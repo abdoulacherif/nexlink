@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}NexLink{% endblock %}</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<script>
+(function(){
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+  s.async=true;
+  s.onload=function(){ if(window.emailjs) emailjs.init("{{ emailjs_key|default('fNyhiux6zn4u2CtRj') }}"); };
+  document.head.appendChild(s);
+})();
+</script>
+{% block head %}{% endblock %}
+</head>
+<body>
+<div class="app-layout">
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">N</div>
+      <div class="logo-text">Nex<span class="accent">Link</span></div>
+    </div>
+    <nav class="nav">
+      <div class="nav-item" data-href="/dashboard">
+        <span class="nicon">🏠</span>
+        <span class="nlabel">Dashboard</span>
+      </div>
+      <div class="nav-item" data-href="/contacts">
+        <span class="nicon">👥</span>
+        <span class="nlabel">Contacts</span>
+      </div>
+      <div class="nav-item" data-href="/tags">
+        <span class="nicon">🏷️</span>
+        <span class="nlabel">Tags</span>
+      </div>
+      <div class="nav-item" data-href="/history">
+        <span class="nicon">📨</span>
+        <span class="nlabel">Historique</span>
+      </div>
+      <div class="nav-item" data-href="/import">
+        <span class="nicon">📥</span>
+        <span class="nlabel">Import CSV</span>
+      </div>
+      <div class="nav-item" data-href="/stats">
+        <span class="nicon">📊</span>
+        <span class="nlabel">Statistiques</span>
+      </div>
+      <div class="nav-divider"></div>
+      <div class="nav-item" data-href="/plans">
+        <span class="nicon">💰</span>
+        <span class="nlabel">Plans & Tarifs</span>
+      </div>
+      {% if session.get('is_admin') %}
+      <div class="nav-divider"></div>
+      <div class="nav-item" data-href="/admin">
+        <span class="nicon">🛡️</span>
+        <span class="nlabel">Admin</span>
+      </div>
+      {% endif %}
+    </nav>
+    <div class="sidebar-footer">
+      <div class="plan-badge">
+        <div class="plan-dot" style="background:{{ plan_color|default('#6b7280') }}"></div>
+        <div class="plan-info">
+          <div class="pname">Plan {{ profile.plan|default('Gratuit')|capitalize }}</div>
+          <div class="plimit">
+            {% if plan_limit == -1 %}Illimité
+            {% else %}{{ plan_limit|default(10) }} emails/jour
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <div class="main-area">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="tpage">{% block page_title %}Page{% endblock %}</div>
+        <div class="tsub">{% block page_sub %}{% endblock %}</div>
+      </div>
+      <div class="topbar-right">
+        {% block topbar_actions %}{% endblock %}
+        <button class="btn btn-ghost btn-sm" onclick="window.location='/logout'">
+          ↩ Quitter
+        </button>
+      </div>
+    </div>
+
+    <div class="page-content">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/static/js/main.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
