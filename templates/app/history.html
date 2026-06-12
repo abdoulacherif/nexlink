@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}NexLink · Historique{% endblock %}
+{% block page_title %}Historique{% endblock %}
+{% block page_sub %}Tous vos envois d'emails{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="sc-top" style="background:linear-gradient(90deg,var(--neon),#60efff)"></div>
+    <span class="sc-ico">📤</span>
+    <div class="sc-val v-neon">{{ logs|length }}</div>
+    <div class="sc-lbl">Campagnes</div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-top" style="background:linear-gradient(90deg,var(--orange),var(--orange2))"></div>
+    <span class="sc-ico">✉️</span>
+    <div class="sc-val v-orange">{{ logs|sum(attribute='recipient_count') }}</div>
+    <div class="sc-lbl">Emails envoyés</div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-top" style="background:linear-gradient(90deg,var(--success),#00e5ff)"></div>
+    <span class="sc-ico">✅</span>
+    <div class="sc-val v-green">{{ logs|selectattr('status','eq','sent')|list|length }}</div>
+    <div class="sc-lbl">Succès</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3>📋 Journal des envois</h3>
+    <span style="font-size:.78rem;color:var(--muted)">{{ logs|length }} entrées</span>
+  </div>
+  {% if logs %}
+  <div style="overflow-x:auto">
+    <table class="nx-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Objet</th>
+          <th>Destinataires</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td style="color:var(--muted);font-size:.75rem;white-space:nowrap">
+            {{ log.created_at[:16].replace('T',' ') if log.created_at else '—' }}
+          </td>
+          <td style="font-weight:600">{{ log.subject or '—' }}</td>
+          <td>
+            <span style="background:var(--neon-g,rgba(0,180,255,.08));border:1px solid rgba(0,180,255,.2);color:var(--neon);border-radius:10px;padding:2px 8px;font-size:.75rem;font-weight:700">
+              {{ log.recipient_count or 1 }}
+            </span>
+          </td>
+          <td>
+            {% if log.status == 'sent' %}
+            <span class="pill pill-active">✅ Envoyé</span>
+            {% elif log.status == 'failed' %}
+            <span class="pill pill-rejected">❌ Échec</span>
+            {% else %}
+            <span class="pill pill-pending">⏳ {{ log.status }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state" style="padding:50px">
+    <span class="eico">📭</span>
+    <p>Aucun envoi pour l'instant</p>
+    <a href="/contacts" class="btn btn-neon btn-sm" style="margin-top:16px">Envoyer ma première campagne →</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
