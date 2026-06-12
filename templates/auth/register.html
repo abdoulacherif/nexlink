@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexLink · Inscription</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-box" style="max-width:520px">
+    <div class="auth-logo">
+      <div class="mark">N</div>
+      <div class="brand">Nex<span class="a">Link</span></div>
+    </div>
+    <div class="auth-title">Créez votre compte</div>
+    <div class="auth-sub">Plateforme d'email marketing pour l'Afrique francophone 🌍</div>
+
+    <form id="registerForm" style="display:flex;flex-direction:column;gap:14px">
+
+      <div class="frow">
+        <div class="fgroup">
+          <label>Nom complet *</label>
+          <input type="text" id="name" placeholder="Jean Dupont" required>
+        </div>
+        <div class="fgroup">
+          <label>WhatsApp *</label>
+          <input type="tel" id="whatsapp" placeholder="+237 6XX XXX XXX" required>
+        </div>
+      </div>
+
+      <div class="fgroup">
+        <label>Email *</label>
+        <input type="email" id="email" placeholder="vous@email.com" required>
+      </div>
+
+      <div class="frow">
+        <div class="fgroup">
+          <label>Mot de passe *</label>
+          <input type="password" id="password" placeholder="Min. 6 caractères" required>
+        </div>
+        <div class="fgroup">
+          <label>Confirmer *</label>
+          <input type="password" id="password2" placeholder="Répétez" required>
+        </div>
+      </div>
+
+      <div class="fgroup">
+        <label>Pourquoi souhaitez-vous utiliser NexLink ? *</label>
+        <textarea id="reason" placeholder="Décrivez votre activité et votre besoin en email marketing…" style="min-height:80px" required></textarea>
+      </div>
+
+      <!-- Plans -->
+      <div>
+        <div class="section-title" style="margin-bottom:10px">Choisissez votre plan</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px" id="planSelector">
+          {% for key, p in plans.items() %}
+          <label class="plan-option" data-plan="{{ key }}" style="
+            background:var(--card2);border:1px solid var(--border2);
+            border-radius:var(--rs);padding:12px;cursor:pointer;transition:all .15s;
+          ">
+            <input type="radio" name="plan" value="{{ key }}" {% if key=='free' %}checked{% endif %} style="display:none">
+            <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">
+              {{ p.name }}
+            </div>
+            <div style="font-size:1.1rem;font-weight:900;{% if key=='free' %}color:var(--muted){% elif key=='starter' %}color:var(--neon){% elif key=='business' %}color:var(--orange){% else %}color:var(--yellow){% endif %}">
+              {% if p.price == 0 %}Gratuit{% else %}{{ "{:,}".format(p.price) }} F{% endif %}
+              <span style="font-size:.7rem;color:var(--muted);font-weight:400">/mois</span>
+            </div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:2px">
+              {% if p.emails_per_day == -1 %}Illimité{% else %}{{ p.emails_per_day }} emails/jour{% endif %}
+            </div>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div id="formError" style="display:none;background:rgba(255,51,102,.08);border:1px solid rgba(255,51,102,.2);border-radius:var(--rs);padding:10px;font-size:.82rem;color:var(--danger)"></div>
+
+      <button type="submit" class="btn btn-orange" style="width:100%;justify-content:center;padding:12px">
+        🚀 Créer mon compte
+      </button>
+
+      <div style="text-align:center;font-size:.8rem;color:var(--muted)">
+        Déjà inscrit ? <a href="/login" style="color:var(--neon)">Se connecter</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/static/js/main.js"></script>
+<script>
+// Plan selector visual
+document.querySelectorAll('.plan-option').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.plan-option').forEach(p => {
+      p.style.borderColor = 'var(--border2)';
+      p.style.background = 'var(--card2)';
+    });
+    el.style.borderColor = 'var(--neon)';
+    el.style.background = 'var(--neon-g, rgba(0,180,255,0.08))';
+    el.querySelector('input').checked = true;
+  });
+});
+// Default select free
+document.querySelector('.plan-option[data-plan="free"]').click();
+
+document.getElementById('registerForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const errBox = document.getElementById('formError');
+  errBox.style.display = 'none';
+  const name = document.getElementById('name').value.trim();
+  const whatsapp = document.getElementById('whatsapp').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const password2 = document.getElementById('password2').value;
+  const reason = document.getElementById('reason').value.trim();
+  const plan = document.querySelector('input[name="plan"]:checked')?.value || 'free';
+  if (password !== password2) {
+    errBox.textContent = '❌ Les mots de passe ne correspondent pas';
+    errBox.style.display = 'block'; return;
+  }
+  const btn = e.target.querySelector('button[type="submit"]');
+  btn.disabled = true; btn.textContent = '⏳ Création…';
+  const r = await fetch('/register', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({name, whatsapp, email, password, reason, plan})
+  });
+  const data = await r.json();
+  btn.disabled = false; btn.textContent = '🚀 Créer mon compte';
+  if (data.error) { errBox.textContent = '❌ ' + data.error; errBox.style.display = 'block'; return; }
+  window.location.href = data.redirect || '/waiting';
+});
+</script>
+</body>
+</html>
