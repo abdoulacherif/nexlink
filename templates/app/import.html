@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}NexLink · Import CSV{% endblock %}
+{% block page_title %}Import CSV{% endblock %}
+{% block page_sub %}Ajoutez des contacts en masse{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+  <div class="stat-card">
+    <div class="sc-top" style="background:linear-gradient(90deg,var(--neon),#60efff)"></div>
+    <span class="sc-ico">📥</span>
+    <div class="sc-val v-neon" id="sImported">0</div>
+    <div class="sc-lbl">Importés cette session</div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-top" style="background:linear-gradient(90deg,var(--orange),var(--orange2))"></div>
+    <span class="sc-ico">🚫</span>
+    <div class="sc-val v-orange" id="sDups">0</div>
+    <div class="sc-lbl">Doublons ignorés</div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-top" style="background:var(--border)"></div>
+    <span class="sc-ico">💎</span>
+    <div class="sc-val v-white">
+      {% if plan_key == 'free' %}Limité{% else %}Illimité{% endif %}
+    </div>
+    <div class="sc-lbl">Import sur votre plan</div>
+  </div>
+</div>
+
+{% if plan_key == 'free' %}
+<div style="background:rgba(255,107,0,.06);border:1px solid rgba(255,107,0,.2);border-radius:var(--r);padding:16px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+  <div>
+    <div style="font-weight:700;margin-bottom:4px">⚠️ Import limité sur le plan Gratuit</div>
+    <div style="font-size:.82rem;color:var(--muted)">Maximum 50 contacts par import. Upgradez pour importer sans limite.</div>
+  </div>
+  <a href="/plans" class="btn btn-orange btn-sm" style="flex-shrink:0">Upgrader →</a>
+</div>
+{% endif %}
+
+<div id="dropZone" style="
+  border:2px dashed var(--border2);border-radius:var(--r);
+  padding:48px 24px;text-align:center;cursor:pointer;
+  background:var(--card);transition:all .2s;margin-bottom:16px;
+">
+  <div style="font-size:3rem;margin-bottom:14px">📂</div>
+  <div style="color:var(--muted);font-size:.9rem;margin-bottom:16px">
+    Glissez votre fichier CSV ici ou cliquez pour choisir
+  </div>
+  <button class="btn btn-neon btn-sm">Choisir un fichier CSV</button>
+  <input type="file" id="csvFile" accept=".csv" style="display:none">
+</div>
+
+<div class="card" style="margin-bottom:16px">
+  <div class="card-header"><h3>📋 Format CSV attendu</h3></div>
+  <div class="card-body">
+    <code style="font-size:.78rem;color:var(--neon);background:var(--bg2);padding:12px;border-radius:var(--rs);display:block;line-height:2;border:1px solid var(--border)">
+      full_name, email, phone<br>
+      Jean Dupont, jean@gmail.com, +237 612345678<br>
+      Marie Kamga, marie@yahoo.fr, +229 91234567
+    </code>
+  </div>
+</div>
+
+<div class="card" id="importPreview" style="display:none">
+  <div class="card-header">
+    <h3 id="previewTitle">Aperçu</h3>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" id="btnCancel">Annuler</button>
+      <button class="btn btn-success btn-sm" id="btnImport">✅ Importer</button>
+    </div>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="nx-table" id="previewTable"></table>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const PLAN_KEY = "{{ plan_key }}";
+const MAX_IMPORT = PLAN_KEY === 'free' ? 50 : 999999;
+let importBuf = [], totalImported = 0, totalDups = 0;
+
+const dz = document.getElementById('dropZone');
+dz.addEventListener('click', () => document.getElementById('csvFile').click());
+document.getElementById('csvFile').addEventListener('change', e => handleFile(e.target.files[0]));
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor = 'var(--neon)'; dz.style.background = 'rgba(0,180,255,.04)'; });
+dz.addEventListener('dragleave', () => { dz.style.borderColor = 'var(--border2)'; dz.style.background = 'var(--card)'; });
+dz.addEventListener('drop', e => { e.preventDefault(); dz.style.borderColor = 'var(--border2)'; dz.style.background = 'var(--card)'; handleFile(e.dataTransfer.files[0]); });
+
+function handleFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const lines = e.target.result.trim().split('\n');
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/['"]/g,''));
+    const ei = headers.findIndex(h => h.includes('email'));
+    const ni = headers.findIndex(h => h.includes('name') || h.includes('nom'));
+    const pi = headers.findIndex(h => h.includes('phone') || h.includes('tel'));
+    if (ei === -1) { toast('❌ Colonne email introuvable'); return; }
+    importBuf = []; let dups = 0;
+    lines.slice(1).forEach(line => {
+      const v = line.split(',');
+      const email = (v[ei] || '').trim().replace(/['"]/g,'');
+      if (!email || !email.includes('@')) return;
+      importBuf.push({
+        name: ni >= 0 ? (v[ni] || '').trim().replace(/['"]/g,'') : '',
+        email,
+        phone: pi >= 0 ? (v[pi] || '').trim().replace(/['"]/g,'') : ''
+      });
+    });
+    if (importBuf.length > MAX_IMPORT) {
+      toast(`⚠️ Plan ${PLAN_KEY}: max ${MAX_IMPORT} contacts. Les ${importBuf.length - MAX_IMPORT} suivants ignorés.`);
+      importBuf = importBuf.slice(0, MAX_IMPORT);
+    }
+    document.getElementById('previewTitle').textContent = `${importBuf.length} contacts à importer · ${dups} doublons ignorés`;
+    const table = document.getElementById('previewTable');
+    table.innerHTML = `<thead><tr><th>Nom</th><th>Email</th><th>Téléphone</th></tr></thead>
+    <tbody>${importBuf.slice(0,10).map(c=>`<tr><td>${c.name||'—'}</td><td>${c.email}</td><td>${c.phone||'—'}</td></tr>`).join('')}
+    ${importBuf.length>10?`<tr><td colspan="3" style="color:var(--muted);text-align:center;font-size:.75rem">+${importBuf.length-10} autres…</td></tr>`:''}</tbody>`;
+    document.getElementById('importPreview').style.display = 'block';
+    totalDups += dups;
+    document.getElementById('sDups').textContent = totalDups;
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById('btnCancel').addEventListener('click', () => {
+  importBuf = []; document.getElementById('importPreview').style.display = 'none';
+});
+
+document.getElementById('btnImport').addEventListener('click', async () => {
+  if (!importBuf.length) { toast('⚠️ Rien à importer'); return; }
+  const btn = document.getElementById('btnImport');
+  btn.disabled = true; btn.textContent = '⏳ Import…';
+  const r = await fetch('/api/contacts', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({contacts: importBuf})
+  });
+  const data = await r.json();
+  totalImported += data.inserted || importBuf.length;
+  document.getElementById('sImported').textContent = totalImported;
+  importBuf = [];
+  document.getElementById('importPreview').style.display = 'none';
+  btn.disabled = false; btn.textContent = '✅ Importer';
+  toast(`✅ ${totalImported} contacts importés !`);
+});
+</script>
+{% endblock %}
