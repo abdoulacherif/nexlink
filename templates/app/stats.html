@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}NexLink · Statistiques{% endblock %}
+{% block page_title %}Statistiques{% endblock %}
+{% block page_sub %}Analysez votre activité{% endblock %}
+
+{% block content %}
+{% set total = logs|length %}
+{% set sent = logs|selectattr('status','eq','sent')|list|length %}
+{% set rate = ((sent / total * 100)|int) if total > 0 else 0 %}
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="sc-top" style="background:linear-gradient(90deg,var(--neon),#60efff)"></div>
+    <span class="sc-ico">📤</span>
+    <div class="sc-val v-neon">{{ total }}</div>
+    <div class="sc-lbl">Campagnes total</div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-top" style="background:linear-gradient(90deg,var(--orange),var(--orange2))"></div>
+    <span class="sc-ico">✉️</span>
+    <div class="sc-val v-orange">{{ logs|sum(attribute='recipient_count') }}</div>
+    <div class="sc-lbl">Emails envoyés</div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-top" style="background:linear-gradient(90deg,var(--success),#00e5ff)"></div>
+    <span class="sc-ico">📈</span>
+    <div class="sc-val v-green">{{ rate }}%</div>
+    <div class="sc-lbl">Taux de succès</div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-top" style="background:var(--border)"></div>
+    <span class="sc-ico">📅</span>
+    <div class="sc-val v-white">{{ logs|selectattr('created_at','defined')|list|length }}</div>
+    <div class="sc-lbl">Ce mois</div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:16px">
+  <div class="card-header"><h3>📊 Volume d'envoi par campagne</h3></div>
+  <div class="card-body" id="barChart">
+    {% if logs %}
+      {% for log in logs[:8] %}
+      {% set pct = ((log.recipient_count or 1) / ([logs|map(attribute='recipient_count')|max, 1]|max) * 100)|int %}
+      <div class="bar-row">
+        <div class="bar-lbl" style="font-size:.7rem">{{ (log.subject or 'Campagne')[:20] }}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:{{ pct }}%"></div></div>
+        <div class="bar-val">{{ log.recipient_count or 1 }}</div>
+      </div>
+      {% endfor %}
+    {% else %}
+    <div class="empty-state" style="padding:30px">
+      <span class="eico">📊</span>
+      <p>Aucune donnée pour l'instant</p>
+      <a href="/contacts" class="btn btn-neon btn-sm" style="margin-top:12px">Lancer une campagne →</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+  <div class="card">
+    <div class="card-header"><h3>✅ Campagnes réussies</h3></div>
+    <div class="card-body">
+      <div style="font-size:3rem;font-weight:900;background:linear-gradient(90deg,var(--success),#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent">
+        {{ sent }}
+      </div>
+      <div style="font-size:.78rem;color:var(--muted);margin-top:4px">sur {{ total }} campagnes</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>💎 Votre plan</h3></div>
+    <div class="card-body">
+      <div style="font-size:1.4rem;font-weight:900;color:var(--neon)">{{ profile.plan|default('free')|capitalize }}</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-top:4px">
+        {% if profile.plan == 'elite' %}Envois illimités{% else %}Voir <a href="/plans" style="color:var(--orange)">les plans →</a>{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
