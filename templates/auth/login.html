@@ -4,19 +4,45 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NexLink · Connexion</title>
-<link rel="stylesheet" href="/static/css/style.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#000;--bg2:#0a0a0f;--card:#0d0d1a;--border2:#252540;--neon:#00b4ff;--neon2:#0088ff;--orange:#ff6b00;--orange2:#ff8c00;--white:#fff;--muted:#6b7280;--muted2:#374151;--danger:#ff3366;--rs:8px;}
+html,body{min-height:100%;font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--white)}
+.page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden;}
+.page::before{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,180,255,.07) 0%,transparent 70%);top:-200px;left:-200px;pointer-events:none;}
+.page::after{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,0,.06) 0%,transparent 70%);bottom:-150px;right:-150px;pointer-events:none;}
+.box{background:var(--card);border:1px solid var(--border2);border-radius:18px;padding:36px 32px;width:100%;max-width:420px;position:relative;z-index:1;}
+.box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:18px 18px 0 0;background:linear-gradient(90deg,var(--neon),var(--orange));}
+.logo{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+.logo-mark{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--neon2),var(--orange));display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:900;color:#000;}
+.logo-text{font-size:1.3rem;font-weight:900}.logo-text .a{color:var(--neon)}
+.title{font-size:1.5rem;font-weight:900;margin-bottom:6px}.sub{font-size:.85rem;color:var(--muted);margin-bottom:28px}
+.form{display:flex;flex-direction:column;gap:16px}
+.fgroup{display:flex;flex-direction:column;gap:6px}
+.fgroup label{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.fgroup input{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--rs);padding:12px 14px;color:var(--white);font-size:.9rem;outline:none;transition:border-color .15s,box-shadow .15s;width:100%;}
+.fgroup input::placeholder{color:var(--muted2)}
+.fgroup input:focus{border-color:var(--neon);box-shadow:0 0 0 3px rgba(0,180,255,.1);}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;border-radius:var(--rs);font-size:.9rem;font-weight:700;cursor:pointer;border:none;transition:all .15s;width:100%;}
+.btn-neon{background:linear-gradient(135deg,var(--neon2),var(--neon));color:#000;box-shadow:0 0 20px rgba(0,180,255,.2);}
+.btn-neon:hover{box-shadow:0 0 30px rgba(0,180,255,.35);}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.err-box{background:rgba(255,51,102,.08);border:1px solid rgba(255,51,102,.25);border-radius:var(--rs);padding:11px 14px;font-size:.82rem;color:var(--danger);display:none;}
+.footer-link{text-align:center;font-size:.8rem;color:var(--muted)}.footer-link a{color:var(--orange);font-weight:600}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111120;border:1px solid #252540;border-radius:10px;padding:10px 22px;font-size:.83rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99;}
+</style>
 </head>
 <body>
-<div class="auth-page">
-  <div class="auth-box">
-    <div class="auth-logo">
-      <div class="mark">N</div>
-      <div class="brand">Nex<span class="a">Link</span></div>
+<div class="page">
+  <div class="box">
+    <div class="logo">
+      <div class="logo-mark">N</div>
+      <div class="logo-text">Nex<span class="a">Link</span></div>
     </div>
-    <div class="auth-title">Bon retour 👋</div>
-    <div class="auth-sub">Connectez-vous à votre espace NexLink</div>
-
-    <form id="loginForm" style="display:flex;flex-direction:column;gap:14px">
+    <div class="title">Bon retour 👋</div>
+    <div class="sub">Connectez-vous à votre espace NexLink</div>
+    <form class="form" id="loginForm">
       <div class="fgroup">
         <label>Email</label>
         <input type="email" id="email" placeholder="vous@email.com" required>
@@ -25,40 +51,43 @@
         <label>Mot de passe</label>
         <input type="password" id="password" placeholder="••••••••" required>
       </div>
-
-      <div id="loginError" style="display:none;background:rgba(255,51,102,.08);border:1px solid rgba(255,51,102,.2);border-radius:var(--rs);padding:10px;font-size:.82rem;color:var(--danger)"></div>
-
-      <button type="submit" class="btn btn-neon" style="width:100%;justify-content:center;padding:12px">
-        🔐 Se connecter
-      </button>
-
-      <div style="text-align:center;font-size:.8rem;color:var(--muted)">
-        Pas encore de compte ? <a href="/" style="color:var(--orange)">S'inscrire</a>
-      </div>
+      <div class="err-box" id="errBox"></div>
+      <button type="submit" class="btn btn-neon" id="submitBtn">🔐 Se connecter</button>
+      <div class="footer-link">Pas encore de compte ? <a href="/">S'inscrire</a></div>
     </form>
   </div>
 </div>
-
 <div class="toast" id="toast"></div>
-<script src="/static/js/main.js"></script>
 <script>
+function toast(msg,dur=2500){const t=document.getElementById('toast');t.textContent=msg;t.style.opacity='1';clearTimeout(t._t);t._t=setTimeout(()=>t.style.opacity='0',dur);}
 document.getElementById('loginForm').addEventListener('submit', async e => {
   e.preventDefault();
-  const errBox = document.getElementById('loginError');
-  errBox.style.display = 'none';
+  const err = document.getElementById('errBox');
+  err.style.display = 'none';
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
-  const btn = e.target.querySelector('button[type="submit"]');
+  const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = '⏳ Connexion…';
-  const r = await fetch('/login', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({email, password})
-  });
-  const data = await r.json();
-  btn.disabled = false; btn.textContent = '🔐 Se connecter';
-  if (data.error) { errBox.textContent = '❌ ' + data.error; errBox.style.display = 'block'; return; }
-  window.location.href = data.redirect || '/dashboard';
+  try {
+    const r = await fetch('/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email, password})
+    });
+    const data = await r.json();
+    if (data.error) {
+      err.textContent = '❌ ' + data.error;
+      err.style.display = 'block';
+      btn.disabled = false; btn.textContent = '🔐 Se connecter';
+      return;
+    }
+    toast('✅ Connexion réussie !');
+    setTimeout(() => window.location.href = data.redirect || '/dashboard', 600);
+  } catch(e) {
+    err.textContent = '❌ Erreur réseau. Réessayez.';
+    err.style.display = 'block';
+    btn.disabled = false; btn.textContent = '🔐 Se connecter';
+  }
 });
 </script>
 </body>
