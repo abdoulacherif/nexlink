@@ -1,0 +1,127 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Utilisateurs{% endblock %}
+{% block page_title %}Utilisateurs{% endblock %}
+{% block page_sub %}Gérez tous les comptes{% endblock %}
+
+{% block topbar_actions %}
+<div style="display:flex;gap:8px">
+  <button class="btn btn-ghost btn-sm" onclick="filterUsers('all')" id="f-all">Tous</button>
+  <button class="btn btn-ghost btn-sm" onclick="filterUsers('pending')" id="f-pending">⏳ En attente</button>
+  <button class="btn btn-ghost btn-sm" onclick="filterUsers('active')" id="f-active">✅ Actifs</button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
+  <div class="stat-card">
+    <div class="sc-val v-neon">{{ users|length }}</div>
+    <div class="sc-lbl">Total</div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-val v-yellow">{{ users|selectattr('status','eq','pending')|list|length }}</div>
+    <div class="sc-lbl">En attente</div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-val v-green">{{ users|selectattr('status','eq','active')|list|length }}</div>
+    <div class="sc-lbl">Actifs</div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-val" style="color:var(--danger);-webkit-text-fill-color:var(--danger)">{{ users|selectattr('status','eq','rejected')|list|length }}</div>
+    <div class="sc-lbl">Refusés</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3>👥 Liste des utilisateurs</h3>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="nx-table" id="usersTable">
+      <thead>
+        <tr>
+          <th>Utilisateur</th>
+          <th>WhatsApp</th>
+          <th>Plan</th>
+          <th>Statut</th>
+          <th>Raison</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr data-status="{{ u.status }}">
+          <td>
+            <div style="font-weight:700;font-size:.85rem">{{ u.name or '—' }}</div>
+            <div style="font-size:.72rem;color:var(--muted)">{{ u.email }}</div>
+          </td>
+          <td style="font-size:.82rem">{{ u.whatsapp or '—' }}</td>
+          <td>
+            <select onchange="changePlan('{{ u.id }}',this.value)" style="background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:4px 8px;color:var(--white);font-size:.75rem;cursor:pointer">
+              {% for key, p in plans.items() %}
+              <option value="{{ key }}" {% if u.plan == key %}selected{% endif %}>{{ p.name }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td>
+            {% if u.status == 'active' %}<span class="pill pill-active">✅ Actif</span>
+            {% elif u.status == 'pending' %}<span class="pill pill-pending">⏳ Attente</span>
+            {% elif u.status == 'rejected' %}<span class="pill pill-rejected">❌ Refusé</span>
+            {% else %}<span class="pill">{{ u.status }}</span>{% endif %}
+          </td>
+          <td style="font-size:.75rem;color:var(--muted);max-width:180px">
+            <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ u.reason or '' }}">
+              {{ (u.reason or '')[:60] }}{% if (u.reason or '')|length > 60 %}…{% endif %}
+            </div>
+          </td>
+          <td>
+            <div style="display:flex;gap:5px;flex-wrap:wrap">
+              {% if u.status == 'pending' %}
+              <button class="btn btn-success btn-xs" onclick="validateUser('{{ u.id }}','approve',this)">✅</button>
+              <button class="btn btn-danger btn-xs" onclick="validateUser('{{ u.id }}','reject',this)">❌</button>
+              {% elif u.status == 'rejected' %}
+              <button class="btn btn-neon btn-xs" onclick="validateUser('{{ u.id }}','approve',this)">↩ Réactiver</button>
+              {% else %}
+              <button class="btn btn-danger btn-xs" onclick="validateUser('{{ u.id }}','reject',this)">Suspendre</button>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterUsers(status) {
+  document.querySelectorAll('[id^="f-"]').forEach(b => b.classList.remove('btn-neon'));
+  document.getElementById('f-'+status)?.classList.add('btn-neon');
+  document.querySelectorAll('#usersTable tbody tr').forEach(row => {
+    row.style.display = (status==='all' || row.dataset.status===status) ? '' : 'none';
+  });
+}
+
+async function validateUser(userId, action, btn) {
+  btn.disabled = true;
+  const r = await fetch(`/admin/users/${userId}/validate`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({action})
+  });
+  const data = await r.json();
+  if (data.error) { toast('❌ '+data.error); btn.disabled=false; return; }
+  toast(action==='approve' ? '✅ Validé !' : '❌ Refusé');
+  setTimeout(() => location.reload(), 800);
+}
+
+async function changePlan(userId, plan) {
+  const r = await fetch(`/admin/users/${userId}/plan`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({plan})
+  });
+  const data = await r.json();
+  toast(data.error ? '❌ '+data.error : '✅ Plan mis à jour !');
+}
+</script>
+{% endblock %}
