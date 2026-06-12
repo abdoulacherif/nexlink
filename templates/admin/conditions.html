@@ -1,0 +1,161 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Conditions{% endblock %}
+{% block page_title %}Conditions{% endblock %}
+{% block page_sub %}Créez et gérez les règles de la plateforme{% endblock %}
+
+{% block topbar_actions %}
+<button class="btn btn-orange btn-sm" onclick="openModal('mNewCond')">➕ Nouvelle condition</button>
+{% endblock %}
+
+{% block content %}
+<div style="background:linear-gradient(135deg,rgba(0,180,255,.06),rgba(255,107,0,.06));border:1px solid rgba(0,180,255,.12);border-radius:var(--r);padding:18px 22px;margin-bottom:24px">
+  <div style="font-size:.95rem;font-weight:800;margin-bottom:6px">📋 Comment fonctionnent les conditions</div>
+  <div style="font-size:.82rem;color:var(--muted);line-height:1.7">
+    Les conditions sont des règles affichées aux utilisateurs sur leur dashboard. Vous pouvez les cibler par plan (gratuit, starter…) et les activer/désactiver à tout moment. Exemples : limites d'utilisation, règles de contenu, CGU.
+  </div>
+</div>
+
+<div class="section-title">{{ conditions|length }} condition(s) créée(s)</div>
+
+{% if conditions %}
+<div style="display:flex;flex-direction:column;gap:10px">
+  {% for c in conditions %}
+  <div class="card" id="cond-{{ c.id }}">
+    <div style="padding:16px 18px;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">
+          <div style="font-size:.9rem;font-weight:700">{{ c.title }}</div>
+          <span class="pill {% if c.is_active %}pill-active{% else %}pill-rejected{% endif %}">
+            {% if c.is_active %}✅ Active{% else %}⏸ Inactive{% endif %}
+          </span>
+          <span style="background:var(--neon-g,rgba(0,180,255,.08));border:1px solid rgba(0,180,255,.15);border-radius:10px;padding:2px 8px;font-size:.68rem;font-weight:700;color:var(--neon)">
+            Plan: {{ c.plan or 'tous' }}
+          </span>
+          <span style="background:var(--orange-g,rgba(255,107,0,.08));border:1px solid rgba(255,107,0,.15);border-radius:10px;padding:2px 8px;font-size:.68rem;font-weight:700;color:var(--orange)">
+            {{ c.applies_to or 'général' }}
+          </span>
+        </div>
+        <div style="font-size:.82rem;color:var(--muted);line-height:1.6">{{ c.description }}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn btn-ghost btn-xs" onclick="editCond('{{ c.id }}','{{ c.title|e }}','{{ c.description|e }}','{{ c.plan or 'all' }}','{{ c.applies_to or 'all' }}',{{ 'true' if c.is_active else 'false' }})">✏️</button>
+        <button class="btn {% if c.is_active %}btn-ghost{% else %}btn-success{% endif %} btn-xs" onclick="toggleCond('{{ c.id }}',{{ 'false' if c.is_active else 'true' }},this)">
+          {% if c.is_active %}⏸{% else %}▶{% endif %}
+        </button>
+        <button class="btn btn-danger btn-xs" onclick="deleteCond('{{ c.id }}')">🗑️</button>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <span class="eico">📋</span>
+  <p>Aucune condition créée — commencez par en créer une</p>
+</div>
+{% endif %}
+
+<!-- MODAL NEW/EDIT CONDITION -->
+<div class="moverlay" id="mNewCond">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="condModalTitle">➕ Nouvelle condition</h2>
+      <button class="modal-close" data-close="mNewCond">✕</button>
+    </div>
+    <input type="hidden" id="condId">
+    <div class="fgroup">
+      <label>Titre *</label>
+      <input type="text" id="condTitle" placeholder="Ex: Limite d'envoi gratuit">
+    </div>
+    <div class="fgroup">
+      <label>Description *</label>
+      <textarea id="condDesc" placeholder="Décrivez la condition en détail…" style="min-height:80px"></textarea>
+    </div>
+    <div class="frow">
+      <div class="fgroup">
+        <label>Applicable au plan</label>
+        <select id="condPlan">
+          <option value="all">Tous les plans</option>
+          <option value="free">Gratuit</option>
+          <option value="starter">Starter</option>
+          <option value="business">Business</option>
+          <option value="elite">Elite</option>
+        </select>
+      </div>
+      <div class="fgroup">
+        <label>Fonctionnalité ciblée</label>
+        <select id="condApplies">
+          <option value="all">Général</option>
+          <option value="email">Envoi d'emails</option>
+          <option value="import">Import CSV</option>
+          <option value="contacts">Contacts</option>
+          <option value="stats">Statistiques</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" data-close="mNewCond">Annuler</button>
+      <button class="btn btn-orange" id="btnSaveCond">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function editCond(id, title, desc, plan, applies, isActive) {
+  document.getElementById('condModalTitle').textContent = '✏️ Modifier la condition';
+  document.getElementById('condId').value = id;
+  document.getElementById('condTitle').value = title;
+  document.getElementById('condDesc').value = desc;
+  document.getElementById('condPlan').value = plan;
+  document.getElementById('condApplies').value = applies;
+  openModal('mNewCond');
+}
+
+document.getElementById('btnSaveCond').addEventListener('click', async () => {
+  const id = document.getElementById('condId').value;
+  const body = {
+    title: document.getElementById('condTitle').value.trim(),
+    description: document.getElementById('condDesc').value.trim(),
+    plan: document.getElementById('condPlan').value,
+    applies_to: document.getElementById('condApplies').value,
+    is_active: true,
+  };
+  if (!body.title || !body.description) { toast('⚠️ Titre et description requis'); return; }
+  const url = id ? `/admin/conditions/${id}` : '/admin/conditions';
+  const method = id ? 'PUT' : 'POST';
+  const r = await fetch(url, { method, headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const data = await r.json();
+  if (data.error) { toast('❌ '+data.error); return; }
+  closeModal('mNewCond');
+  toast('✅ Condition enregistrée !');
+  setTimeout(() => location.reload(), 600);
+});
+
+// Reset modal on open
+document.getElementById('mNewCond').addEventListener('click', () => {});
+document.querySelector('[onclick="openModal(\'mNewCond\')"]')?.addEventListener('click', () => {
+  document.getElementById('condId').value = '';
+  document.getElementById('condTitle').value = '';
+  document.getElementById('condDesc').value = '';
+  document.getElementById('condModalTitle').textContent = '➕ Nouvelle condition';
+});
+
+async function toggleCond(id, newState, btn) {
+  const r = await fetch(`/admin/conditions/${id}`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({is_active: newState})
+  });
+  toast(newState ? '▶ Condition activée' : '⏸ Condition désactivée');
+  setTimeout(() => location.reload(), 600);
+}
+
+async function deleteCond(id) {
+  if (!confirm('Supprimer cette condition ?')) return;
+  await fetch(`/admin/conditions/${id}`, {method:'DELETE'});
+  toast('🗑️ Condition supprimée');
+  setTimeout(() => location.reload(), 600);
+}
+</script>
+{% endblock %}
