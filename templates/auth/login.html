@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexLink · Connexion</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="mark">N</div>
+      <div class="brand">Nex<span class="a">Link</span></div>
+    </div>
+    <div class="auth-title">Bon retour 👋</div>
+    <div class="auth-sub">Connectez-vous à votre espace NexLink</div>
+
+    <form id="loginForm" style="display:flex;flex-direction:column;gap:14px">
+      <div class="fgroup">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="vous@email.com" required>
+      </div>
+      <div class="fgroup">
+        <label>Mot de passe</label>
+        <input type="password" id="password" placeholder="••••••••" required>
+      </div>
+
+      <div id="loginError" style="display:none;background:rgba(255,51,102,.08);border:1px solid rgba(255,51,102,.2);border-radius:var(--rs);padding:10px;font-size:.82rem;color:var(--danger)"></div>
+
+      <button type="submit" class="btn btn-neon" style="width:100%;justify-content:center;padding:12px">
+        🔐 Se connecter
+      </button>
+
+      <div style="text-align:center;font-size:.8rem;color:var(--muted)">
+        Pas encore de compte ? <a href="/" style="color:var(--orange)">S'inscrire</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/static/js/main.js"></script>
+<script>
+document.getElementById('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const errBox = document.getElementById('loginError');
+  errBox.style.display = 'none';
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const btn = e.target.querySelector('button[type="submit"]');
+  btn.disabled = true; btn.textContent = '⏳ Connexion…';
+  const r = await fetch('/login', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({email, password})
+  });
+  const data = await r.json();
+  btn.disabled = false; btn.textContent = '🔐 Se connecter';
+  if (data.error) { errBox.textContent = '❌ ' + data.error; errBox.style.display = 'block'; return; }
+  window.location.href = data.redirect || '/dashboard';
+});
+</script>
+</body>
+</html>
