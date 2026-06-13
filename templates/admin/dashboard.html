@@ -1,110 +1,69 @@
-{% extends "base.html" %}
-{% block title %}NexLink · Dashboard{% endblock %}
-{% block page_title %}Dashboard{% endblock %}
-{% block page_sub %}Bienvenue, {{ profile.name }} 👋{% endblock %}
-
+{% extends "admin/base_admin.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard Admin{% endblock %}
+{% block page_sub %}Vue globale de la plateforme{% endblock %}
 {% block content %}
 <div class="stats-grid">
-  <div class="stat-card">
-    <div class="sc-top" style="background:linear-gradient(90deg,var(--neon),#60efff)"></div>
-    <span class="sc-ico">📧</span>
-    <div class="sc-val v-neon">{{ profile.emails_sent_today|default(0) }}</div>
-    <div class="sc-lbl">Emails aujourd'hui</div>
-  </div>
-  <div class="stat-card">
-    <div class="sc-top" style="background:linear-gradient(90deg,var(--orange),var(--orange2))"></div>
-    <span class="sc-ico">📤</span>
-    <div class="sc-val v-orange">{{ total_sent }}</div>
-    <div class="sc-lbl">Total envoyés</div>
-  </div>
-  <div class="stat-card">
-    <div class="sc-top" style="background:linear-gradient(90deg,var(--success),#00e5ff)"></div>
-    <span class="sc-ico">📊</span>
-    <div class="sc-val v-green">
-      {% if plan.emails_per_day == -1 %}∞
-      {% else %}{{ plan.emails_per_day - profile.emails_sent_today|default(0) }}{% endif %}
-    </div>
-    <div class="sc-lbl">Emails restants</div>
-  </div>
-  <div class="stat-card">
-    <div class="sc-top" style="background:{{ plan.color }}44"></div>
-    <span class="sc-ico">💎</span>
-    <div class="sc-val" style="color:{{ plan.color }};-webkit-text-fill-color:{{ plan.color }}">
-      {{ plan.name }}
-    </div>
-    <div class="sc-lbl">Plan actuel</div>
-  </div>
+  <div class="stat-card"><div class="sc-top" style="background:linear-gradient(90deg,var(--neon),#60efff)"></div><span class="sc-ico">👥</span><div class="sc-val v-neon">{{ total_users }}</div><div class="sc-lbl">Utilisateurs</div></div>
+  <div class="stat-card"><div class="sc-top" style="background:linear-gradient(90deg,var(--yellow),var(--orange))"></div><span class="sc-ico">⏳</span><div class="sc-val v-yellow">{{ pending|length }}</div><div class="sc-lbl">En attente</div></div>
+  <div class="stat-card"><div class="sc-top" style="background:linear-gradient(90deg,var(--orange),var(--orange2))"></div><span class="sc-ico">✉️</span><div class="sc-val v-orange">{{ total_emails }}</div><div class="sc-lbl">Emails envoyés</div></div>
+  <div class="stat-card"><div class="sc-top" style="background:linear-gradient(90deg,var(--success),#00e5ff)"></div><span class="sc-ico">✅</span><div class="sc-val v-green">{{ users|selectattr('status','eq','active')|list|length }}</div><div class="sc-lbl">Actifs</div></div>
 </div>
 
-<!-- Quota bar -->
-<div class="card" style="margin-bottom:20px">
-  <div class="card-header">
-    <h3>📊 Quota journalier</h3>
-    <span style="font-size:.78rem;color:var(--muted)">
-      {{ profile.emails_sent_today|default(0) }} /
-      {% if plan.emails_per_day == -1 %}∞{% else %}{{ plan.emails_per_day }}{% endif %}
-      emails
-    </span>
-  </div>
-  <div class="card-body">
-    {% if plan.emails_per_day == -1 %}
-      <div style="font-size:.85rem;color:var(--success)">✨ Envois illimités — Plan Elite</div>
-    {% else %}
-      {% set pct = ((profile.emails_sent_today|default(0)) / plan.emails_per_day * 100)|int %}
-      <div class="pbar" style="height:10px;border-radius:6px;margin-bottom:8px">
-        <div class="pfill" style="width:{{ pct }}%;border-radius:6px;
-          background:{% if pct > 80 %}var(--danger){% elif pct > 50 %}var(--orange){% else %}linear-gradient(90deg,var(--neon),var(--orange)){% endif %}">
-        </div>
+{% if pending %}
+<div class="section-title">⚡ Inscriptions en attente</div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:22px">
+  {% for u in pending %}
+  <div class="card" style="padding:0">
+    <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--neon2),var(--orange));display:flex;align-items:center;justify-content:center;font-size:.95rem;font-weight:800;color:#000;flex-shrink:0">{{ u.name[0].upper() if u.name else '?' }}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:.88rem">{{ u.name or '—' }}</div>
+        <div style="font-size:.72rem;color:var(--muted)">{{ u.email }} · {{ u.whatsapp or '—' }}</div>
+        <div style="font-size:.72rem;color:var(--muted2);margin-top:2px;font-style:italic">"{{ (u.reason or '')[:80] }}{% if (u.reason or '')|length>80 %}…{% endif %}"</div>
       </div>
-      <div style="font-size:.75rem;color:var(--muted)">
-        {{ pct }}% utilisé — Réinitialisation à minuit
+      <div style="display:flex;gap:7px;flex-shrink:0">
+        <button class="btn btn-success btn-sm" onclick="validateUser('{{ u.id }}','approve',this)">✅ Valider</button>
+        <button class="btn btn-danger btn-sm" onclick="validateUser('{{ u.id }}','reject',this)">❌ Refuser</button>
       </div>
-    {% endif %}
-    {% if plan_key != 'elite' %}
-    <div style="margin-top:12px">
-      <a href="/plans" class="btn btn-orange btn-sm">⚡ Upgrader mon plan</a>
     </div>
-    {% endif %}
   </div>
-</div>
-
-<!-- Conditions actives -->
-{% if conditions %}
-<div class="section-title">Conditions actives</div>
-<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
-  {% for c in conditions %}
-  {% if c.is_active and (c.plan == 'all' or c.plan == plan_key) %}
-  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:14px 16px">
-    <div style="font-size:.85rem;font-weight:700;margin-bottom:4px">📋 {{ c.title }}</div>
-    <div style="font-size:.78rem;color:var(--muted)">{{ c.description }}</div>
-  </div>
-  {% endif %}
   {% endfor %}
 </div>
 {% endif %}
 
-<!-- Quick actions -->
-<div class="section-title">Actions rapides</div>
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
-  <a href="/contacts" class="card" style="padding:18px;cursor:pointer;text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='rgba(0,180,255,.3)'" onmouseout="this.style.borderColor='var(--border)'">
-    <div style="font-size:1.8rem;margin-bottom:8px">👥</div>
-    <div style="font-size:.88rem;font-weight:700">Gérer les contacts</div>
-    <div style="font-size:.75rem;color:var(--muted);margin-top:4px">Filtrer, taguer, contacter</div>
-  </a>
-  <a href="/contacts" class="card" style="padding:18px;cursor:pointer;text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='rgba(255,107,0,.3)'" onmouseout="this.style.borderColor='var(--border)'">
-    <div style="font-size:1.8rem;margin-bottom:8px">✉️</div>
-    <div style="font-size:.88rem;font-weight:700">Envoyer une campagne</div>
-    <div style="font-size:.75rem;color:var(--muted);margin-top:4px">Email à un groupe ciblé</div>
-  </a>
-  <a href="/import" class="card" style="padding:18px;cursor:pointer;text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='rgba(0,255,136,.3)'" onmouseout="this.style.borderColor='var(--border)'">
-    <div style="font-size:1.8rem;margin-bottom:8px">📥</div>
-    <div style="font-size:.88rem;font-weight:700">Importer des contacts</div>
-    <div style="font-size:.75rem;color:var(--muted);margin-top:4px">Via fichier CSV</div>
-  </a>
-  <a href="/stats" class="card" style="padding:18px;cursor:pointer;text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='rgba(251,191,36,.3)'" onmouseout="this.style.borderColor='var(--border)'">
-    <div style="font-size:1.8rem;margin-bottom:8px">📊</div>
-    <div style="font-size:.88rem;font-weight:700">Voir les statistiques</div>
-    <div style="font-size:.75rem;color:var(--muted);margin-top:4px">Analyse de vos envois</div>
-  </a>
+<div class="section-title">Répartition par plan</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:22px">
+  {% for key,p in plans.items() %}
+  {% set count=users|selectattr('plan','eq',key)|list|length %}
+  <div class="stat-card" style="text-align:center">
+    <div class="sc-val" style="font-size:1.6rem;{% if key=='free' %}color:var(--muted);-webkit-text-fill-color:var(--muted){% elif key=='starter' %}color:var(--neon);-webkit-text-fill-color:var(--neon){% elif key=='business' %}color:var(--orange);-webkit-text-fill-color:var(--orange){% else %}color:var(--yellow);-webkit-text-fill-color:var(--yellow){% endif %}">{{ count }}</div>
+    <div class="sc-lbl">{{ p.name }}</div>
+  </div>
+  {% endfor %}
 </div>
+
+<div class="section-title">Conditions actives</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+  {% if conditions %}{% for c in conditions if c.is_active %}
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:12px 15px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+    <div><div style="font-size:.84rem;font-weight:700">{{ c.title }}</div><div style="font-size:.72rem;color:var(--muted)">Plan: {{ c.plan or 'tous' }}</div></div>
+    <span class="pill pill-active">Actif</span>
+  </div>
+  {% else %}<div style="color:var(--muted);font-size:.83rem">Aucune condition active</div>{% endfor %}
+  {% else %}<div style="color:var(--muted);font-size:.83rem">Aucune condition créée</div>{% endif %}
+  <a href="/admin/conditions" class="btn btn-neon btn-sm" style="align-self:flex-start;margin-top:4px">Gérer les conditions →</a>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function validateUser(id,action,btn){
+  btn.disabled=true;
+  const r=await fetch(`/admin/users/${id}/validate`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});
+  const d=await r.json();
+  if(d.error){toast('❌ '+d.error);btn.disabled=false;return;}
+  toast(action==='approve'?'✅ Compte validé !':'❌ Compte refusé');
+  setTimeout(()=>location.reload(),800);
+}
+</script>
 {% endblock %}
