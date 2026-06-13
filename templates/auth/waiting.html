@@ -21,8 +21,10 @@ html,body{min-height:100%;font-family:'Inter',system-ui,sans-serif;background:va
 .steps strong{color:var(--white);display:block;margin-bottom:6px;font-size:.85rem}
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;border-radius:var(--rs);font-size:.9rem;font-weight:700;cursor:pointer;border:none;transition:all .15s;width:100%;text-decoration:none;margin-bottom:10px;}
 .btn-neon{background:linear-gradient(135deg,var(--neon2),var(--neon));color:#000;box-shadow:0 0 20px rgba(0,180,255,.2);}
+.btn-neon:hover{transform:translateY(-2px);box-shadow:0 0 30px rgba(0,180,255,.4);}
 .btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--muted);}
 .btn-ghost:hover{border-color:var(--neon);color:var(--neon);}
+.btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
 .status-box{padding:10px 14px;border-radius:var(--rs);font-size:.82rem;font-weight:600;margin-bottom:16px;display:none;}
 .status-ok{background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.2);color:var(--success);}
 .status-err{background:rgba(255,51,102,.08);border:1px solid rgba(255,51,102,.2);color:var(--danger);}
@@ -57,53 +59,106 @@ html,body{min-height:100%;font-family:'Inter',system-ui,sans-serif;background:va
 </div>
 
 <script>
+// Récupérer l'état depuis la session au chargement
+document.addEventListener('DOMContentLoaded', function() {
+    // Vérifier automatiquement au chargement
+    checkStatus();
+});
+
 async function checkStatus() {
   const btn = document.getElementById('btnCheck');
   const box = document.getElementById('statusBox');
-  btn.innerHTML = '<span class="spinner"></span> Vérification…';
-  btn.disabled = true;
-  box.style.display = 'none';
+  
+  if (btn) {
+    btn.innerHTML = '<span class="spinner"></span> Vérification…';
+    btn.disabled = true;
+  }
+  if (box) box.style.display = 'none';
 
   try {
     const r = await fetch('/check-status');
     const data = await r.json();
 
     if (data.status === 'active') {
-      box.className = 'status-box status-ok';
-      box.textContent = '✅ Votre compte est activé ! Redirection…';
-      box.style.display = 'block';
-      document.getElementById('mainIco').textContent = '🎉';
-      document.getElementById('mainTitle').textContent = 'Compte activé !';
-      setTimeout(() => window.location.href = data.is_admin ? '/admin' : '/dashboard', 1200);
-    } else if (data.status === 'rejected') {
-      box.className = 'status-box status-err';
-      box.textContent = '❌ Votre compte a été refusé. Contactez l\'admin.';
-      box.style.display = 'block';
-      btn.innerHTML = '🔄 Vérifier mon statut';
-      btn.disabled = false;
-    } else if (data.status === 'pending') {
-      box.className = 'status-box status-err';
-      box.textContent = '⏳ Toujours en attente de validation…';
-      box.style.display = 'block';
-      btn.innerHTML = '🔄 Vérifier mon statut';
-      btn.disabled = false;
-    } else if (data.redirect) {
+      if (box) {
+        box.className = 'status-box status-ok';
+        box.textContent = '✅ Votre compte est activé ! Redirection…';
+        box.style.display = 'block';
+      }
+      const mainIco = document.getElementById('mainIco');
+      const mainTitle = document.getElementById('mainTitle');
+      if (mainIco) mainIco.textContent = '🎉';
+      if (mainTitle) mainTitle.textContent = 'Compte activé !';
+      setTimeout(() => {
+        window.location.href = data.redirect || (data.is_admin ? '/admin' : '/dashboard');
+      }, 1200);
+    } 
+    else if (data.status === 'rejected') {
+      if (box) {
+        box.className = 'status-box status-err';
+        box.textContent = '❌ Votre compte a été refusé. Contactez l\'admin.';
+        box.style.display = 'block';
+      }
+      if (btn) {
+        btn.innerHTML = '🔄 Vérifier mon statut';
+        btn.disabled = false;
+      }
+      // Changer l'icône et le titre
+      const mainIco = document.getElementById('mainIco');
+      const mainTitle = document.getElementById('mainTitle');
+      if (mainIco) mainIco.textContent = '❌';
+      if (mainTitle) mainTitle.textContent = 'Compte refusé';
+    } 
+    else if (data.status === 'pending') {
+      if (box) {
+        box.className = 'status-box status-err';
+        box.textContent = '⏳ Toujours en attente de validation par l\'administrateur…';
+        box.style.display = 'block';
+      }
+      if (btn) {
+        btn.innerHTML = '🔄 Vérifier mon statut';
+        btn.disabled = false;
+      }
+    } 
+    else if (data.redirect) {
+      // Pas de session, rediriger vers login
       window.location.href = data.redirect;
-    } else {
+    } 
+    else {
+      if (box) {
+        box.className = 'status-box status-err';
+        box.textContent = data.error || '❌ Erreur — réessayez';
+        box.style.display = 'block';
+      }
+      if (btn) {
+        btn.innerHTML = '🔄 Vérifier mon statut';
+        btn.disabled = false;
+      }
+    }
+  } catch(e) {
+    console.error('Erreur:', e);
+    if (box) {
       box.className = 'status-box status-err';
-      box.textContent = data.error || '❌ Erreur — réessayez';
+      box.textContent = '❌ Erreur réseau — réessayez';
       box.style.display = 'block';
+    }
+    if (btn) {
       btn.innerHTML = '🔄 Vérifier mon statut';
       btn.disabled = false;
     }
-  } catch(e) {
-    box.className = 'status-box status-err';
-    box.textContent = '❌ Erreur réseau — réessayez';
-    box.style.display = 'block';
-    btn.innerHTML = '🔄 Vérifier mon statut';
-    btn.disabled = false;
   }
 }
+
+// Vérifier toutes les 10 secondes automatiquement
+let interval = setInterval(() => {
+  // Ne vérifier que si on est toujours sur la page et toujours en attente
+  const mainTitle = document.getElementById('mainTitle');
+  if (mainTitle && mainTitle.textContent === 'Compte en attente') {
+    checkStatus();
+  } else {
+    clearInterval(interval);
+  }
+}, 10000);
 </script>
 </body>
 </html>
