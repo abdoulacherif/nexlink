@@ -2,52 +2,34 @@
 {% block title %}Plans{% endblock %}
 {% block page_title %}Gestion des Plans{% endblock %}
 {% block page_sub %}Modifiez les limites et prix en temps réel{% endblock %}
-
 {% block content %}
-<div style="background:rgba(255,107,0,.06);border:1px solid rgba(255,107,0,.15);border-radius:var(--r);padding:16px 20px;margin-bottom:24px;font-size:.85rem;color:var(--muted)">
-  ⚠️ Les modifications de plans prennent effet immédiatement pour tous les utilisateurs concernés.
+<div style="background:rgba(255,107,0,.06);border:1px solid rgba(255,107,0,.15);border-radius:var(--r);padding:14px 18px;margin-bottom:22px;font-size:.83rem;color:var(--muted)">
+  ⚠️ Les modifications prennent effet immédiatement pour tous les utilisateurs.
 </div>
-
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px">
-  {% for key, p in plans.items() %}
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px">
+  {% for key,p in plans.items() %}
   <div class="card">
     <div class="card-header">
-      <h3 style="
-        {% if key=='free' %}color:var(--muted)
-        {% elif key=='starter' %}color:var(--neon)
-        {% elif key=='business' %}color:var(--orange)
-        {% else %}color:var(--yellow){% endif %}">
-        {{ p.name }}
-      </h3>
-      <span style="font-size:.75rem;font-weight:700;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:3px 8px">{{ key }}</span>
+      <h3 style="{% if key=='free' %}color:var(--muted){% elif key=='starter' %}color:var(--neon){% elif key=='business' %}color:var(--orange){% else %}color:var(--yellow){% endif %}">{{ p.name }}</h3>
+      <span style="font-size:.72rem;font-weight:700;background:var(--card2);border:1px solid var(--border);border-radius:5px;padding:2px 8px">{{ key }}</span>
     </div>
     <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
-      <div class="fgroup">
-        <label>Prix (FCFA/mois)</label>
-        <input type="number" id="price-{{ key }}" value="{{ p.price }}" min="0" step="500">
-      </div>
-      <div class="fgroup">
-        <label>Emails/jour (-1 = illimité)</label>
-        <input type="number" id="limit-{{ key }}" value="{{ p.emails_per_day }}" min="-1">
-      </div>
+      <div class="fgroup"><label>Prix (FCFA/mois)</label><input type="number" id="price-{{ key }}" value="{{ p.price }}" min="0" step="500"></div>
+      <div class="fgroup"><label>Emails/jour (-1 = illimité)</label><input type="number" id="limit-{{ key }}" value="{{ p.emails_per_day }}" min="-1"></div>
       <button class="btn btn-neon btn-sm" onclick="savePlan('{{ key }}')">💾 Sauvegarder</button>
     </div>
   </div>
   {% endfor %}
 </div>
 {% endblock %}
-
 {% block scripts %}
 <script>
-async function savePlan(key) {
-  const price = document.getElementById('price-'+key).value;
-  const limit = document.getElementById('limit-'+key).value;
-  const r = await fetch('/admin/plans', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({key, price: parseInt(price), emails_per_day: parseInt(limit)})
-  });
-  const data = await r.json();
-  toast(data.error ? '❌ '+data.error : '✅ Plan mis à jour !');
+async function savePlan(key){
+  const price=document.getElementById('price-'+key).value;
+  const limit=document.getElementById('limit-'+key).value;
+  const r=await fetch('/admin/plans',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,price:parseInt(price),emails_per_day:parseInt(limit)})});
+  const d=await r.json();
+  toast(d.error?'❌ '+d.error:'✅ Plan mis à jour !');
 }
 </script>
 {% endblock %}
