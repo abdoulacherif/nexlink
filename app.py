@@ -195,6 +195,31 @@ def register():
 def waiting():
     return render_template("auth/waiting.html")
 
+@app.route("/check-status")
+def check_status():
+    """Called from waiting.html to check if account is now active."""
+    # If already logged in, recheck profile from DB
+    if "user" in session:
+        user_id = session["user"]["id"]
+        profile = get_user_profile(user_id)
+        if not profile:
+            return jsonify({"error": "Profil introuvable"}), 404
+        status = profile.get("status", "pending")
+        is_admin = bool(profile.get("is_admin", False))
+        # Update session with fresh profile
+        session["profile"] = profile
+        session["is_admin"] = is_admin
+        if status == "active":
+            return jsonify({
+                "status": "active",
+                "is_admin": is_admin,
+                "redirect": "/admin" if is_admin else "/dashboard"
+            })
+        return jsonify({"status": status})
+
+    # Not logged in — ask them to login
+    return jsonify({"redirect": "/login"})
+
 @app.route("/logout")
 def logout():
     session.clear()
