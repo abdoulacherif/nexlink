@@ -4,30 +4,106 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NexLink · En attente</title>
-<link rel="stylesheet" href="/static/css/style.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#000;--card:#0d0d1a;--card2:#111120;--border:#1a1a2e;--border2:#252540;--neon:#00b4ff;--neon2:#0088ff;--orange:#ff6b00;--orange2:#ff8c00;--white:#fff;--muted:#6b7280;--success:#00ff88;--danger:#ff3366;--rs:8px;}
+html,body{min-height:100%;font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--white)}
+.page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden;}
+.page::before{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,180,255,.07) 0%,transparent 70%);top:-200px;left:-200px;}
+.page::after{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,0,.06) 0%,transparent 70%);bottom:-150px;right:-150px;}
+.box{background:var(--card);border:1px solid var(--border2);border-radius:18px;padding:36px 28px;width:100%;max-width:420px;position:relative;z-index:1;text-align:center;}
+.box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:18px 18px 0 0;background:linear-gradient(90deg,var(--neon),var(--orange));}
+.ico{font-size:3.5rem;margin-bottom:18px;display:block}
+.title{font-size:1.5rem;font-weight:900;margin-bottom:8px;letter-spacing:-0.5px}
+.sub{font-size:.85rem;color:var(--muted);margin-bottom:22px;line-height:1.6}
+.steps{background:var(--card2);border:1px solid var(--border);border-radius:var(--rs);padding:16px;text-align:left;font-size:.82rem;color:var(--muted);line-height:2.2;margin-bottom:22px;}
+.steps strong{color:var(--white);display:block;margin-bottom:6px;font-size:.85rem}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;border-radius:var(--rs);font-size:.9rem;font-weight:700;cursor:pointer;border:none;transition:all .15s;width:100%;text-decoration:none;margin-bottom:10px;}
+.btn-neon{background:linear-gradient(135deg,var(--neon2),var(--neon));color:#000;box-shadow:0 0 20px rgba(0,180,255,.2);}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--muted);}
+.btn-ghost:hover{border-color:var(--neon);color:var(--neon);}
+.status-box{padding:10px 14px;border-radius:var(--rs);font-size:.82rem;font-weight:600;margin-bottom:16px;display:none;}
+.status-ok{background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.2);color:var(--success);}
+.status-err{background:rgba(255,51,102,.08);border:1px solid rgba(255,51,102,.2);color:var(--danger);}
+.foot{margin-top:14px;font-size:.78rem;color:var(--muted)}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(0,0,0,.2);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
 </head>
 <body>
-<div class="auth-page">
-  <div class="auth-box" style="text-align:center">
-    <div style="font-size:4rem;margin-bottom:20px">⏳</div>
-    <div class="auth-title">Compte en attente</div>
-    <div class="auth-sub" style="margin-bottom:24px">
-      Votre demande a bien été reçue. Notre équipe va examiner votre profil et valider votre compte dans les plus brefs délais.
+<div class="page">
+  <div class="box">
+    <span class="ico" id="mainIco">⏳</span>
+    <div class="title" id="mainTitle">Compte en attente</div>
+    <div class="sub">Votre demande a bien été reçue. Notre équipe va examiner votre profil et valider votre compte dans les plus brefs délais.</div>
+
+    <div class="status-box" id="statusBox"></div>
+
+    <div class="steps">
+      <strong>📋 Prochaines étapes :</strong>
+      ✅ Votre inscription a été soumise<br>
+      ⏳ L'admin examine votre demande<br>
+      📧 Vous recevrez une confirmation<br>
+      🚀 Accès à votre tableau de bord
     </div>
-    <div style="background:var(--card2);border:1px solid var(--border);border-radius:var(--rs);padding:16px;text-align:left;font-size:.82rem;color:var(--muted);line-height:1.8;margin-bottom:20px">
-      <div style="font-weight:700;color:var(--white);margin-bottom:8px">📋 Prochaines étapes :</div>
-      <div>✅ Votre inscription a été soumise</div>
-      <div>⏳ L'admin examine votre demande</div>
-      <div>📧 Vous recevrez un email de confirmation</div>
-      <div>🚀 Accès à votre tableau de bord</div>
-    </div>
-    <a href="/login" class="btn btn-neon" style="width:100%;justify-content:center">
-      Vérifier mon accès
-    </a>
-    <div style="margin-top:16px;font-size:.78rem;color:var(--muted)">
-      Des questions ? Contactez-nous sur WhatsApp
-    </div>
+
+    <button class="btn btn-neon" id="btnCheck" onclick="checkStatus()">
+      🔄 Vérifier mon statut
+    </button>
+    <a href="/login" class="btn btn-ghost">Se connecter →</a>
+    <div class="foot">Des questions ? Contactez-nous sur WhatsApp</div>
   </div>
 </div>
+
+<script>
+async function checkStatus() {
+  const btn = document.getElementById('btnCheck');
+  const box = document.getElementById('statusBox');
+  btn.innerHTML = '<span class="spinner"></span> Vérification…';
+  btn.disabled = true;
+  box.style.display = 'none';
+
+  try {
+    const r = await fetch('/check-status');
+    const data = await r.json();
+
+    if (data.status === 'active') {
+      box.className = 'status-box status-ok';
+      box.textContent = '✅ Votre compte est activé ! Redirection…';
+      box.style.display = 'block';
+      document.getElementById('mainIco').textContent = '🎉';
+      document.getElementById('mainTitle').textContent = 'Compte activé !';
+      setTimeout(() => window.location.href = data.is_admin ? '/admin' : '/dashboard', 1200);
+    } else if (data.status === 'rejected') {
+      box.className = 'status-box status-err';
+      box.textContent = '❌ Votre compte a été refusé. Contactez l\'admin.';
+      box.style.display = 'block';
+      btn.innerHTML = '🔄 Vérifier mon statut';
+      btn.disabled = false;
+    } else if (data.status === 'pending') {
+      box.className = 'status-box status-err';
+      box.textContent = '⏳ Toujours en attente de validation…';
+      box.style.display = 'block';
+      btn.innerHTML = '🔄 Vérifier mon statut';
+      btn.disabled = false;
+    } else if (data.redirect) {
+      window.location.href = data.redirect;
+    } else {
+      box.className = 'status-box status-err';
+      box.textContent = data.error || '❌ Erreur — réessayez';
+      box.style.display = 'block';
+      btn.innerHTML = '🔄 Vérifier mon statut';
+      btn.disabled = false;
+    }
+  } catch(e) {
+    box.className = 'status-box status-err';
+    box.textContent = '❌ Erreur réseau — réessayez';
+    box.style.display = 'block';
+    btn.innerHTML = '🔄 Vérifier mon statut';
+    btn.disabled = false;
+  }
+}
+</script>
 </body>
 </html>
