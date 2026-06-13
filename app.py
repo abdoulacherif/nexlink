@@ -15,6 +15,7 @@ app.permanent_session_lifetime = 86400  # 24 hours
 
 # ── SUPABASE (lazy init) ───────────────────────────────────────
 _supabase = None
+_supabase_admin = None
 
 def get_supabase():
     global _supabase
@@ -25,6 +26,16 @@ def get_supabase():
         if url and key:
             _supabase = create_client(url, key)
     return _supabase
+
+def get_supabase_admin():
+    global _supabase_admin
+    if _supabase_admin is None:
+        from supabase import create_client
+        url = os.environ.get("SUPABASE_URL", "")
+        key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "") or os.environ.get("SUPABASE_ANON_KEY", "")
+        if url and key:
+            _supabase_admin = create_client(url, key)
+    return _supabase_admin
 
 # ── PLANS ─────────────────────────────────────────────────────
 PLANS = {
@@ -55,12 +66,31 @@ def admin_required(f):
 
 def get_user_profile(user_id):
     try:
+        sb_admin = get_supabase_admin()
+        if sb_admin:
+            r = sb_admin.table("profiles").select("*").eq("id", user_id).execute()
+            if r.data and len(r.data) > 0:
+                return r.data[0]
+        
         sb = get_supabase()
-        if not sb:
-            return None
-        r = sb.table("profiles").select("*").eq("id", user_id).single().execute()
-        return r.data
-    except:
+        if sb:
+            r = sb.table("profiles").select("*").eq("id", user_id).execute()
+            if r.data and len(r.data) > 0:
+                return r.data[0]
+        return None
+    except Exception as e:
+        print(f"Erreur get_user_profile: {e}")
+        return None
+
+def update_user_profile(user_id, data):
+    try:
+        sb_admin = get_supabase_admin()
+        if sb_admin:
+            r = sb_admin.table("profiles").update(data).eq("id", user_id).execute()
+            return r.data[0] if r.data else None
+        return None
+    except Exception as e:
+        print(f"Erreur update_user_profile: {e}")
         return None
 
 def get_conditions():
@@ -136,6 +166,10 @@ def login():
         session["user"] = {"id": user.id, "email": user.email}
         session["profile"] = profile
         session["is_admin"] = bool(profile.get("is_admin", False))
+        
+        # Stocker le token Supabase
+        if hasattr(r, 'session') and r.session:
+            session["supabase_token"] = r.session.access_token
 
         return jsonify({"redirect": "/admin" if session["is_admin"] else "/dashboard"})
 
@@ -168,28 +202,25 @@ def register():
             return jsonify({"error": "Erreur de configuration serveur"}), 500
 
         # Créer l'utilisateur
-        r = sb.auth.sign_up({"email": email, "password": password})
+        r = sb.auth.sign_up({
+            "email": email,
+            "password": password,
+            "options": {
+                "data": {
+                    "name": name,
+                    "whatsapp": whatsapp,
+                    "plan": plan
+                }
+            }
+        })
+        
         user = r.user
         if not user:
             return jsonify({"error": "Erreur lors de la création du compte"}), 400
 
-        # Créer le profil
-        sb.table("profiles").insert({
-            "id": user.id,
-            "name": name,
-            "email": email,
-            "whatsapp": whatsapp,
-            "reason": reason,
-            "status": "pending",
-            "plan": plan,
-            "is_admin": False,
-            "emails_sent_today": 0,
-        }).execute()
-
-        # 🔥 CONNECTER L'UTILISATEUR IMMÉDIATEMENT 🔥
-        session.permanent = True
-        session["user"] = {"id": user.id, "email": user.email}
-        session["profile"] = {
+        # Créer le profil avec admin client (bypass RLS)
+        sb_admin = get_supabase_admin()
+        profile_data = {
             "id": user.id,
             "name": name,
             "email": email,
@@ -200,18 +231,43 @@ def register():
             "is_admin": False,
             "emails_sent_today": 0,
         }
-        session["is_admin"] = False
+        
+        if sb_admin:
+            sb_admin.table("profiles").insert(profile_data).execute()
+        else:
+            # Fallback avec le client normal
+            sb.table("profiles").insert(profile_data).execute()
+
+        # Se connecter automatiquement
+        try:
+            login_r = sb.auth.sign_in_with_password({"email": email, "password": password})
+            session.permanent = True
+            session["user"] = {"id": user.id, "email": user.email}
+            session["profile"] = profile_data
+            session["is_admin"] = False
+            
+            if hasattr(login_r, 'session') and login_r.session:
+                session["supabase_token"] = login_r.session.access_token
+        except Exception as login_err:
+            print(f"Erreur auto-login: {login_err}")
+            session["user"] = {"id": user.id, "email": user.email}
+            session["profile"] = profile_data
+            session["is_admin"] = False
 
         return jsonify({"success": True, "redirect": "/waiting"})
 
     except Exception as e:
         err = str(e)
+        print(f"Erreur register: {err}")
         if "already registered" in err.lower() or "already exists" in err.lower():
             return jsonify({"error": "Cet email est déjà utilisé"}), 400
         return jsonify({"error": f"Erreur: {err}"}), 400
 
 @app.route("/waiting")
 def waiting():
+    # Vérifier si l'utilisateur a une session
+    if "user" not in session:
+        return redirect(url_for("login"))
     return render_template("auth/waiting.html")
 
 @app.route("/check-status")
@@ -220,23 +276,41 @@ def check_status():
     
     # Vérifier si l'utilisateur est connecté
     if "user" not in session:
-        # Pas de session -> rediriger vers login
         return jsonify({"redirect": "/login", "status": "no_session"})
     
     user_id = session["user"]["id"]
-    profile = get_user_profile(user_id)
     
-    if not profile:
-        # Profil introuvable -> déconnecter
-        session.clear()
-        return jsonify({"redirect": "/login", "error": "Profil introuvable"}), 404
+    try:
+        # Utiliser admin client pour contourner RLS
+        sb_admin = get_supabase_admin()
+        if sb_admin:
+            r = sb_admin.table("profiles").select("*").eq("id", user_id).execute()
+            if r.data and len(r.data) > 0:
+                profile = r.data[0]
+                status = profile.get("status", "pending")
+                is_admin = bool(profile.get("is_admin", False))
+                
+                # Mettre à jour la session
+                session["profile"] = profile
+                session["is_admin"] = is_admin
+                
+                if status == "active":
+                    return jsonify({
+                        "status": "active",
+                        "is_admin": is_admin,
+                        "redirect": "/admin" if is_admin else "/dashboard"
+                    })
+                elif status == "rejected":
+                    return jsonify({"status": "rejected"})
+                else:
+                    return jsonify({"status": "pending"})
+    except Exception as e:
+        print(f"Erreur check-status: {e}")
     
+    # Fallback avec la session
+    profile = session.get("profile", {})
     status = profile.get("status", "pending")
-    is_admin = bool(profile.get("is_admin", False))
-    
-    # Mettre à jour la session avec les dernières infos
-    session["profile"] = profile
-    session["is_admin"] = is_admin
+    is_admin = session.get("is_admin", False)
     
     if status == "active":
         return jsonify({
@@ -245,13 +319,9 @@ def check_status():
             "redirect": "/admin" if is_admin else "/dashboard"
         })
     elif status == "rejected":
-        return jsonify({
-            "status": "rejected"
-        })
-    else:  # pending
-        return jsonify({
-            "status": "pending"
-        })
+        return jsonify({"status": "rejected"})
+    else:
+        return jsonify({"status": "pending"})
 
 @app.route("/logout")
 def logout():
@@ -462,18 +532,19 @@ def api_tags():
 @app.route("/admin")
 @admin_required
 def admin_dashboard():
-    sb = get_supabase()
+    sb_admin = get_supabase_admin()
     users, pending, total_users, total_emails, conditions = [], [], 0, 0, []
     try:
-        users_r = sb.table("profiles").select("*").execute()
-        users = users_r.data or []
-        total_users = len(users)
-        pending = [u for u in users if u.get("status") == "pending"]
-        logs_r = sb.table("email_logs").select("id", count="exact").execute()
-        total_emails = logs_r.count or 0
+        if sb_admin:
+            users_r = sb_admin.table("profiles").select("*").execute()
+            users = users_r.data or []
+            total_users = len(users)
+            pending = [u for u in users if u.get("status") == "pending"]
+            logs_r = sb_admin.table("email_logs").select("id", count="exact").execute()
+            total_emails = logs_r.count or 0
         conditions = get_conditions()
-    except:
-        pass
+    except Exception as e:
+        print(f"Erreur admin_dashboard: {e}")
     return render_template("admin/dashboard.html",
         users=users, pending=pending,
         total_users=total_users, total_emails=total_emails,
@@ -483,11 +554,12 @@ def admin_dashboard():
 @app.route("/admin/users")
 @admin_required
 def admin_users():
-    sb = get_supabase()
+    sb_admin = get_supabase_admin()
     users = []
     try:
-        r = sb.table("profiles").select("*").order("created_at", desc=True).execute()
-        users = r.data or []
+        if sb_admin:
+            r = sb_admin.table("profiles").select("*").order("created_at", desc=True).execute()
+            users = r.data or []
     except:
         pass
     return render_template("admin/users.html", users=users, plans=PLANS)
@@ -499,9 +571,11 @@ def admin_validate_user(user_id):
     action = data.get("action")
     status = "active" if action == "approve" else "rejected"
     try:
-        sb = get_supabase()
-        sb.table("profiles").update({"status": status}).eq("id", user_id).execute()
-        return jsonify({"success": True, "status": status})
+        sb_admin = get_supabase_admin()
+        if sb_admin:
+            sb_admin.table("profiles").update({"status": status}).eq("id", user_id).execute()
+            return jsonify({"success": True, "status": status})
+        return jsonify({"error": "Erreur de connexion"}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -513,9 +587,11 @@ def admin_change_plan(user_id):
     if plan not in PLANS:
         return jsonify({"error": "Plan invalide"}), 400
     try:
-        sb = get_supabase()
-        sb.table("profiles").update({"plan": plan}).eq("id", user_id).execute()
-        return jsonify({"success": True})
+        sb_admin = get_supabase_admin()
+        if sb_admin:
+            sb_admin.table("profiles").update({"plan": plan}).eq("id", user_id).execute()
+            return jsonify({"success": True})
+        return jsonify({"error": "Erreur de connexion"}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -531,6 +607,8 @@ def admin_create_condition():
     data = request.get_json() or {}
     try:
         sb = get_supabase()
+        if not sb:
+            return jsonify({"error": "Erreur de connexion"}), 500
         r = sb.table("conditions").insert({
             "title": data.get("title"),
             "description": data.get("description"),
@@ -547,6 +625,9 @@ def admin_create_condition():
 @admin_required
 def admin_update_condition(cond_id):
     sb = get_supabase()
+    if not sb:
+        return jsonify({"error": "Erreur de connexion"}), 500
+    
     if request.method == "DELETE":
         try:
             sb.table("conditions").delete().eq("id", cond_id).execute()
@@ -580,6 +661,24 @@ def admin_plans():
                 PLANS[plan_key]["price"] = int(data["price"])
         return jsonify({"success": True, "plans": PLANS})
     return render_template("admin/plans.html", plans=PLANS)
+
+# ── DEBUG ROUTE ─────────────────────────────────────────────
+@app.route("/debug-session")
+def debug_session():
+    """Route temporaire pour debug"""
+    if "user" not in session:
+        return jsonify({"logged_in": False})
+    
+    user_id = session["user"]["id"]
+    profile = get_user_profile(user_id)
+    
+    return jsonify({
+        "logged_in": True,
+        "user_id": user_id,
+        "session_profile": session.get("profile"),
+        "db_profile": profile,
+        "is_admin": session.get("is_admin")
+    })
 
 # ── ERROR HANDLERS ─────────────────────────────────────────────
 @app.errorhandler(404)
