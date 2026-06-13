@@ -11,6 +11,7 @@ except:
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "nexlink-secret-2025")
+app.permanent_session_lifetime = 86400  # 24 hours
 
 # ── SUPABASE (lazy init) ───────────────────────────────────────
 _supabase = None
@@ -166,11 +167,13 @@ def register():
         if not sb:
             return jsonify({"error": "Erreur de configuration serveur"}), 500
 
+        # Créer l'utilisateur
         r = sb.auth.sign_up({"email": email, "password": password})
         user = r.user
         if not user:
             return jsonify({"error": "Erreur lors de la création du compte"}), 400
 
+        # Créer le profil
         sb.table("profiles").insert({
             "id": user.id,
             "name": name,
@@ -182,6 +185,22 @@ def register():
             "is_admin": False,
             "emails_sent_today": 0,
         }).execute()
+
+        # 🔥 CONNECTER L'UTILISATEUR IMMÉDIATEMENT 🔥
+        session.permanent = True
+        session["user"] = {"id": user.id, "email": user.email}
+        session["profile"] = {
+            "id": user.id,
+            "name": name,
+            "email": email,
+            "whatsapp": whatsapp,
+            "reason": reason,
+            "status": "pending",
+            "plan": plan,
+            "is_admin": False,
+            "emails_sent_today": 0,
+        }
+        session["is_admin"] = False
 
         return jsonify({"success": True, "redirect": "/waiting"})
 
@@ -198,27 +217,41 @@ def waiting():
 @app.route("/check-status")
 def check_status():
     """Called from waiting.html to check if account is now active."""
-    # If already logged in, recheck profile from DB
-    if "user" in session:
-        user_id = session["user"]["id"]
-        profile = get_user_profile(user_id)
-        if not profile:
-            return jsonify({"error": "Profil introuvable"}), 404
-        status = profile.get("status", "pending")
-        is_admin = bool(profile.get("is_admin", False))
-        # Update session with fresh profile
-        session["profile"] = profile
-        session["is_admin"] = is_admin
-        if status == "active":
-            return jsonify({
-                "status": "active",
-                "is_admin": is_admin,
-                "redirect": "/admin" if is_admin else "/dashboard"
-            })
-        return jsonify({"status": status})
-
-    # Not logged in — ask them to login
-    return jsonify({"redirect": "/login"})
+    
+    # Vérifier si l'utilisateur est connecté
+    if "user" not in session:
+        # Pas de session -> rediriger vers login
+        return jsonify({"redirect": "/login", "status": "no_session"})
+    
+    user_id = session["user"]["id"]
+    profile = get_user_profile(user_id)
+    
+    if not profile:
+        # Profil introuvable -> déconnecter
+        session.clear()
+        return jsonify({"redirect": "/login", "error": "Profil introuvable"}), 404
+    
+    status = profile.get("status", "pending")
+    is_admin = bool(profile.get("is_admin", False))
+    
+    # Mettre à jour la session avec les dernières infos
+    session["profile"] = profile
+    session["is_admin"] = is_admin
+    
+    if status == "active":
+        return jsonify({
+            "status": "active",
+            "is_admin": is_admin,
+            "redirect": "/admin" if is_admin else "/dashboard"
+        })
+    elif status == "rejected":
+        return jsonify({
+            "status": "rejected"
+        })
+    else:  # pending
+        return jsonify({
+            "status": "pending"
+        })
 
 @app.route("/logout")
 def logout():
