@@ -2,68 +2,40 @@
 {% block title %}NexLink · Tags{% endblock %}
 {% block page_title %}Tags{% endblock %}
 {% block page_sub %}Organisez vos contacts{% endblock %}
-
 {% block topbar_actions %}
 <button class="btn btn-neon btn-sm" id="btnNewTag">➕ Nouveau tag</button>
 {% endblock %}
-
 {% block content %}
 <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
-  <div class="stat-card">
-    <div class="sc-top" style="background:linear-gradient(90deg,var(--neon),#60efff)"></div>
-    <span class="sc-ico">🏷️</span>
-    <div class="sc-val v-neon">{{ user_tags|length + 4 }}</div>
-    <div class="sc-lbl">Tags créés</div>
-  </div>
-  <div class="stat-card">
-    <div class="sc-top" style="background:linear-gradient(90deg,var(--orange),var(--orange2))"></div>
-    <span class="sc-ico">📂</span>
-    <div class="sc-val v-orange">4</div>
-    <div class="sc-lbl">Tags prédéfinis</div>
-  </div>
-  <div class="stat-card">
-    <div class="sc-top" style="background:var(--border)"></div>
-    <span class="sc-ico">✨</span>
-    <div class="sc-val v-white">{{ user_tags|length }}</div>
-    <div class="sc-lbl">Tags personnalisés</div>
-  </div>
+  <div class="stat-card"><div class="sc-top" style="background:linear-gradient(90deg,var(--neon),#60efff)"></div><span class="sc-ico">🏷️</span><div class="sc-val v-neon">{{ user_tags|length + 4 }}</div><div class="sc-lbl">Tags créés</div></div>
+  <div class="stat-card"><div class="sc-top" style="background:linear-gradient(90deg,var(--orange),var(--orange2))"></div><span class="sc-ico">📂</span><div class="sc-val v-orange">4</div><div class="sc-lbl">Prédéfinis</div></div>
+  <div class="stat-card"><div class="sc-top" style="background:var(--border)"></div><span class="sc-ico">✨</span><div class="sc-val v-white">{{ user_tags|length }}</div><div class="sc-lbl">Personnalisés</div></div>
 </div>
 
 <div class="section-title">Tags prédéfinis</div>
 <div class="card" style="margin-bottom:16px">
   <div class="card-body" style="display:flex;flex-wrap:wrap;gap:10px">
-    <div style="display:flex;align-items:center;gap:8px;background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.25);border-radius:20px;padding:8px 16px;font-size:.85rem;font-weight:700;color:var(--success)">
-      Client
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;background:rgba(0,180,255,.08);border:1px solid rgba(0,180,255,.25);border-radius:20px;padding:8px 16px;font-size:.85rem;font-weight:700;color:var(--neon)">
-      Prospect
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;background:rgba(255,140,0,.08);border:1px solid rgba(255,140,0,.25);border-radius:20px;padding:8px 16px;font-size:.85rem;font-weight:700;color:var(--orange2)">
-      ⭐ VIP
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;background:rgba(255,51,102,.08);border:1px solid rgba(255,51,102,.25);border-radius:20px;padding:8px 16px;font-size:.85rem;font-weight:700;color:var(--danger)">
-      🔥 Lead
-    </div>
+    <div style="display:flex;align-items:center;gap:8px;background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.25);border-radius:20px;padding:8px 16px;font-size:.85rem;font-weight:700;color:var(--success)">Client</div>
+    <div style="display:flex;align-items:center;gap:8px;background:rgba(0,180,255,.08);border:1px solid rgba(0,180,255,.25);border-radius:20px;padding:8px 16px;font-size:.85rem;font-weight:700;color:var(--neon)">Prospect</div>
+    <div style="display:flex;align-items:center;gap:8px;background:rgba(255,140,0,.08);border:1px solid rgba(255,140,0,.25);border-radius:20px;padding:8px 16px;font-size:.85rem;font-weight:700;color:var(--orange2)">⭐ VIP</div>
+    <div style="display:flex;align-items:center;gap:8px;background:rgba(255,51,102,.08);border:1px solid rgba(255,51,102,.25);border-radius:20px;padding:8px 16px;font-size:.85rem;font-weight:700;color:var(--danger)">🔥 Lead</div>
   </div>
 </div>
 
 <div class="section-title">Tags personnalisés</div>
 <div class="card">
-  <div class="card-header">
-    <h3>Vos tags</h3>
-    <button class="btn btn-neon btn-sm" id="btnNewTag2">+ Créer</button>
-  </div>
+  <div class="card-header"><h3>Vos tags</h3><button class="btn btn-neon btn-sm" id="btnNewTag2">+ Créer</button></div>
   <div class="card-body">
     <div id="customTagList" style="display:flex;flex-wrap:wrap;gap:10px">
       {% if user_tags %}
         {% for tag in user_tags %}
         <div style="display:flex;align-items:center;gap:8px;background:{{ tag.color }}18;border:1px solid {{ tag.color }}40;border-radius:20px;padding:8px 16px;font-size:.85rem;font-weight:700;color:{{ tag.color }}">
           {{ tag.name }}
-          <button onclick="deleteTag('{{ tag.id }}')" style="background:none;border:none;cursor:pointer;color:inherit;opacity:.6;padding:0 0 0 4px;font-size:.8rem">✕</button>
+          <button onclick="deleteTag('{{ tag.id }}')" style="background:none;border:none;cursor:pointer;color:inherit;opacity:.6;font-size:.8rem">✕</button>
         </div>
         {% endfor %}
       {% else %}
-      <div style="color:var(--muted);font-size:.85rem">Aucun tag personnalisé — créez-en un !</div>
+      <div style="color:var(--muted);font-size:.84rem">Aucun tag personnalisé — créez-en un !</div>
       {% endif %}
     </div>
   </div>
@@ -71,15 +43,9 @@
 
 <!-- MODAL NEW TAG -->
 <div class="moverlay" id="mNewTag">
-  <div class="modal" style="max-width:380px">
-    <div class="modal-header">
-      <h2>🏷️ Nouveau tag</h2>
-      <button class="modal-close" data-close="mNewTag">✕</button>
-    </div>
-    <div class="fgroup">
-      <label>Nom du tag</label>
-      <input type="text" id="tagName" placeholder="Ex: Partenaire, VIP2…">
-    </div>
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header"><h2>🏷️ Nouveau tag</h2><button class="modal-close" data-close="mNewTag">✕</button></div>
+    <div class="fgroup"><label>Nom du tag</label><input type="text" id="tagName" placeholder="Ex: Partenaire, VIP2…"></div>
     <div class="fgroup">
       <label>Couleur</label>
       <div style="display:flex;gap:8px;flex-wrap:wrap" id="colorPicker">
@@ -94,43 +60,25 @@
     </div>
   </div>
 </div>
-
-<div class="toast" id="toast"></div>
 {% endblock %}
-
 {% block scripts %}
 <script>
-let selectedColor = '#a78bfa';
-document.querySelectorAll('#colorPicker div').forEach(el => {
-  if (el.dataset.color === selectedColor) el.style.border = '2px solid white';
+let selColor_val='#a78bfa';
+document.querySelectorAll('#colorPicker div')[0].style.border='2px solid white';
+function selColor(c,el){selColor_val=c;document.querySelectorAll('#colorPicker div').forEach(d=>d.style.border='2px solid transparent');el.style.border='2px solid white';}
+['btnNewTag','btnNewTag2'].forEach(id=>document.getElementById(id)?.addEventListener('click',()=>openModal('mNewTag')));
+document.getElementById('btnCreateTag').addEventListener('click',async()=>{
+  const name=document.getElementById('tagName').value.trim();
+  if(!name){toast('⚠️ Nom requis');return;}
+  const r=await fetch('/api/tags',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,color:selColor_val})});
+  const d=await r.json();
+  if(d.error){toast('❌ '+d.error);return;}
+  closeModal('mNewTag');toast('✅ Tag créé !');setTimeout(()=>location.reload(),500);
 });
-function selColor(c, el) {
-  selectedColor = c;
-  document.querySelectorAll('#colorPicker div').forEach(d => d.style.border = '2px solid transparent');
-  el.style.border = '2px solid white';
-}
-['btnNewTag','btnNewTag2'].forEach(id => {
-  document.getElementById(id)?.addEventListener('click', () => openModal('mNewTag'));
-});
-document.getElementById('btnCreateTag').addEventListener('click', async () => {
-  const name = document.getElementById('tagName').value.trim();
-  if (!name) { toast('⚠️ Nom requis'); return; }
-  const r = await fetch('/api/tags', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({name, color: selectedColor})
-  });
-  const data = await r.json();
-  if (data.error) { toast('❌ ' + data.error); return; }
-  closeModal('mNewTag');
-  toast('✅ Tag créé !');
-  setTimeout(() => location.reload(), 500);
-});
-async function deleteTag(id) {
-  if (!confirm('Supprimer ce tag ?')) return;
-  await fetch(`/api/tags?id=${id}`, {method:'DELETE'});
-  toast('🗑️ Tag supprimé');
-  setTimeout(() => location.reload(), 500);
+async function deleteTag(id){
+  if(!confirm('Supprimer ce tag ?'))return;
+  await fetch(`/api/tags?id=${id}`,{method:'DELETE'});
+  toast('🗑️ Tag supprimé');setTimeout(()=>location.reload(),500);
 }
 </script>
 {% endblock %}
