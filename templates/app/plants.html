@@ -1,53 +1,72 @@
-{% extends "admin/base_admin.html" %}
-{% block title %}Plans{% endblock %}
-{% block page_title %}Gestion des Plans{% endblock %}
-{% block page_sub %}Modifiez les limites et prix en temps réel{% endblock %}
-
+{% extends "base.html" %}
+{% block title %}NexLink · Plans{% endblock %}
+{% block page_title %}Plans & Tarifs{% endblock %}
+{% block page_sub %}Choisissez le plan adapté{% endblock %}
 {% block content %}
-<div style="background:rgba(255,107,0,.06);border:1px solid rgba(255,107,0,.15);border-radius:var(--r);padding:16px 20px;margin-bottom:24px;font-size:.85rem;color:var(--muted)">
-  ⚠️ Les modifications de plans prennent effet immédiatement pour tous les utilisateurs concernés.
+<div style="text-align:center;margin-bottom:28px">
+  <div style="font-size:1.8rem;font-weight:900;letter-spacing:-1px;margin-bottom:8px">Boostez votre <span style="background:linear-gradient(90deg,var(--neon),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent">audience 🔥</span></div>
+  <div style="color:var(--muted);font-size:.85rem">Paiement via Mobile Money · Activation sous 24h</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-bottom:28px">
+{% for key,p in plans.items() %}
+<div class="plan-card {% if key==current_plan %}featured{% endif %}" style="position:relative">
+  {% if key==current_plan %}<div style="position:absolute;top:14px;right:14px;background:var(--neon);color:#000;font-size:.62rem;font-weight:800;padding:3px 8px;border-radius:10px">ACTUEL</div>{% endif %}
+  {% if key=='business' and key!=current_plan %}<div style="position:absolute;top:14px;right:14px;background:var(--orange);color:#fff;font-size:.62rem;font-weight:800;padding:3px 8px;border-radius:10px">⭐ POPULAIRE</div>{% endif %}
+  <div style="font-size:.67rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;
+    {% if key=='free' %}color:var(--muted){% elif key=='starter' %}color:var(--neon){% elif key=='business' %}color:var(--orange){% else %}color:var(--yellow){% endif %}">{{ p.name }}</div>
+  <div class="plan-price">
+    <span class="amount" style="{% if key=='free' %}color:var(--muted);-webkit-text-fill-color:var(--muted){% elif key=='starter' %}background:linear-gradient(90deg,var(--neon),#60efff);-webkit-background-clip:text;-webkit-text-fill-color:transparent{% elif key=='business' %}background:linear-gradient(90deg,var(--orange),var(--orange2));-webkit-background-clip:text;-webkit-text-fill-color:transparent{% else %}background:linear-gradient(90deg,var(--yellow),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent{% endif %}">
+      {% if p.price==0 %}Gratuit{% else %}{{ "{:,}".format(p.price)|replace(',',' ') }} F{% endif %}
+    </span>
+    {% if p.price>0 %}<span class="per">/mois</span>{% endif %}
+  </div>
+  <ul class="plan-features">
+    <li><span class="fi">✓</span> {% if p.emails_per_day==-1 %}Envois <b>illimités</b>{% else %}<b>{{ p.emails_per_day }}</b> emails/jour{% endif %}</li>
+    <li><span class="fi">✓</span> Filtrage par pays</li>
+    {% if key!='free' %}<li><span class="fi">✓</span> Import CSV</li>{% endif %}
+    {% if key in ['business','elite'] %}<li><span class="fi">✓</span> Tags avancés</li><li><span class="fi">✓</span> Statistiques</li>{% endif %}
+    {% if key=='elite' %}<li><span class="fi">✓</span> Support prioritaire</li>{% endif %}
+  </ul>
+  {% if key==current_plan %}
+  <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center" disabled>✅ Plan actuel</button>
+  {% else %}
+  <button class="btn {% if key=='free' %}btn-ghost{% elif key=='starter' %}btn-neon{% elif key=='business' %}btn-orange{% else %}btn-success{% endif %} btn-sm" style="width:100%;justify-content:center" onclick="selectPlan('{{ key }}','{{ p.name }}','{{ p.price }}')">
+    {% if p.price==0 %}Rester gratuit{% else %}Choisir {{ p.name }}{% endif %}
+  </button>
+  {% endif %}
+</div>
+{% endfor %}
 </div>
 
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px">
-  {% for key, p in plans.items() %}
-  <div class="card">
-    <div class="card-header">
-      <h3 style="
-        {% if key=='free' %}color:var(--muted)
-        {% elif key=='starter' %}color:var(--neon)
-        {% elif key=='business' %}color:var(--orange)
-        {% else %}color:var(--yellow){% endif %}">
-        {{ p.name }}
-      </h3>
-      <span style="font-size:.75rem;font-weight:700;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:3px 8px">{{ key }}</span>
+<!-- MODAL PAIEMENT -->
+<div class="moverlay" id="mPlan">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header"><h2>💳 Passer au plan <span id="planName" style="color:var(--neon)"></span></h2><button class="modal-close" data-close="mPlan">✕</button></div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:14px;margin-bottom:4px">
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:4px">Montant</div>
+      <div id="planPrice" style="font-size:1.7rem;font-weight:900;background:linear-gradient(90deg,var(--neon),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent"></div>
     </div>
-    <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
-      <div class="fgroup">
-        <label>Prix (FCFA/mois)</label>
-        <input type="number" id="price-{{ key }}" value="{{ p.price }}" min="0" step="500">
-      </div>
-      <div class="fgroup">
-        <label>Emails/jour (-1 = illimité)</label>
-        <input type="number" id="limit-{{ key }}" value="{{ p.emails_per_day }}" min="-1">
-      </div>
-      <button class="btn btn-neon btn-sm" onclick="savePlan('{{ key }}')">💾 Sauvegarder</button>
+    <div class="fgroup"><label>Mode de paiement</label><select id="payMethod"><option value="wave">Wave</option><option value="orange">Orange Money</option><option value="mtn">MTN MoMo</option></select></div>
+    <div class="fgroup"><label>Votre numéro</label><input type="tel" id="payNumber" placeholder="+237 6XX XXX XXX"></div>
+    <div style="background:rgba(255,107,0,.06);border:1px solid rgba(255,107,0,.15);border-radius:var(--rs);padding:11px;font-size:.77rem;color:var(--muted)">📋 Après paiement, envoyez la capture à l'admin pour activation sous 24h.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" data-close="mPlan">Annuler</button>
+      <button class="btn btn-orange" onclick="submitPayment()">📤 Envoyer la demande</button>
     </div>
   </div>
-  {% endfor %}
 </div>
 {% endblock %}
-
 {% block scripts %}
 <script>
-async function savePlan(key) {
-  const price = document.getElementById('price-'+key).value;
-  const limit = document.getElementById('limit-'+key).value;
-  const r = await fetch('/admin/plans', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({key, price: parseInt(price), emails_per_day: parseInt(limit)})
-  });
-  const data = await r.json();
-  toast(data.error ? '❌ '+data.error : '✅ Plan mis à jour !');
+function selectPlan(key,name,price){
+  document.getElementById('planName').textContent=name;
+  document.getElementById('planPrice').textContent=parseInt(price).toLocaleString('fr-FR')+' FCFA/mois';
+  openModal('mPlan');
+}
+function submitPayment(){
+  const n=document.getElementById('payNumber').value.trim();
+  if(!n){toast('⚠️ Numéro requis');return;}
+  closeModal('mPlan');toast('✅ Demande envoyée ! Activation sous 24h.',4000);
 }
 </script>
 {% endblock %}
