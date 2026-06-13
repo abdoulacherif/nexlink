@@ -14,30 +14,10 @@
 
 {% block content %}
 <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
-  <div class="stat-card">
-    <div class="sc-top" style="background:linear-gradient(90deg,var(--neon),#60efff)"></div>
-    <span class="sc-ico">👥</span>
-    <div class="sc-val v-neon" id="sTotal">—</div>
-    <div class="sc-lbl">Total contacts</div>
-  </div>
-  <div class="stat-card">
-    <div class="sc-top" style="background:linear-gradient(90deg,var(--orange),var(--orange2))"></div>
-    <span class="sc-ico">🌍</span>
-    <div class="sc-val v-orange" id="sCountries">—</div>
-    <div class="sc-lbl">Pays</div>
-  </div>
-  <div class="stat-card">
-    <div class="sc-top" style="background:linear-gradient(90deg,var(--success),#00e5ff)"></div>
-    <span class="sc-ico">📧</span>
-    <div class="sc-val v-green">{{ plan.emails_per_day if plan.emails_per_day != -1 else '∞' }}</div>
-    <div class="sc-lbl">Limite/jour</div>
-  </div>
-  <div class="stat-card">
-    <div class="sc-top" style="background:var(--border)"></div>
-    <span class="sc-ico">✨</span>
-    <div class="sc-val v-white" id="sFiltered">—</div>
-    <div class="sc-lbl">Filtrés</div>
-  </div>
+  <div class="stat-card"><div class="sc-top" style="background:linear-gradient(90deg,var(--neon),#60efff)"></div><span class="sc-ico">👥</span><div class="sc-val v-neon" id="sTotal">—</div><div class="sc-lbl">Total</div></div>
+  <div class="stat-card"><div class="sc-top" style="background:linear-gradient(90deg,var(--orange),var(--orange2))"></div><span class="sc-ico">🌍</span><div class="sc-val v-orange" id="sCountries">—</div><div class="sc-lbl">Pays</div></div>
+  <div class="stat-card"><div class="sc-top" style="background:linear-gradient(90deg,var(--success),#00e5ff)"></div><span class="sc-ico">📧</span><div class="sc-val v-green">{{ plan.emails_per_day if plan.emails_per_day != -1 else '∞' }}</div><div class="sc-lbl">Limite/jour</div></div>
+  <div class="stat-card"><div class="sc-top" style="background:var(--border)"></div><span class="sc-ico">✨</span><div class="sc-val v-white" id="sFiltered">—</div><div class="sc-lbl">Filtrés</div></div>
 </div>
 
 <div class="filter-bar">
@@ -45,31 +25,19 @@
   <div class="chips" id="countryChips"></div>
 </div>
 
-<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px" id="contactsGrid"></div>
-<div class="empty-state" id="emptyState" style="display:none">
-  <span class="eico">🔍</span>
-  <p>Aucun contact trouvé</p>
-</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:12px" id="contactsGrid"></div>
+<div class="empty-state" id="emptyState" style="display:none"><span class="eico">🔍</span><p>Aucun contact trouvé</p></div>
 
 <!-- MODAL EMAIL -->
 <div class="moverlay" id="mEmail">
   <div class="modal">
-    <div class="modal-header">
-      <h2>✉️ Envoyer un email</h2>
-      <button class="modal-close" data-close="mEmail">✕</button>
-    </div>
+    <div class="modal-header"><h2>✉️ Envoyer un email</h2><button class="modal-close" data-close="mEmail">✕</button></div>
     <div class="fgroup">
       <label>Destinataires (<span id="recCount">0</span>)</label>
-      <div id="mTo" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:10px;max-height:80px;overflow-y:auto;line-height:1.9"></div>
+      <div id="mTo" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:10px;max-height:75px;overflow-y:auto;line-height:1.9"></div>
     </div>
-    <div class="fgroup">
-      <label>Objet *</label>
-      <input type="text" id="mSubject" placeholder="Objet de votre email…">
-    </div>
-    <div class="fgroup">
-      <label>Message *</label>
-      <textarea id="mBody" placeholder="Rédigez votre message…"></textarea>
-    </div>
+    <div class="fgroup"><label>Objet *</label><input type="text" id="mSubject" placeholder="Objet de votre email…"></div>
+    <div class="fgroup"><label>Message *</label><textarea id="mBody" placeholder="Rédigez votre message…"></textarea></div>
     <div class="progress-wrap" id="progWrap">
       <div class="pbar"><div class="pfill" id="pfill"></div></div>
       <div class="pmsg" id="pmsg"></div>
@@ -84,18 +52,14 @@
 <!-- MODAL ADD -->
 <div class="moverlay" id="mAdd">
   <div class="modal">
-    <div class="modal-header">
-      <h2>➕ Nouveau contact</h2>
-      <button class="modal-close" data-close="mAdd">✕</button>
-    </div>
+    <div class="modal-header"><h2>➕ Nouveau contact</h2><button class="modal-close" data-close="mAdd">✕</button></div>
     <div class="frow">
       <div class="fgroup"><label>Nom</label><input type="text" id="aN" placeholder="Jean Dupont"></div>
       <div class="fgroup"><label>Email *</label><input type="email" id="aE" placeholder="jean@gmail.com"></div>
     </div>
     <div class="frow">
       <div class="fgroup"><label>Téléphone</label><input type="tel" id="aP" placeholder="+237 6XX XXX XXX"></div>
-      <div class="fgroup">
-        <label>Tag</label>
+      <div class="fgroup"><label>Tag</label>
         <select id="aT">
           <option value="">— Aucun —</option>
           <option value="client">Client</option>
@@ -115,18 +79,19 @@
 
 {% block scripts %}
 <script>
-const LIMIT = {{ plan.emails_per_day }};
-const SENT_TODAY = {{ profile.emails_sent_today|default(0) }};
-const PLAN_KEY = "{{ plan_key }}";
+const LIMIT={{ plan.emails_per_day }}, SENT={{ profile.emails_sent_today|default(0) }};
+const CN={'+221':'Sénégal 🇸🇳','+223':'Mali 🇲🇱','+225':'Côte d\'Ivoire 🇨🇮','+226':'Burkina Faso 🇧🇫','+227':'Niger 🇳🇪','+228':'Togo 🇹🇬','+229':'Bénin 🇧🇯','+237':'Cameroun 🇨🇲','+243':'RD Congo 🇨🇩'};
+function code(p){if(!p)return null;const m=p.match(/^\+(\d{1,3})/);return m?'+'+m[1]:null}
+function clbl(c){return CN[c]||(c||'Autre')}
+function av(n){return n?n.trim()[0].toUpperCase():'?'}
+function esc(s){return(s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
-// Built-in contacts (shared base)
-const BASE_CONTACTS = [
+const BASE=[
   {name:"AVISSEY",email:"sossouatsou1@gmail.com",phone:"+228 79941832"},
   {name:"Charifatou Amadou",email:"amadoumahamadoucharifa@gmail.com",phone:"+227 87118113"},
   {name:"AYIKE",email:"ayikemillion1@gmail.com",phone:"+228 98128276"},
   {name:"Abdoula",email:"abdoula13cherif@gmail.com",phone:"+237 658033690"},
   {name:"Romain",email:"businessenligne2077@gmail.com",phone:"+228 71517910"},
-  {name:"Icrem",email:"enockehoud@gmail.com",phone:"+229 0142602005"},
   {name:"Alex Bns",email:"digital1bsns@gmail.com",phone:"+226 60304656"},
   {name:"Un peu de tour",email:"leonelfeugaing8@gmail.com",phone:"+237 692198531"},
   {name:"Shafa atu",email:"safiyumoustapha@gmail.com",phone:"+227 89587200"},
@@ -136,7 +101,6 @@ const BASE_CONTACTS = [
   {name:"Loveline",email:"teflove668@gmail.com",phone:"+237 692776974"},
   {name:"Franc Pierre",email:"djapangfrancleblanc@gmail.com",phone:"+237 673578159"},
   {name:"Diakité TOUMANI",email:"diaktoumani@gmail.com",phone:"+225 0502527261"},
-  {name:"Yao Gérard",email:"gerardy309@gmail.com",phone:"+225 0708371912"},
   {name:"Henry tsafack",email:"henrytsafack80@gmail.com",phone:"+237 670693075"},
   {name:"Visley",email:"rdvvisley@gmail.com",phone:"+226 72790837"},
   {name:"Joko",email:"waitybns@gmail.com",phone:"+228 92252664"},
@@ -146,7 +110,6 @@ const BASE_CONTACTS = [
   {name:"Hilary",email:"hilairekabore69@gmail.com",phone:"+226 75392542"},
   {name:"Fati Amadou",email:"fatouma@gmail.com",phone:"+227 97423280"},
   {name:"NEMBOT MALDINI",email:"nembotmaldini7532@gmail.com",phone:"+237 690949694"},
-  {name:"Ngouana Bryan",email:"ngouanabryan@gmail.com",phone:"+237 673573892"},
   {name:"Isaac Newton",email:"gorbaisaac88@gmail.com",phone:"+237 659265361"},
   {name:"Kokou eric",email:"erickokou53@gmail.com",phone:"+228 79525491"},
   {name:"Herval",email:"hervalwanji13@gmail.com",phone:"+237 692802406"},
@@ -154,153 +117,112 @@ const BASE_CONTACTS = [
   {name:"KingBishop",email:"kingbishop6666@gmail.com",phone:"+228 70356238"},
   {name:"Aminou Barmini",email:"baminou737@gmail.com",phone:"+227 77099049"},
   {name:"Léandre sanou",email:"sanouleandros@gmail.com",phone:"+226 56666008"},
-  {name:"Wonder",email:"azwonder288@gmail.com",phone:"+228 70422400"},
-  {name:"Gilbert kpoti",email:"gilbertkpoti17@gmail.com",phone:"+228 92216316"},
   {name:"Gueye",email:"2005malickgueye@gmail.com",phone:"+221 770525302"},
   {name:"Bocar",email:"degogabocar9@gmail.com",phone:"+223 61444194"},
   {name:"Henry",email:"angenabukuze@gmail.com",phone:"+243 905163334"},
 ];
+let all=[...BASE], selC='ALL', search='', pending=[];
 
-const CN = {'+221':'Sénégal 🇸🇳','+223':'Mali 🇲🇱','+225':'Côte d\'Ivoire 🇨🇮','+226':'Burkina Faso 🇧🇫','+227':'Niger 🇳🇪','+228':'Togo 🇹🇬','+229':'Bénin 🇧🇯','+237':'Cameroun 🇨🇲','+243':'RD Congo 🇨🇩'};
-function code(p){if(!p)return null;const m=p.match(/^\+(\d{1,3})/);return m?'+'+m[1]:null}
-function clbl(c){return CN[c]||(c||'Autre')}
-function av(n){return n?n.trim()[0].toUpperCase():'?'}
-function esc(s){return s?(s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):''}
-
-let allContacts = [...BASE_CONTACTS];
-let selCountry = 'ALL', search = '', pending = [];
-
-// Load user contacts from server
-fetch('/api/contacts').then(r=>r.json()).then(data=>{
-  if(Array.isArray(data)) allContacts = [...BASE_CONTACTS, ...data];
-  buildChips(); renderCards();
-}).catch(()=>{ buildChips(); renderCards(); });
+fetch('/api/contacts').then(r=>r.json()).then(d=>{if(Array.isArray(d))all=[...BASE,...d];buildChips();renderCards();}).catch(()=>{buildChips();renderCards();});
 
 function getFiltered(){
-  let l = allContacts;
-  if(selCountry!=='ALL') l=l.filter(c=>code(c.phone)===selCountry);
-  if(search){const q=search.toLowerCase();l=l.filter(c=>(c.name||'').toLowerCase().includes(q)||(c.email||'').toLowerCase().includes(q)||(c.phone||'').toLowerCase().includes(q))}
+  let l=all;
+  if(selC!=='ALL')l=l.filter(c=>code(c.phone)===selC);
+  if(search){const q=search.toLowerCase();l=l.filter(c=>(c.name||'').toLowerCase().includes(q)||(c.email||'').toLowerCase().includes(q)||(c.phone||'').toLowerCase().includes(q));}
   return l;
 }
 function buildChips(){
-  const cnt={};
-  allContacts.forEach(c=>{const cd=code(c.phone)||'Autre';cnt[cd]=(cnt[cd]||0)+1});
-  const sorted=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
-  const box=document.getElementById('countryChips');
-  box.innerHTML='';
-  [['ALL','🌍 Tous',allContacts.length],...sorted].forEach(([c,lbl,n])=>{
-    const d=document.createElement('div');
-    d.className='chip'+(selCountry===c?' active':'');
-    d.innerHTML=(lbl||clbl(c))+` <span style="opacity:.7;font-size:.65rem">${n||cnt[c]}</span>`;
-    d.addEventListener('click',()=>{selCountry=c;document.querySelectorAll('#countryChips .chip').forEach(x=>x.classList.remove('active'));d.classList.add('active');renderCards()});
-    box.appendChild(d);
+  const cnt={};all.forEach(c=>{const cd=code(c.phone)||'Autre';cnt[cd]=(cnt[cd]||0)+1});
+  const s=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
+  const box=document.getElementById('countryChips');box.innerHTML='';
+  [['ALL','🌍 Tous',all.length],...s.map(([c,n])=>[c,clbl(c),n])].forEach(([c,lbl,n])=>{
+    const el=document.createElement('div');el.className='chip'+(selC===c?' active':'');
+    el.innerHTML=`${lbl} <span style="opacity:.65;font-size:.65rem">${n}</span>`;
+    el.onclick=()=>{selC=c;document.querySelectorAll('#countryChips .chip').forEach(x=>x.classList.remove('active'));el.classList.add('active');renderCards()};
+    box.appendChild(el);
   });
 }
 function renderCards(){
   const list=getFiltered();
-  document.getElementById('sTotal').textContent=allContacts.length;
+  document.getElementById('sTotal').textContent=all.length;
   document.getElementById('sFiltered').textContent=list.length;
-  document.getElementById('sCountries').textContent=new Set(allContacts.map(c=>code(c.phone)).filter(Boolean)).size;
-  const grid=document.getElementById('contactsGrid');
-  const emp=document.getElementById('emptyState');
-  if(!list.length){grid.innerHTML='';emp.style.display='block';return}
+  document.getElementById('sCountries').textContent=new Set(all.map(c=>code(c.phone)).filter(Boolean)).size;
+  const grid=document.getElementById('contactsGrid'),emp=document.getElementById('emptyState');
+  if(!list.length){grid.innerHTML='';emp.style.display='block';return;}
   emp.style.display='none';
   grid.innerHTML=list.map(c=>`
     <div class="ccard">
-      <div style="padding:14px 14px 10px;display:flex;align-items:flex-start;gap:10px">
+      <div style="padding:13px 13px 9px;display:flex;align-items:flex-start;gap:10px">
         <div class="ccard-av">${av(c.name)}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:.9rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.name||'—')}</div>
-          <div style="font-size:.7rem;color:var(--muted);margin-top:2px">${clbl(code(c.phone))}</div>
+          <div style="font-size:.88rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.name||'—')}</div>
+          <div style="font-size:.68rem;color:var(--muted);margin-top:1px">${clbl(code(c.phone))}</div>
         </div>
       </div>
-      <div style="padding:0 14px 10px;display:flex;flex-direction:column;gap:4px">
-        <div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border-radius:6px;padding:6px 10px;font-size:.75rem">
-          <span style="color:var(--muted)">📧</span>
-          <span style="flex:1;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.75rem">${esc(c.email)}</span>
-          <button onclick="copyText('${esc(c.email)}')" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:2px 5px;border-radius:4px;font-size:.8rem" title="Copier">⎘</button>
+      <div style="padding:0 13px 9px;display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;align-items:center;gap:7px;background:var(--bg2);border-radius:6px;padding:5px 9px">
+          <span style="color:var(--muted);font-size:.78rem">📧</span>
+          <span style="flex:1;font-family:monospace;font-size:.72rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.email)}</span>
+          <button onclick="copyText('${esc(c.email)}')" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:2px 4px;font-size:.75rem">⎘</button>
         </div>
-        ${c.phone?`<div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border-radius:6px;padding:6px 10px;font-size:.75rem"><span style="color:var(--muted)">📞</span><span style="flex:1;font-family:monospace;font-size:.75rem">${esc(c.phone)}</span></div>`:''}
+        ${c.phone?`<div style="display:flex;align-items:center;gap:7px;background:var(--bg2);border-radius:6px;padding:5px 9px"><span style="color:var(--muted);font-size:.78rem">📞</span><span style="font-family:monospace;font-size:.72rem">${esc(c.phone)}</span></div>`:''}
       </div>
-      <div style="padding:0 14px 14px;display:flex;gap:6px">
+      <div style="padding:0 13px 13px;display:flex;gap:6px">
         <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openSingleEmail('${esc(c.email)}','${esc(c.name||'')}')">✉️ Email</button>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
-
-// Email
-function openSingleEmail(email, name){ openEmailModal([{email,name}]); }
+function openSingleEmail(e,n){openEmailModal([{email:e,name:n}])}
 function openEmailModal(recs){
-  pending = recs.filter(r=>r.email&&r.email.includes('@'));
-  if(!pending.length){toast('⚠️ Aucun email valide');return}
-  const remaining = LIMIT===-1 ? 999999 : LIMIT - SENT_TODAY;
-  if(pending.length > remaining && LIMIT!==-1){
-    toast(`⚠️ Quota insuffisant. Reste: ${remaining} emails aujourd'hui`);
-    if(remaining <= 0){window.location.href='/plans';return}
-    pending = pending.slice(0, remaining);
-  }
+  pending=recs.filter(r=>r.email&&r.email.includes('@'));
+  if(!pending.length){toast('⚠️ Aucun email valide');return;}
+  const rem=LIMIT===-1?999999:LIMIT-SENT;
+  if(LIMIT!==-1&&pending.length>rem){if(rem<=0){toast('⚠️ Quota épuisé. Upgradez votre plan.');window.location='/plans';return;}pending=pending.slice(0,rem);}
   document.getElementById('recCount').textContent=pending.length;
-  document.getElementById('mTo').innerHTML=pending.slice(0,30).map(r=>`<span style="display:inline-block;background:rgba(0,180,255,.08);border:1px solid rgba(0,180,255,.2);border-radius:4px;padding:1px 7px;color:var(--neon);font-size:.7rem;margin:1px">${esc(r.name||r.email)}</span>`).join('');
+  document.getElementById('mTo').innerHTML=pending.slice(0,25).map(r=>`<span style="display:inline-block;background:rgba(0,180,255,.08);border:1px solid rgba(0,180,255,.2);border-radius:4px;padding:1px 7px;color:var(--neon);font-size:.69rem;margin:1px">${esc(r.name||r.email)}</span>`).join('');
   document.getElementById('progWrap').classList.remove('show');
   document.getElementById('pfill').style.width='0%';
   document.getElementById('pmsg').textContent='';
-  const btn=document.getElementById('btnSendEmail');
-  btn.disabled=false; btn.textContent='📤 Envoyer';
-  document.getElementById('mSubject').value='';
-  document.getElementById('mBody').value='';
+  const btn=document.getElementById('btnSendEmail');btn.disabled=false;btn.textContent='📤 Envoyer';
+  document.getElementById('mSubject').value='';document.getElementById('mBody').value='';
   openModal('mEmail');
 }
-
-document.getElementById('btnSendGroup').addEventListener('click',()=>{
-  const list=getFiltered().map(c=>({email:c.email,name:c.name||''}));
-  if(!list.length){toast('⚠️ Aucun contact filtré');return}
-  openEmailModal(list);
-});
-
-document.getElementById('btnSendEmail').addEventListener('click', async()=>{
+document.getElementById('btnSendGroup').onclick=()=>{
+  const l=getFiltered().map(c=>({email:c.email,name:c.name||''}));
+  if(!l.length){toast('⚠️ Aucun contact');return;}openEmailModal(l);
+};
+document.getElementById('btnSendEmail').onclick=async()=>{
   const subj=document.getElementById('mSubject').value.trim();
   const body=document.getElementById('mBody').value.trim();
-  if(!subj||!body){toast('⚠️ Objet et message requis');return}
-  const btn=document.getElementById('btnSendEmail');
-  btn.disabled=true; btn.textContent='⏳…';
-  const pw=document.getElementById('progWrap');
-  const pf=document.getElementById('pfill');
-  const pm=document.getElementById('pmsg');
-  pw.classList.add('show');
-  if(!window.emailjs){pm.textContent='❌ EmailJS non chargé';btn.disabled=false;btn.textContent='📤 Envoyer';return}
+  if(!subj||!body){toast('⚠️ Objet et message requis');return;}
+  const btn=document.getElementById('btnSendEmail');btn.disabled=true;btn.textContent='⏳…';
+  document.getElementById('progWrap').classList.add('show');
+  const pf=document.getElementById('pfill'),pm=document.getElementById('pmsg');
+  if(!window.emailjs){pm.textContent='❌ EmailJS non chargé';btn.disabled=false;btn.textContent='📤 Envoyer';return;}
   let sent=0,fail=0;
   for(let i=0;i<pending.length;i++){
     const r=pending[i];
-    try{
-      await emailjs.send('service_ps61bla','template_aks186b',{to_email:r.email,name:r.name||r.email,subject:subj,message:body});
-      sent++;
-    }catch(e){fail++}
+    try{await emailjs.send('service_ps61bla','template_aks186b',{to_email:r.email,name:r.name||r.email,subject:subj,message:body});sent++;}
+    catch(e){fail++;}
     pf.style.width=`${Math.round((i+1)/pending.length*100)}%`;
     pm.textContent=`${i+1}/${pending.length} traités…`;
-    if(i<pending.length-1) await new Promise(res=>setTimeout(res,400));
+    if(i<pending.length-1)await new Promise(res=>setTimeout(res,400));
   }
-  // Log to server
   await fetch('/api/send-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({recipients:pending,subject:subj,message:body})}).catch(()=>{});
-  btn.textContent='✅ Terminé';
-  pm.textContent=`✅ ${sent} envoyé(s)${fail?` · ❌ ${fail} échec(s)`:''}`;
+  btn.textContent='✅ Terminé';pm.textContent=`✅ ${sent} envoyé(s)${fail?` · ❌ ${fail} échec(s)`:''}`;
   toast(`✅ ${sent} email(s) envoyé(s)`);
   setTimeout(()=>closeModal('mEmail'),3000);
-});
-
-// Add contact
-document.getElementById('btnAddContact').addEventListener('click',()=>openModal('mAdd'));
-document.getElementById('btnConfirmAdd').addEventListener('click', async()=>{
+};
+document.getElementById('btnAddContact').onclick=()=>openModal('mAdd');
+document.getElementById('btnConfirmAdd').onclick=async()=>{
   const e=document.getElementById('aE').value.trim();
-  if(!e||!e.includes('@')){toast('⚠️ Email invalide');return}
-  if(allContacts.find(c=>c.email.toLowerCase()===e.toLowerCase())){toast('⚠️ Doublon');return}
+  if(!e||!e.includes('@')){toast('⚠️ Email invalide');return;}
+  if(all.find(c=>c.email.toLowerCase()===e.toLowerCase())){toast('⚠️ Contact déjà existant');return;}
   const nc={name:document.getElementById('aN').value.trim(),email:e,phone:document.getElementById('aP').value.trim()};
-  allContacts.push(nc);
+  all.push(nc);
   await fetch('/api/contacts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contacts:[nc]})}).catch(()=>{});
-  closeModal('mAdd'); buildChips(); renderCards();
-  toast('✅ Contact ajouté !');
-});
-
-document.getElementById('searchInput').addEventListener('input',e=>{search=e.target.value;renderCards()});
+  closeModal('mAdd');buildChips();renderCards();toast('✅ Contact ajouté !');
+};
+document.getElementById('searchInput').addEventListener('input',e=>{search=e.target.value;renderCards();});
 </script>
 {% endblock %}
