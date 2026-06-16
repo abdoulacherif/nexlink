@@ -1,115 +1,74 @@
-# NexLink · Plateforme Email Marketing
+# NexLink — Reconstruction propre
 
-Plateforme d'email marketing pour l'Afrique francophone.
-Stack : **Python Flask + Supabase + Vercel + EmailJS**
+## ⚠️ Étapes de déploiement (à suivre dans l'ordre)
 
----
-
-## 🚀 Installation rapide
-
-### 1. Cloner et installer
-
-```bash
-git clone https://github.com/abdoulacherif/nexlink.git
-cd nexlink
-pip install -r requirements.txt
-```
-
-### 2. Variables d'environnement
-
-Créez `.env` à la racine :
-
-```env
-SUPABASE_URL=https://gstgfdqvqkhgouzfgeyl.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-EMAILJS_PUBLIC_KEY=fNyhiux6zn4u2CtRj
-EMAILJS_SERVICE_ID=service_ps61bla
-EMAILJS_TEMPLATE_ID=template_aks186b
-SECRET_KEY=nexlink-super-secret-2025
-```
-
-### 3. Base de données Supabase
-
-Dans le dashboard Supabase → SQL Editor, exécutez `schema.sql`.
-
-Puis définissez votre compte admin :
-```sql
-UPDATE profiles SET is_admin = TRUE WHERE email = 'votre@email.com';
-```
-
-### 4. Lancer en local
-
-```bash
-python app.py
-```
-
-Ouvrez http://localhost:5000
-
----
-
-## 📦 Déploiement Vercel
-
-```bash
-vercel --prod
-```
-
-Ajoutez les variables d'env dans Vercel Dashboard → Settings → Environment Variables.
-
----
-
-## 📁 Structure
+### 1. Remplacer TOUS les fichiers du repo GitHub
+Supprime l'ancien contenu et remplace par celui de ce zip, en gardant la même structure :
 
 ```
 nexlink/
-├── app.py                    # Flask routes + logique
+├── app.py
 ├── requirements.txt
 ├── vercel.json
-├── schema.sql                # Schéma Supabase
-├── .env                      # Variables locales
-├── static/
-│   ├── css/style.css         # Thème global (blanc/néon/orange)
-│   └── js/main.js            # Utilitaires JS
 └── templates/
-    ├── base.html             # Layout utilisateur
+    ├── base.html
     ├── auth/
-    │   ├── register.html     # Inscription
-    │   ├── login.html        # Connexion
-    │   └── waiting.html      # En attente validation
+    │   ├── register.html
+    │   ├── login.html
+    │   └── waiting.html
     ├── app/
-    │   ├── dashboard.html    # Dashboard utilisateur
-    │   ├── contacts.html     # Contacts + envoi email
-    │   ├── tags.html         # Tags
-    │   ├── history.html      # Historique
-    │   ├── import.html       # Import CSV
-    │   ├── stats.html        # Statistiques
-    │   └── plans.html        # Plans & Tarifs
+    │   ├── dashboard.html
+    │   ├── contacts.html
+    │   ├── tags.html
+    │   ├── history.html
+    │   ├── import.html
+    │   ├── stats.html
+    │   └── plans.html
     └── admin/
-        ├── base_admin.html   # Layout admin
-        ├── dashboard.html    # Dashboard admin
-        ├── users.html        # Gestion utilisateurs
-        ├── conditions.html   # Créer/modifier conditions
-        └── plans.html        # Gérer les plans
+        ├── base_admin.html
+        ├── dashboard.html
+        ├── users.html
+        ├── conditions.html
+        └── plans.html
 ```
 
+### 2. Variables d'environnement sur Vercel
+Vérifie dans Vercel → Settings → Environment Variables :
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SECRET_KEY` (n'importe quelle valeur secrète)
+
+### 3. Supabase — AUCUNE modification nécessaire
+Les données existantes (users, contacts, etc.) sont conservées. Le schema.sql n'a pas besoin d'être réexécuté.
+
+### 4. Déployer
+Push sur GitHub → Vercel redéploie automatiquement.
+
+### 5. Tester le login admin
+1. Va sur `/login`
+2. Connecte-toi avec `abdoula13cherif@gmail.com`
+3. Si "en attente" persiste malgré `status='active'` en BD, visite `/debug-session` après login pour voir l'état exact de la session (route de debug temporaire incluse dans ce build)
+
 ---
 
-## 💰 Plans
+## 🆕 Ce qui a changé dans cette reconstruction
 
-| Plan      | Prix      | Emails/jour |
-|-----------|-----------|-------------|
-| Gratuit   | 0 FCFA    | 10          |
-| Starter   | 3 000 F   | 100         |
-| Business  | 8 000 F   | 500         |
-| Elite     | 15 000 F  | Illimité    |
+**app.py**
+- Suppression de tous les `except: pass` silencieux → chaque erreur est maintenant loggée dans les logs Vercel (`print(...)`)
+- `get_user_profile()` utilise `.execute()` au lieu de `.single()` pour éviter un crash si 0 ou plusieurs lignes existent pour le même `id`
+- `/dashboard` recharge TOUJOURS le profil depuis Supabase au lieu de faire confiance à la session — élimine le bug "en attente" persistant après activation
+- Nouvelle route `/debug-session` pour diagnostiquer l'état de session en un coup d'œil
 
----
+**Design**
+- `base.html` : header + onglets horizontaux (style "MARATHON") au lieu de la sidebar verticale
+- Tout le CSS est inline dans chaque template — aucune dépendance à un fichier `.css` externe
 
-## 🛡️ Admin
+**Contacts**
+- 267 contacts uniques de l'annuaire partagé (dédupliqués depuis les données originales)
+- Plan Gratuit : accès aux 200 premiers contacts + section "verrouillé" avec CTA upgrade
+- Plans payants : accès aux 267 contacts complets
+- Chaque utilisateur garde ses propres contacts ajoutés, stockés dans Supabase (table `contacts`, filtré par `user_id`)
 
-Accès : `/admin` (compte avec `is_admin = TRUE` dans Supabase)
-
-Fonctionnalités admin :
-- ✅ Valider / refuser les inscriptions
-- 💰 Changer le plan d'un utilisateur
-- 📋 Créer des conditions (règles affichées aux utilisateurs)
-- 📊 Vue globale de la plateforme
+**Admin**
+- Complètement séparé de l'interface utilisateur (`admin/base_admin.html` dédié)
+- Aucun lien admin visible dans la navigation utilisateur
