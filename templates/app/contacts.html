@@ -13,12 +13,22 @@
 {% endblock %}
 
 {% block content %}
-<div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
-  <div class="stat-card"><div class="sc-top" style="background:linear-gradient(90deg,var(--neon),#60efff)"></div><span class="sc-ico">👥</span><div class="sc-val v-neon" id="sTotal">—</div><div class="sc-lbl">Total</div></div>
+<div class="stats-grid">
+  <div class="stat-card"><div class="sc-top" style="background:linear-gradient(90deg,var(--neon),#60efff)"></div><span class="sc-ico">👥</span><div class="sc-val v-neon" id="sTotal">—</div><div class="sc-lbl">Total accessible</div></div>
   <div class="stat-card"><div class="sc-top" style="background:linear-gradient(90deg,var(--orange),var(--orange2))"></div><span class="sc-ico">🌍</span><div class="sc-val v-orange" id="sCountries">—</div><div class="sc-lbl">Pays</div></div>
-  <div class="stat-card"><div class="sc-top" style="background:linear-gradient(90deg,var(--success),#00e5ff)"></div><span class="sc-ico">📧</span><div class="sc-val v-green">{{ plan.emails_per_day if plan.emails_per_day != -1 else '∞' }}</div><div class="sc-lbl">Limite/jour</div></div>
-  <div class="stat-card"><div class="sc-top" style="background:var(--border)"></div><span class="sc-ico">✨</span><div class="sc-val v-white" id="sFiltered">—</div><div class="sc-lbl">Filtrés</div></div>
+  <div class="stat-card"><div class="sc-top" style="background:linear-gradient(90deg,var(--success),#00e5ff)"></div><span class="sc-ico">✨</span><div class="sc-val v-green" id="sMine">—</div><div class="sc-lbl">Mes contacts</div></div>
+  <div class="stat-card"><div class="sc-top" style="background:var(--border)"></div><span class="sc-ico">🔒</span><div class="sc-val v-white" id="sLocked">—</div><div class="sc-lbl">Verrouillés</div></div>
 </div>
+
+{% if plan_key == 'free' %}
+<div style="background:rgba(255,107,0,.06);border:1px solid rgba(255,107,0,.2);border-radius:var(--r);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+  <div>
+    <div style="font-weight:700;margin-bottom:3px">🔒 Accès limité — Plan Gratuit</div>
+    <div style="font-size:.8rem;color:var(--muted)">Vous avez accès à 200 contacts sur l'annuaire partagé. Upgradez pour débloquer tout l'annuaire.</div>
+  </div>
+  <a href="/plans" class="btn btn-orange btn-sm">⚡ Upgrader</a>
+</div>
+{% endif %}
 
 <div class="filter-bar">
   <span class="filter-label">Pays</span>
@@ -27,6 +37,17 @@
 
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:12px" id="contactsGrid"></div>
 <div class="empty-state" id="emptyState" style="display:none"><span class="eico">🔍</span><p>Aucun contact trouvé</p></div>
+
+<!-- LOCKED PREVIEW (free plan) -->
+<div id="lockedSection" style="display:none;margin-top:18px">
+  <div class="section-title">🔒 Contacts verrouillés — Plan Gratuit</div>
+  <div style="background:var(--card);border:1px dashed var(--border2);border-radius:var(--r);padding:24px;text-align:center">
+    <div style="font-size:2rem;margin-bottom:8px">🔐</div>
+    <div style="font-weight:700;margin-bottom:6px"><span id="lockedCount">0</span> contacts supplémentaires disponibles</div>
+    <div style="font-size:.82rem;color:var(--muted);margin-bottom:14px">Passez à un plan supérieur pour débloquer l'accès complet à l'annuaire NexLink.</div>
+    <a href="/plans" class="btn btn-orange btn-sm">⚡ Voir les plans</a>
+  </div>
+</div>
 
 <!-- MODAL EMAIL -->
 <div class="moverlay" id="mEmail">
@@ -57,18 +78,7 @@
       <div class="fgroup"><label>Nom</label><input type="text" id="aN" placeholder="Jean Dupont"></div>
       <div class="fgroup"><label>Email *</label><input type="email" id="aE" placeholder="jean@gmail.com"></div>
     </div>
-    <div class="frow">
-      <div class="fgroup"><label>Téléphone</label><input type="tel" id="aP" placeholder="+237 6XX XXX XXX"></div>
-      <div class="fgroup"><label>Tag</label>
-        <select id="aT">
-          <option value="">— Aucun —</option>
-          <option value="client">Client</option>
-          <option value="prospect">Prospect</option>
-          <option value="vip">⭐ VIP</option>
-          <option value="lead">🔥 Lead</option>
-        </select>
-      </div>
-    </div>
+    <div class="fgroup"><label>Téléphone</label><input type="tel" id="aP" placeholder="+237 6XX XXX XXX"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" data-close="mAdd">Annuler</button>
       <button class="btn btn-success" id="btnConfirmAdd">✅ Ajouter</button>
@@ -80,50 +90,37 @@
 {% block scripts %}
 <script>
 const LIMIT={{ plan.emails_per_day }}, SENT={{ profile.emails_sent_today|default(0) }};
-const CN={'+221':'Sénégal 🇸🇳','+223':'Mali 🇲🇱','+225':'Côte d\'Ivoire 🇨🇮','+226':'Burkina Faso 🇧🇫','+227':'Niger 🇳🇪','+228':'Togo 🇹🇬','+229':'Bénin 🇧🇯','+237':'Cameroun 🇨🇲','+243':'RD Congo 🇨🇩'};
+const PLAN_KEY="{{ plan_key }}";
+const FREE_LIMIT = 200;
+
+const CN={'+221':'Sénégal 🇸🇳','+223':'Mali 🇲🇱','+225':"Côte d'Ivoire 🇨🇮",'+226':'Burkina Faso 🇧🇫','+227':'Niger 🇳🇪','+228':'Togo 🇹🇬','+229':'Bénin 🇧🇯','+237':'Cameroun 🇨🇲','+243':'RD Congo 🇨🇩','+241':'Gabon 🇬🇦','+242':'Congo 🇨🇬','+244':'Angola 🇦🇴'};
 function code(p){if(!p)return null;const m=p.match(/^\+(\d{1,3})/);return m?'+'+m[1]:null}
 function clbl(c){return CN[c]||(c||'Autre')}
-function av(n){return n?n.trim()[0].toUpperCase():'?'}
+function av(n){return n&&n.trim()?n.trim()[0].toUpperCase():'?'}
 function esc(s){return(s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
-const BASE=[
-  {name:"AVISSEY",email:"sossouatsou1@gmail.com",phone:"+228 79941832"},
-  {name:"Charifatou Amadou",email:"amadoumahamadoucharifa@gmail.com",phone:"+227 87118113"},
-  {name:"AYIKE",email:"ayikemillion1@gmail.com",phone:"+228 98128276"},
-  {name:"Abdoula",email:"abdoula13cherif@gmail.com",phone:"+237 658033690"},
-  {name:"Romain",email:"businessenligne2077@gmail.com",phone:"+228 71517910"},
-  {name:"Alex Bns",email:"digital1bsns@gmail.com",phone:"+226 60304656"},
-  {name:"Un peu de tour",email:"leonelfeugaing8@gmail.com",phone:"+237 692198531"},
-  {name:"Shafa atu",email:"safiyumoustapha@gmail.com",phone:"+227 89587200"},
-  {name:"Gédéon",email:"avisseygedeon@gmail.com",phone:"+228 72134711"},
-  {name:"James",email:"james@gmail.com",phone:"+237 677854205"},
-  {name:"Boris davi",email:"boristogo0@gmail.com",phone:"+228 97561188"},
-  {name:"Loveline",email:"teflove668@gmail.com",phone:"+237 692776974"},
-  {name:"Franc Pierre",email:"djapangfrancleblanc@gmail.com",phone:"+237 673578159"},
-  {name:"Diakité TOUMANI",email:"diaktoumani@gmail.com",phone:"+225 0502527261"},
-  {name:"Henry tsafack",email:"henrytsafack80@gmail.com",phone:"+237 670693075"},
-  {name:"Visley",email:"rdvvisley@gmail.com",phone:"+226 72790837"},
-  {name:"Joko",email:"waitybns@gmail.com",phone:"+228 92252664"},
-  {name:"Yankou Firmin",email:"tchaladoofficielle@gmail.com",phone:"+237 651310762"},
-  {name:"Alann Fusnel",email:"awouzonga@gmail.com",phone:"+237 678808230"},
-  {name:"Sègnon",email:"sossouomer19@gmail.com",phone:"+229 56558283"},
-  {name:"Hilary",email:"hilairekabore69@gmail.com",phone:"+226 75392542"},
-  {name:"Fati Amadou",email:"fatouma@gmail.com",phone:"+227 97423280"},
-  {name:"NEMBOT MALDINI",email:"nembotmaldini7532@gmail.com",phone:"+237 690949694"},
-  {name:"Isaac Newton",email:"gorbaisaac88@gmail.com",phone:"+237 659265361"},
-  {name:"Kokou eric",email:"erickokou53@gmail.com",phone:"+228 79525491"},
-  {name:"Herval",email:"hervalwanji13@gmail.com",phone:"+237 692802406"},
-  {name:"Lawali",email:"lawal@gmail.com",phone:"+227 94344932"},
-  {name:"KingBishop",email:"kingbishop6666@gmail.com",phone:"+228 70356238"},
-  {name:"Aminou Barmini",email:"baminou737@gmail.com",phone:"+227 77099049"},
-  {name:"Léandre sanou",email:"sanouleandros@gmail.com",phone:"+226 56666008"},
-  {name:"Gueye",email:"2005malickgueye@gmail.com",phone:"+221 770525302"},
-  {name:"Bocar",email:"degogabocar9@gmail.com",phone:"+223 61444194"},
-  {name:"Henry",email:"angenabukuze@gmail.com",phone:"+243 905163334"},
-];
-let all=[...BASE], selC='ALL', search='', pending=[];
+// ── BASE CONTACTS (annuaire partagé NexLink) ──
+const BASE_CONTACTS = [{"name":"AVISSEY","email":"sossouatsou1@gmail.com","phone":"+228 79941832"},{"name":"Charifatou Mahamadou Amadou","email":"amadoumahamadoucharifa@gmail.com","phone":"+227 87118113"},{"name":"AYIKE","email":"ayikemillion1@gmail.com","phone":"+228 98128276"},{"name":"LEADER","email":"marieedoh@gmail.com","phone":"+228 93738252"},{"name":"LEADER","email":"edohm70@gmail.com","phone":"+22879872103"},{"name":"Abdoula","email":"abdoula13cherif@gmail.com","phone":"658033690"},{"name":"","email":"marie.kamga@yopmail.com","phone":""},{"name":"Romain","email":"businessenligne2077@gmail.com","phone":"+228 71517910"},{"name":"Icrem","email":"enockehoud@gmail.com","phone":"+229 0142602005"},{"name":"Alex Bns","email":"digital1bsns@gmail.com","phone":"+226 60304656"},{"name":"Un peu de tour","email":"leonelfeugaing8@gmail.com","phone":"+237 692198531"},{"name":"Shafa atu","email":"safiyumoustapha@gmail.com","phone":"+227 89587200"},{"name":"abdoula","email":"abdoulacherif@gmail.com","phone":"+237 652177746"},{"name":"Gédéon","email":"avisseygedeon@gmail.com","phone":"+228 72134711"},{"name":"Roma KY","email":"kylawatoma@gmail.com","phone":"+226"},{"name":"James","email":"james@gmail.com","phone":"+237 677854205"},{"name":"Boris davi","email":"boristogo0@gmail.com","phone":"+228 97561188"},{"name":"Loveline","email":"teflove668@gmail.com","phone":"+237 692776974"},{"name":"Roseline claire","email":"kentsa482@gmail.com","phone":"+237 679830434"},{"name":"Mourfou Benin wendé Aïcha","email":"chailabombe@gmail.com","phone":"+226 55101838"},{"name":"Franc Pierre","email":"djapangfrancleblanc@gmail.com","phone":"+237 673578159"},{"name":"Diakité TOUMANI","email":"diaktoumani@gmail.com","phone":"+225 0502527261"},{"name":"","email":"elechionyekachi50@gmail.com","phone":""},{"name":"Yao N'guessan Gérard","email":"gerardy309@gmail.com","phone":"+225 0708371912"},{"name":"Brehima sawadogo","email":"eliseebomba7@gmail.com","phone":"+225 0151510596"},{"name":"Henry tsafack","email":"henrytsafack80@gmail.com","phone":"+237 670693075"},{"name":"Visley","email":"rdvvisley@gmail.com","phone":"+226 72790837"},{"name":"Joko","email":"waitybns@gmail.com","phone":"+228 92252664"},{"name":"Yankou Firmin","email":"tchaladoofficielle@gmail.com","phone":"+237 651310762"},{"name":"Etoundi jean","email":"rodrigueetoundi333@gmail.com","phone":"+237 652480507"},{"name":"Alann Fusnel","email":"awouzonga@gmail.com","phone":"+237 678808230"},{"name":"Toyib","email":"toyibmuhammed06@gmail.com","phone":"+229"},{"name":"Sègnon","email":"sossouomer19@gmail.com","phone":"+229 56558283"},{"name":"Djeuga djomtchum phannuel landry","email":"djeuga.540@icloud.com","phone":"+237 653190236"},{"name":"Ntamack maxim","email":"maximfally@gmail.com","phone":"+237 6526114252"},{"name":"Mbikijunior","email":"mbikijunior50@gmail.com","phone":"+237 640609786"},{"name":"Leader","email":"dilwidoa@gmail.com","phone":"+229 0153458599"},{"name":"Hilary","email":"hilairekabore69@gmail.com","phone":"+226 75392542"},{"name":"Najim","email":"zezidjibrillnajim03@gmail.com","phone":"+237 22780781244"},{"name":"Kouadio Cedric Yves Parfait","email":"kcypcedric@gmail.com","phone":"+225 0759554445"},{"name":"Zapo","email":"hounouseverin10@gmail.com","phone":"+228 70696321"},{"name":"Fati Amadou","email":"fatouma@gmail.com","phone":"+227 97423280"},{"name":"NEMBOT MALDINI","email":"nembotmaldini7532@gmail.com","phone":"+237 690949694"},{"name":"Gnemegna","email":"komlanmartin2024@gmail.com","phone":"+228 92320276"},{"name":"Ngouana Bryan","email":"ngouanabryan@gmail.com","phone":"+237 673573892"},{"name":"jdd","email":"jeandediieu95@gmail.com","phone":"+229 0140436893"},{"name":"Isaac Newton","email":"gorbaisaac88@gmail.com","phone":"+237 659265361"},{"name":"Kokou eric","email":"erickokou53@gmail.com","phone":"+228 79525491"},{"name":"Popy","email":"popyel25@gmail.com","phone":"+229 0159899902"},{"name":"Herval","email":"hervalwanji13@gmail.com","phone":"+237 692802406"},{"name":"ELECTROPROMAN","email":"bosselectroproman@gmail.com","phone":"+237 653262062"},{"name":"Ebat Terrance Abibang","email":"tonygeniola@gmail.com","phone":"+237 676804498"},{"name":"Mbome marie","email":"mbomemarie90@gmail.com","phone":"+237 671690031"},{"name":"Joël","email":"kamkeuj@gmail.com","phone":"+237 677141940"},{"name":"Felix","email":"romualdsobtchoupe@gmail.com","phone":"+237 698751135"},{"name":"Ryan aymeric","email":"ryanaymeric272@gmail.com","phone":"+237 692154047"},{"name":"Lawali","email":"lawal@gmail.com","phone":"+227 94344932"},{"name":"KingBishop","email":"kingbishop6666@gmail.com","phone":"+228 70356238"},{"name":"William","email":"zitaattisso0@gmail.com","phone":"+228 70134136"},{"name":"Aishatou","email":"asrauf45@gmail.com","phone":"+227 76517326"},{"name":"Jean claude vandamme","email":"kelyanmercywambawounangkelyan@gmail.com","phone":"+237 650152841"},{"name":"Joel Djoulde","email":"jubrismk19@gmail.com","phone":"+237 678472935"},{"name":"Ibn abass","email":"ibn307583@gmail.com","phone":"+225"},{"name":"Youdjeu Clarence","email":"kameniyvanna40@gmail.com","phone":"+237 692632560"},{"name":"Cupidon daj","email":"cupidondaj@gmail.com","phone":"+225 0500634412"},{"name":"Happi","email":"joelhappi19@gmail.com","phone":"+237 692354788"},{"name":"Aminou Barmini","email":"baminou737@gmail.com","phone":"+227 77099049"},{"name":"Mc chinois","email":"tinkamfogueng285@gmail.com","phone":"+237 678339950"},{"name":"Léandre sanou","email":"sanouleandros@gmail.com","phone":"+226 56666008"},{"name":"Wonder","email":"azwonder288@gmail.com","phone":"+228 70422400"},{"name":"Bodric","email":"tchindafokengbodric@gmail.com","phone":"+237 653935492"},{"name":"Pamela Christelle fopa djegou","email":"rahimrahim2370@gmail.com","phone":"+237 659941972"},{"name":"Nestor Nack","email":"andyrayenvermeulen908@gmail.com","phone":"+237 675979612"},{"name":"Dayane","email":"foussenidayane@gmail.com","phone":"+229 98804737"},{"name":"loraine","email":"tchapsles5@gmail.com","phone":"+237 681712435"},{"name":"N'bessa Boniface","email":"bonifaciobeni8@gmail.com","phone":"+229 0153051829"},{"name":"Houssseini Abdoulaye","email":"abdoulayeousseini983@gmail.com","phone":"+227 76595421"},{"name":"Leader","email":"ruthsoleyaks225@gmail.com","phone":"+225 0586098492"},{"name":"Abdoul Kader","email":"manmaneabdoulkadermanmane6@gmail.com","phone":"+226 98668942"},{"name":"Moise","email":"ayamouronaldo07@gmail.com","phone":"+229 0169556937"},{"name":"Zeekeown Fombasso Ivo","email":"zefoiv@yahoo.com","phone":"+237 677989694"},{"name":"","email":"paul.ngoa@yopmail.com","phone":""},{"name":"Yvan","email":"koagnefowayvan@gmail.com","phone":"+237 670692950"},{"name":"Merlo","email":"ahlin@gmail.com","phone":"+228 70903319"},{"name":"Msm","email":"ahlinwilfried1@gmail.com","phone":"+228 70903318"},{"name":"Akakpo Daryl","email":"akakpodarylroxy@gmail.com","phone":"+229 0197768559"},{"name":"GBATI Denis","email":"gbatidenis7@gmail.com","phone":"+228 71649044"},{"name":"Massaoudou Garba Hassane","email":"massaoudougarbahassane7@gmail.com","phone":"+229 89859096"},{"name":"Fernandez","email":"kpatikoffifernand617@gmail.com","phone":"+228 79676356"},{"name":"Justin EGOU","email":"justinegou4@gmail.com","phone":"+229 0151526831"},{"name":"Kenfack ange","email":"kenfackange65@gmail.com","phone":"+237 652451607"},{"name":"Adamo","email":"messi.me444@gmail.com","phone":"+225 0160732232"},{"name":"enzo","email":"prodigeenzo@gmail.com","phone":"+237 678189139"},{"name":"Tamaleu Fred","email":"tamaleufred@gmail.com","phone":"+237 658752530"},{"name":"Ali","email":"aliodg@gmail.com","phone":"+226 56565656"},{"name":"Samaïla","email":"zabeirouhitis@gmail.com","phone":"+225 0151267541"},{"name":"Fibi Maman","email":"fibimaman5@gmail.com","phone":"+227 96485886"},{"name":"Peres","email":"peresmezepo@gmail.com","phone":"+237 686223356"},{"name":"Humour","email":"hormiju@gmail.com","phone":"+228 70225588"},{"name":"Pop","email":"bbbbb@gmail.com","phone":"+226 96969633"},{"name":"Tsokeng yemeli","email":"eulogetsokeng549@gmail.com","phone":"+237 681023068"},{"name":"Nguefack Ronny","email":"anafackchanel@gmail.com","phone":"+237 680108683"},{"name":"ANANFACK ROMEO","email":"sidjierolph14@gmail.com","phone":"+237 696437784"},{"name":"Evra le silencieux","email":"kevra4800@gmail.com","phone":"+225 0103148195"},{"name":"Isama","email":"isabellemakhoza@gmail.com","phone":"+237 653174810"},{"name":"Lakoussan Lemuel","email":"lebatteur2004@gmail.com","phone":"+229 0159956100"},{"name":"Kwakou","email":"gnebgakwakou1997@gmail.com","phone":"+237 65229712"},{"name":"Sanoussi Salifou","email":"sanoussisalifourabiou@gmail.com","phone":"+228 73902302"},{"name":"Awonon","email":"komeryawonon2@gmail.com","phone":"+228 72420317"},{"name":"Deungue Tchamdjou Junior Wilfried","email":"jrwilfried023@gmail.com","phone":"+237 692405874"},{"name":"Dk junior","email":"tatsingjunior3@gmail.com","phone":"+237 678629058"},{"name":"Simplice","email":"kamdemjean@gmail.com","phone":"+237 678690043"},{"name":"Djibril","email":"adjibril647@gmail.com","phone":"+227 87450374"},{"name":"Abdoul hadi","email":"abdulhdtassiou@gmail.com","phone":"+227 85977742"},{"name":"Dan kaka","email":"barhamasaidou470@gmail.com","phone":"+227 74232656"},{"name":"Junior Zarres","email":"juniorzarres@gmail.com","phone":"+237 687269637"},{"name":"Ds serena","email":"joannendjo@gmail.com","phone":"+237 678532668"},{"name":"Egue","email":"ogoolouwa70@gmail.com","phone":"+229 0161049886"},{"name":"Konche pascal","email":"barackdassi@gmail.com","phone":"+237 679189409"},{"name":"Maëstro Richkid","email":"nguedealan@gmail.com","phone":"+237 673004149"},{"name":"Ben Ali Mohamed","email":"yowanditat8@gmail.com","phone":"+237 686772621"},{"name":"DOSSOU François","email":"adjahovianney@gmail.com","phone":"+229 0162462778"},{"name":"KG6","email":"kankpingoriyendou81@gmail.com","phone":"+228 96110363"},{"name":"ISDORE","email":"yawosewa0@gmail.com","phone":"+228 90655148"},{"name":"KOHOUDE ADIBA FLORENTIN","email":"florentinkohoude21@gmail.com","phone":"+229 0145940887"},{"name":"VODOUNON TOYI GABIN","email":"vodounongabin@gmail.com","phone":"+229 0153630837"},{"name":"Anna pop","email":"popanne46@gmail.com","phone":"+237 681223501"},{"name":"djafar8833","email":"djafarsalissou989@gmail.com","phone":"+227 88339640"},{"name":"Fifein abdel djamal","email":"fifeinabdeld@gmail.com","phone":"+237 657318923"},{"name":"Njock cesar","email":"njockcesar030@gmail.com","phone":"+237 674259056"},{"name":"DJENU KANA LAEL","email":"djenulael0@gmail.com","phone":"+237 670380987"},{"name":"AKONKWA","email":"calitexhubert@gmail.com","phone":"+243 850846927"},{"name":"Alexie ndinou","email":"fayangono@gmail.com","phone":"+237 688473123"},{"name":"Samo lorris","email":"samolorris99@gmail.com","phone":"+237 651945851"},{"name":"Fatil","email":"disces019@gmail.com","phone":"+237 670322033"},{"name":"Abdoul","email":"abdoullatifsinare63@gmail.com","phone":"+226 06278654"},{"name":"Sayoba","email":"sayoubam491@gmail.com","phone":"+226 05414622"},{"name":"Zioumde Damiba","email":"idrissadamiba530@gmail.com","phone":"+226 64329244"},{"name":"Gnonsean Achille omer Guehi","email":"gnonseanachilledezao@gmail.com","phone":"+225 0584791898"},{"name":"Rachid ouedraogo","email":"rachiro75.com@gmail.com","phone":"+226 77517594"},{"name":"Fred kamga","email":"fredkamga812@gmail.com","phone":"+237 658187753"},{"name":"Adrien Steve Deutchoue leutcheu","email":"deutchouesteve@gmail.com","phone":"+237 680381089"},{"name":"Mourtala laouali","email":"mourtala971@gmail.com","phone":"+227 96444274"},{"name":"Fochive tarick","email":"tarickfochive8@gmail.com","phone":"+237 689269944"},{"name":"Armelle Stéphane","email":"armellebatoumen@gmail.com","phone":"+237 688570730"},{"name":"assana chaibou","email":"malachychiemerie450@gmail.com","phone":"+237 70161010"},{"name":"Kouamé Akissi","email":"tayoroemmanuel632@gmail.com","phone":"+225 0546989159"},{"name":"Brice kengne","email":"bricekengne88@gmail.com","phone":"+237 672299406"},{"name":"SIDI Moustapha","email":"sidimoustaphadembele@gmail.com","phone":"+229 0160480319"},{"name":"Ibrahim Nadabagui Ismael","email":"ibrahimnadabaguiismael3@gmail.com","phone":"+237 98324476"},{"name":"GBENAIDE Ludovic","email":"gbenaide1@gmail.com","phone":"+229 0197581482"},{"name":"Issifou INoua","email":"sewanouthierryetholi@gmail.com","phone":"+229 0150365587"},{"name":"Loic briol","email":"sandjongloic9@gmail.com","phone":"+237 687810557"},{"name":"Koa Bertille","email":"yolandebertillekoa@gmail.com","phone":"+237 655016202"},{"name":"Desfort kislon","email":"tchahodesfort@gmail.com","phone":"+229 0164190823"},{"name":"salissou","email":"salissoubinoumaw@gmail.com","phone":"+227 97320141"},{"name":"Jeugo Stague papis obiang","email":"sadesobiang@gmail.com","phone":"+237 694271427"},{"name":"Gilbert kpoti","email":"gilbertkpoti17@gmail.com","phone":"+228 92216316"},{"name":"AKAMBA TATAW Karuel Teddy","email":"teddyakamba237@gmail.com","phone":"+237 657316060"},{"name":"Sigata abou","email":"silueabou0555@gmail.com","phone":"+225 0170655856"},{"name":"PATO Elie","email":"patoparis52238@gmail.com","phone":"+237 677338780"},{"name":"Salomon","email":"salomonalokpo6@gmail.com","phone":"+229 0159881260"},{"name":"Chanel","email":"chaleuraarc@gmail.com","phone":"+237 658577488"},{"name":"Man cfa","email":"gersonawousou@gmail.com","phone":"+228 93859890"},{"name":"AUBERGILE lokonon","email":"aubergilea@gmail.com","phone":"+229 0140312066"},{"name":"Parkouda","email":"parkoudah@gmail.com","phone":"+226 57041557"},{"name":"KENNE LONTSI DARIOS","email":"kenndarios@gmail.com","phone":"+237 652230714"},{"name":"Kuet","email":"kuetehavel999@gmail.com","phone":"+237 670298227"},{"name":"Romaric Katinan","email":"malachychiemerie100@gmail.com","phone":"+226 70613354"},{"name":"King","email":"sidimoctarabdoulrazak14k@gmail.com","phone":"+237 97155300"},{"name":"Morel Baring","email":"baringmorel207@gmail.com","phone":"+237 687300447"},{"name":"Feutseu Steve","email":"feutseustve2@icloud.com","phone":"+237 695922151"},{"name":"FOPA MOUSSA MORGAN","email":"moussaguenol@gmail.com","phone":"+237 679371149"},{"name":"kuete ramel","email":"derramel@gmail.com","phone":"+237 652802315"},{"name":"Samikada","email":"samikada267@gmail.com","phone":"+227 80181376"},{"name":"Belomie nagel","email":"belomienagelatonfack@gmail.com","phone":"+237 672904622"},{"name":"Adamou","email":"adamouahmadou47@gmail.com","phone":"+237 688900709"},{"name":"Nice","email":"chadospicy@gmail.com","phone":"+229 0191557018"},{"name":"malanmanihalima","email":"malammanihalima@gmail.com","phone":"+227 96199221"},{"name":"Maulé MK","email":"maurelprince.fr@gmail.com","phone":"+237 697006542"},{"name":"AFFAGNITO Marc","email":"affagnitoa@gmail.com","phone":"+229 0145104543"},{"name":"Abdoul","email":"abdoulkpekpassi7@gmail.com","phone":"+228 93318882"},{"name":"Djibril Seydou","email":"djibirlsaydougouno@gmail.com","phone":"+237 99506604"},{"name":"Fadil","email":"ferryjulie766@gmail.com","phone":"+228 79861014"},{"name":"Hadjara tassiou","email":"tassioumanmanhadjara@gmail.com","phone":"+227 89001272"},{"name":"Joel dupleix","email":"duplexofficiel@gmail.com","phone":"+237 674245637"},{"name":"Abdoul Kader bawa","email":"abdoulkadernawalkassoum@gmail.com","phone":"+227 85167596"},{"name":"Jamilou halilou","email":"jamilouhalilou7@gmail.com","phone":"+227 87059124"},{"name":"Djomou","email":"thierryfosso4@gmail.com","phone":"+237 656172451"},{"name":"NGUEFACK","email":"nguefacknobel@gmail.com","phone":"+237 656064930"},{"name":"Abdoul Majid moussa","email":"moussaabdoulmajid771@gmail.com","phone":"+237 96415459"},{"name":"Tsobeng trésor","email":"kokotsobeng@gmail.com","phone":"+237 692963412"},{"name":"Hadiza","email":"hadiza.lawan.4389@gmail.com","phone":"+227 94236030"},{"name":"Kousse mahrez","email":"koussemahrez@gmail.com","phone":"+228 70379653"},{"name":"Steph","email":"steph01@gmail.com","phone":"+228 90155016"},{"name":"ouedraogo Solange","email":"meryldoriane20@gmail.com","phone":"+226 76602366"},{"name":"Tbhnj","email":"noti@gmail.com","phone":"+237 699004814"},{"name":"peneroyce","email":"peneroyce9@gmail.com","phone":"+237 670523765"},{"name":"Ekah Stéphane Ebang","email":"ekahstephane@gmail.com","phone":"+237 653525653"},{"name":"Mbock Mbock saint-jean","email":"k86376625@gmail.com","phone":"+237 681000793"},{"name":"LEADER","email":"hervecusta@gmail.com","phone":"+237 93639363"},{"name":"Assoumane Hassane djibril","email":"djibrilassoumane@gmail.com","phone":"+227 94144982"},{"name":"Kpogomomo","email":"kkpogo88@gmail.com","phone":"+228 90723122"},{"name":"Alfa","email":"essisteve656@gmail.com","phone":"+237 641079539"},{"name":"Fred","email":"freddesmen12@gmail.com","phone":"+237 654178235"},{"name":"Sabiumalanabdu","email":"sabiumalanabdu@gmail.com","phone":"+227 99119920"},{"name":"Mekem Steve","email":"stevemekem@gmail.com","phone":"+237 650359840"},{"name":"Nassiroumoussaleko","email":"nassiroumoussaleko03@gmail.com","phone":"+227 98713230"},{"name":"Jessica GBEMADOU","email":"jessgbemadou@gmail.com","phone":"+228 72121057"},{"name":"Matagni sabine","email":"dakamasnel5@gmail.com","phone":"+237 653545560"},{"name":"Deho Teddy","email":"teddydeho1@gmail.com","phone":"+237 673411420"},{"name":"ano","email":"anodaniel506@gmail.com","phone":"+225 0172933192"},{"name":"Kom","email":"komivan58@gmail.com","phone":"+237 640111253"},{"name":"Benjamin","email":"nacoulmabenjamin827@gmail.com","phone":"+226 77029478"},{"name":"SaratouMoumouni","email":"yachaoumohamed@gmail.com","phone":"+227 96327112"},{"name":"BOCOHONSI Noudéou Elisée","email":"enoudeou@gmail.com","phone":"+229 0168460235"},{"name":"Iness Ndongho","email":"inesndongho@gmail.com","phone":"+237 692479587"},{"name":"Loveline megane","email":"lovelinedonfack98@gmail.com","phone":"+237 679338031"},{"name":"Kevin Nganou","email":"kevin.nganou@yopmail.com","phone":"+237 690112233"},{"name":"Indy","email":"indysalley@gmail.com","phone":"+237 673109149"},{"name":"Yann yepdie","email":"yyepdie@gmail.com","phone":"+237 698940736"},{"name":"Abdoul Rachid Moussa Bernard","email":"amoussabernard@gmail.com","phone":"+237 79941832"},{"name":"Keugmo Rahim","email":"keugmorahim@gmail.com","phone":"+237 680250364"},{"name":"Abdoul aziz lawali","email":"lawaliabdoulaziz32@gmail.com","phone":"+227 98396162"},{"name":"Tafadji Delmas","email":"mrdelmas101@gmail.com","phone":"+237 696186323"},{"name":"Gbènakpon Gédéon BOKOHONSI","email":"gedeonbokohonsi975@gmail.com","phone":"+229 0166437282"},{"name":"king","email":"darusselkitio248@gmail.com","phone":"+237 670546156"},{"name":"Halima Moussa","email":"halimamoussa128@gmail.com","phone":"+227 88482257"},{"name":"Aminouhassanibrahim","email":"aminoumatassa@gmail.com","phone":"+227 97657935"},{"name":"Mr nefco","email":"boukargaston3@gmail.com","phone":"+237 641050526"},{"name":"Ibrahim","email":"ib3448958@gmail.com","phone":"+237 80851288"},{"name":"Gavon kokou Rodrigue","email":"agamanilb@gmail.com","phone":"+237 98115031"},{"name":"LG","email":"angerochn@gmail.com","phone":"+237 673892498"},{"name":"Nouboudem Brice","email":"nouboudembrice@icloud.com","phone":"+237 688395787"},{"name":"Zongo zirwaoga janvier","email":"janvierzirwaogazongo@gmail.com","phone":"+226 57874569"},{"name":"Aboubacar","email":"m80374740@gmail.com","phone":"+237 690352752"},{"name":"Raoul Rafayel","email":"difforaoul718@gmail.com","phone":"+237 673652628"},{"name":"AVOYI Jacques","email":"jamestownyang@gmail.com","phone":"+228 99587256"},{"name":"Marie benardett","email":"emmanuelfalezataemmanuel@gmail.com","phone":"+237 678635940"},{"name":"Kenfack Temgoua","email":"kenfackhyacinthe@gmail.com","phone":"+237 657288756"},{"name":"Alexis Jior","email":"amanidioko06@gmail.com","phone":"+237 678265675"},{"name":"Ndjock yannga joseph stephane","email":"yanngajoseph@icloud.com","phone":"+237 693672355"},{"name":"Ebenezer Asili Mbi","email":"asiliebenezer@gmail.com","phone":"+237 675135590"},{"name":"junior","email":"casselrobin365@gmail.com","phone":"+237 640765815"},{"name":"Djamila Halarou Ali","email":"djamilahalarouali@gmail.com","phone":"+227 88918155"},{"name":"Warren","email":"eliaquimabh@gmail.com","phone":"+229 0197545667"},{"name":"Henri Elvis","email":"kouamekoffihenri74@gmail.com","phone":"+225 0152054453"},{"name":"laouali","email":"issoufoulouali926@gmail.com","phone":"+227 99915422"},{"name":"FOPA Morgan","email":"moussaguenol237@gmail.com","phone":"+237 679371148"},{"name":"Djonkou","email":"dimikrynjonkou5@gmail.com","phone":"+237 673209681"},{"name":"Sallou djime","email":"salloudjime3@gmail.com","phone":"+237 671065603"},{"name":"Elie BONI","email":"elieboni42@gmail.com","phone":"+229 0161791380"},{"name":"LAMICHA","email":"dontsachardin97@gmail.com","phone":"+237 681190758"},{"name":"Abdoul Razak Habou Ibrahim","email":"abdoulrazakhabouibrahim@gmail.com","phone":"+227 89215247"},{"name":"Massaoudou","email":"massaoudouibrachim022@gmail.com","phone":"+227 82113119"},{"name":"Konaté","email":"mamoudoulozekonate17@gmail.com","phone":"+226 55452255"},{"name":"GODJO SONON Jereas Perco","email":"quefgodjosonon@gmail.com","phone":"+229 57103825"},{"name":"Mouhamadou yacine yahaya","email":"yacineyahayayacouba@gmail.com","phone":"+227 89454269"},{"name":"Hountondji Fidégnon Alphonse","email":"alphonseadjasseahountondji@gmail.com","phone":"+229 0191073244"},{"name":"Habou Labo","email":"haboulaboousmane@gmail.com","phone":"+227 94291333"},{"name":"Djonkou","email":"njonkoudimikry@gmail.com","phone":"+237 652730320"},{"name":"Haladou Boukari","email":"haladouboukari08@gmail.com","phone":"+237 99299021"},{"name":"Alio Abdoulahi","email":"alioibo10@gmail.com","phone":"+227 87395333"},{"name":"Abdoul latif Daouda Oumar","email":"abdoullatifdaoudaoumar@gmail.com","phone":"+227 74161604"},{"name":"Gueye","email":"2005malickgueye@gmail.com","phone":"+221 770525302"},{"name":"Bocar","email":"degogabocar9@gmail.com","phone":"+223 61444194"},{"name":"Henry","email":"angenabukuze@gmail.com","phone":"+243 905163334"}];
+const TOTAL_BASE = BASE_CONTACTS.length;
 
-fetch('/api/contacts').then(r=>r.json()).then(d=>{if(Array.isArray(d))all=[...BASE,...d];buildChips();renderCards();}).catch(()=>{buildChips();renderCards();});
+// ── ACCESSIBLE BASE (selon plan) ──
+const accessibleBase = (PLAN_KEY === 'free') ? BASE_CONTACTS.slice(0, FREE_LIMIT) : BASE_CONTACTS;
+const lockedCount = TOTAL_BASE - accessibleBase.length;
+
+let myContacts = [];
+let all = [...accessibleBase];
+let selC='ALL', search='', pending=[];
+
+fetch('/api/contacts').then(r=>r.json()).then(d=>{
+  if(Array.isArray(d)) myContacts = d;
+  all = [...myContacts, ...accessibleBase];
+  buildChips();
+  renderCards();
+}).catch(()=>{
+  all = [...accessibleBase];
+  buildChips();
+  renderCards();
+});
 
 function getFiltered(){
   let l=all;
@@ -131,6 +128,7 @@ function getFiltered(){
   if(search){const q=search.toLowerCase();l=l.filter(c=>(c.name||'').toLowerCase().includes(q)||(c.email||'').toLowerCase().includes(q)||(c.phone||'').toLowerCase().includes(q));}
   return l;
 }
+
 function buildChips(){
   const cnt={};all.forEach(c=>{const cd=code(c.phone)||'Autre';cnt[cd]=(cnt[cd]||0)+1});
   const s=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
@@ -142,11 +140,14 @@ function buildChips(){
     box.appendChild(el);
   });
 }
+
 function renderCards(){
   const list=getFiltered();
   document.getElementById('sTotal').textContent=all.length;
-  document.getElementById('sFiltered').textContent=list.length;
+  document.getElementById('sMine').textContent=myContacts.length;
   document.getElementById('sCountries').textContent=new Set(all.map(c=>code(c.phone)).filter(Boolean)).size;
+  document.getElementById('sLocked').textContent=lockedCount;
+
   const grid=document.getElementById('contactsGrid'),emp=document.getElementById('emptyState');
   if(!list.length){grid.innerHTML='';emp.style.display='block';return;}
   emp.style.display='none';
@@ -171,8 +172,19 @@ function renderCards(){
         <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openSingleEmail('${esc(c.email)}','${esc(c.name||'')}')">✉️ Email</button>
       </div>
     </div>`).join('');
+
+  // Show locked section for free plan
+  const lockedSection = document.getElementById('lockedSection');
+  if (PLAN_KEY === 'free' && lockedCount > 0 && selC === 'ALL' && !search) {
+    document.getElementById('lockedCount').textContent = lockedCount;
+    lockedSection.style.display = 'block';
+  } else {
+    lockedSection.style.display = 'none';
+  }
 }
+
 function openSingleEmail(e,n){openEmailModal([{email:e,name:n}])}
+
 function openEmailModal(recs){
   pending=recs.filter(r=>r.email&&r.email.includes('@'));
   if(!pending.length){toast('⚠️ Aucun email valide');return;}
@@ -187,10 +199,12 @@ function openEmailModal(recs){
   document.getElementById('mSubject').value='';document.getElementById('mBody').value='';
   openModal('mEmail');
 }
+
 document.getElementById('btnSendGroup').onclick=()=>{
   const l=getFiltered().map(c=>({email:c.email,name:c.name||''}));
   if(!l.length){toast('⚠️ Aucun contact');return;}openEmailModal(l);
 };
+
 document.getElementById('btnSendEmail').onclick=async()=>{
   const subj=document.getElementById('mSubject').value.trim();
   const body=document.getElementById('mBody').value.trim();
@@ -213,16 +227,22 @@ document.getElementById('btnSendEmail').onclick=async()=>{
   toast(`✅ ${sent} email(s) envoyé(s)`);
   setTimeout(()=>closeModal('mEmail'),3000);
 };
+
 document.getElementById('btnAddContact').onclick=()=>openModal('mAdd');
+
 document.getElementById('btnConfirmAdd').onclick=async()=>{
   const e=document.getElementById('aE').value.trim();
   if(!e||!e.includes('@')){toast('⚠️ Email invalide');return;}
   if(all.find(c=>c.email.toLowerCase()===e.toLowerCase())){toast('⚠️ Contact déjà existant');return;}
   const nc={name:document.getElementById('aN').value.trim(),email:e,phone:document.getElementById('aP').value.trim()};
-  all.push(nc);
+  myContacts.push(nc);
+  all = [...myContacts, ...accessibleBase];
   await fetch('/api/contacts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contacts:[nc]})}).catch(()=>{});
-  closeModal('mAdd');buildChips();renderCards();toast('✅ Contact ajouté !');
+  closeModal('mAdd');
+  document.getElementById('aN').value='';document.getElementById('aE').value='';document.getElementById('aP').value='';
+  buildChips();renderCards();toast('✅ Contact ajouté !');
 };
+
 document.getElementById('searchInput').addEventListener('input',e=>{search=e.target.value;renderCards();});
 </script>
 {% endblock %}
