@@ -17,14 +17,37 @@ app.secret_key = os.environ.get("SECRET_KEY", "nexlink-secret-2025")
 _supabase = None
 
 def get_supabase():
+    """
+    Returns a Supabase client using the SERVICE ROLE key when available.
+    The service role key bypasses Row Level Security (RLS), which is
+    necessary here because our backend acts on behalf of users via
+    Flask sessions (not Supabase's own session/JWT mechanism).
+    Falls back to the anon key if service role isn't configured
+    (auth.sign_in/sign_up still need to work, which anon key supports).
+    """
     global _supabase
     if _supabase is None:
         from supabase import create_client
         url = os.environ.get("SUPABASE_URL", "")
-        key = os.environ.get("SUPABASE_ANON_KEY", "")
+        service_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+        anon_key = os.environ.get("SUPABASE_ANON_KEY", "")
+        key = service_key if service_key else anon_key
         if url and key:
             _supabase = create_client(url, key)
     return _supabase
+
+def get_supabase_auth():
+    """
+    Returns a Supabase client using the ANON key specifically for
+    auth.sign_in_with_password / auth.sign_up calls. Using the
+    service role key for auth operations is not recommended.
+    """
+    from supabase import create_client
+    url = os.environ.get("SUPABASE_URL", "")
+    anon_key = os.environ.get("SUPABASE_ANON_KEY", "")
+    if url and anon_key:
+        return create_client(url, anon_key)
+    return None
 
 # ══════════════════════════════════════════════════════════════
 # PLANS
@@ -127,13 +150,13 @@ def login():
     if not email or not password:
         return jsonify({"error": "Email et mot de passe requis"}), 400
 
-    sb = get_supabase()
-    if not sb:
+    sb_auth = get_supabase_auth()
+    if not sb_auth:
         return jsonify({"error": "Erreur de configuration serveur (Supabase)"}), 500
 
-    # Step 1: Authenticate
+    # Step 1: Authenticate (must use anon key client)
     try:
-        r = sb.auth.sign_in_with_password({"email": email, "password": password})
+        r = sb_auth.auth.sign_in_with_password({"email": email, "password": password})
         user = r.user
     except Exception as e:
         err = str(e).lower()
@@ -185,12 +208,13 @@ def register():
     if plan not in PLANS:
         plan = "free"
 
+    sb_auth = get_supabase_auth()
     sb = get_supabase()
-    if not sb:
+    if not sb_auth or not sb:
         return jsonify({"error": "Erreur de configuration serveur"}), 500
 
     try:
-        r = sb.auth.sign_up({"email": email, "password": password})
+        r = sb_auth.auth.sign_up({"email": email, "password": password})
         user = r.user
     except Exception as e:
         err = str(e).lower()
@@ -489,17 +513,17 @@ def admin_dashboard():
     conditions = get_conditions()
     if sb:
         try:
-            users_r = sb.table("profiles").select("*").order("created_at", desc=True).execute()
+            users_r = sb.table("profiles").select("*").execute()
             users = users_r.data or []
             total_users = len(users)
             pending = [u for u in users if u.get("status") == "pending"]
         except Exception as e:
-            print(f"[admin_dashboard] users error: {e}")
+            print(f"[admin_dashboard] users error: {repr(e)}")
         try:
             logs_r = sb.table("email_logs").select("id", count="exact").execute()
             total_emails = logs_r.count or 0
         except Exception as e:
-            print(f"[admin_dashboard] logs error: {e}")
+            print(f"[admin_dashboard] logs error: {repr(e)}")
 
     return render_template("admin/dashboard.html",
         users=users, pending=pending,
@@ -629,6 +653,21 @@ def debug_session():
         "profile": session.get("profile"),
         "is_admin": session.get("is_admin"),
     })
+
+@app.route("/debug-users")
+def debug_users():
+    """Temporary route to inspect raw Supabase profiles data."""
+    sb = get_supabase()
+    if not sb:
+        return jsonify({"error": "Supabase not configured"}), 500
+    try:
+        r = sb.table("profiles").select("*").execute()
+        return jsonify({
+            "count": len(r.data or []),
+            "data": r.data
+        })
+    except Exception as e:
+        return jsonify({"error": repr(e)}), 500
 
 # ══════════════════════════════════════════════════════════════
 # ERROR HANDLERS
