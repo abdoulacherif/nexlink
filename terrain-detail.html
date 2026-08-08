@@ -391,6 +391,7 @@
     overflow: hidden;
   }
   .terrain-thumb svg { width: 100%; height: 100%; display: block; }
+  .terrain-thumb img { width: 100%; height: 100%; display: block; object-fit: cover; }
   .terrain-info { flex: 1; min-width: 0; }
   .terrain-info h4 {
     margin: 0;
@@ -431,7 +432,7 @@
       <a class="icon-btn" href="#" aria-label="Notifications">🔔<span class="dot"></span></a>
     </div>
 
-    <div class="detail-hero" id="detail-hero"></div>
+    <div class="detail-hero"><img id="detail-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;" /></div>
 
     <div class="page-card">
       <h3 id="detail-name">Terrain</h3>
@@ -510,7 +511,7 @@
   });
 
 
-  const TERRAINS = {"A": {"id": "A", "name": "Terrain A", "price": "3 000 FCFA", "daily": "300 FCFA / jour", "hue": "#2e7d4f"}, "B": {"id": "B", "name": "Terrain B", "price": "5 000 FCFA", "daily": "500 FCFA / jour", "hue": "#3a8a4f"}, "C": {"id": "C", "name": "Terrain C", "price": "10 000 FCFA", "daily": "1 000 FCFA / jour", "hue": "#4a9a55"}, "D": {"id": "D", "name": "Terrain D", "price": "20 000 FCFA", "daily": "2 000 FCFA / jour", "hue": "#5aa85e"}, "E": {"id": "E", "name": "Terrain E", "price": "50 000 FCFA", "daily": "5 000 FCFA / jour", "hue": "#6bb56a"}};
+  const TERRAINS = {"A": {"id": "A", "name": "Terrain A", "price": "3 000 FCFA", "daily": "300 FCFA / jour", "img": "https://commons.wikimedia.org/wiki/Special:FilePath/Ontario%20Farmland%20(18632603183).jpg?width=400"}, "B": {"id": "B", "name": "Terrain B", "price": "5 000 FCFA", "daily": "500 FCFA / jour", "img": "https://commons.wikimedia.org/wiki/Special:FilePath/Aerial%20View%20Farm.JPG?width=400"}, "C": {"id": "C", "name": "Terrain C", "price": "10 000 FCFA", "daily": "1 000 FCFA / jour", "img": "https://commons.wikimedia.org/wiki/Special:FilePath/Aerial%20view%20of%20farmland%20in%20Dhulura.jpg?width=400"}, "D": {"id": "D", "name": "Terrain D", "price": "20 000 FCFA", "daily": "2 000 FCFA / jour", "img": "https://commons.wikimedia.org/wiki/Special:FilePath/Aerial%20view%20of%20farmland%20in%20Dhulura%20(1).jpg?width=400"}, "E": {"id": "E", "name": "Terrain E", "price": "50 000 FCFA", "daily": "5 000 FCFA / jour", "img": "https://commons.wikimedia.org/wiki/Special:FilePath/Aerial%20View%20of%20Green%20Grass%20Field.jpg?width=400"}};
 
   const params = new URLSearchParams(window.location.search);
   const id = params.get("id") || "A";
@@ -522,15 +523,9 @@
   document.getElementById("detail-daily").textContent = "Revenu quotidien : " + t.daily;
   document.title = t.name;
 
-  const hero = document.getElementById("detail-hero");
-  hero.innerHTML = '<svg viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg">' +
-    '<defs><linearGradient id="gh" x1="0" y1="0" x2="1" y2="1">' +
-    '<stop offset="0%" stop-color="' + t.hue + '"/>' +
-    '<stop offset="100%" stop-color="#0a1f14"/>' +
-    '</linearGradient></defs>' +
-    '<rect width="400" height="180" fill="url(#gh)"/>' +
-    '<polygon points="80,140 180,60 320,90 260,160" fill="none" stroke="#f3efe0" stroke-width="2" opacity="0.85"/>' +
-    '</svg>';
+  const img = document.getElementById("detail-img");
+  img.src = t.img;
+  img.alt = t.name;
 
   document.getElementById("buy-btn").addEventListener("click", () => {
     const msg = document.getElementById("buy-msg");
