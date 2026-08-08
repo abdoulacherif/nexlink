@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tableau de bord</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    padding: 24px;
+  }
+
+  .phone {
+    width: 380px;
+    height: 800px;
+    border: 6px solid #1a1a1a;
+    border-radius: 42px;
+    overflow: hidden;
+    position: relative;
+    background:
+      radial-gradient(60% 60% at 50% 0%, rgba(212,175,55,0.15), transparent 70%),
+      radial-gradient(120% 90% at 50% -10%, #0f3d24 0%, #0a1f14 45%, #050b08 100%);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+
+  .inner {
+    padding: 20px 20px 16px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header button {
+    background: none;
+    border: none;
+    color: #d9c98a;
+    font-size: 20px;
+    cursor: pointer;
+    position: relative;
+  }
+  .header h1 {
+    font-size: 15px;
+    color: #e7e2d2;
+    font-weight: 600;
+    margin: 0;
+  }
+  .dot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: #ef4444;
+    border-radius: 50%;
+  }
+
+  /* Profile */
+  .profile {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 28px;
+  }
+  .avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(160deg,#e9e5d8,#c9c3ad);
+    border: 2px solid rgba(217,201,138,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+  }
+  .welcome { font-size: 13px; color: #a9c9b0; margin: 0; }
+  .name-row { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+  .name-row h2 {
+    font-size: 26px;
+    color: #f3efe0;
+    font-family: Georgia, serif;
+    font-weight: 700;
+    margin: 0;
+  }
+  .badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: linear-gradient(135deg,#e8c46a,#c99a3b);
+    color: #2b1d05;
+  }
+
+  /* Balance card */
+  .balance {
+    margin-top: 24px;
+    border-radius: 16px;
+    padding: 20px;
+    background: linear-gradient(135deg,#1f6b3e 0%,#124a29 60%,#0c331c 100%);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  }
+  .balance-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .balance-top span { font-size: 13px; color: rgba(230,245,230,0.85); }
+  .balance-amount {
+    margin-top: 8px;
+    font-size: 30px;
+    color: #f4fbf1;
+    font-weight: 700;
+  }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .stat-card {
+    border-radius: 16px;
+    padding: 16px;
+    border: 1px solid rgba(217,201,138,0.25);
+    background: rgba(255,255,255,0.02);
+  }
+  .stat-card p.label { font-size: 12px; color: #9db9a3; margin: 0; }
+  .stat-card p.value {
+    margin-top: 8px;
+    font-size: 18px;
+    color: #eef0e4;
+    font-weight: 700;
+  }
+  .stat-card.center .value { text-align: center; }
+
+  /* Quick actions */
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 24px;
+  }
+  .action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  .action .icon-box {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(56,168,101,0.12);
+    border: 1px solid rgba(90,200,140,0.35);
+    font-size: 22px;
+  }
+  .action span.label { font-size: 11px; color: #cfe8d5; }
+
+  /* Revenue summary */
+  .summary {
+    margin-top: 24px;
+    border-radius: 16px;
+    padding: 16px;
+    border: 1px solid rgba(217,201,138,0.25);
+    background: rgba(255,255,255,0.02);
+  }
+  .summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+  }
+  .summary-row span.label { font-size: 13px; color: #a9c9b0; }
+  .summary-row span.value { font-size: 15px; color: #e8c46a; font-weight: 700; }
+  .divider { height: 1px; background: rgba(217,201,138,0.15); margin: 4px 0; }
+
+  .spacer { flex: 1; }
+
+  /* Bottom nav */
+  .bottom-nav {
+    margin-top: 24px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(217,201,138,0.15);
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .nav-item .icon { font-size: 18px; color: rgba(207,232,213,0.55); }
+  .nav-item span.label { font-size: 10px; color: rgba(207,232,213,0.55); }
+  .nav-item.active .icon,
+  .nav-item.active span.label { color: #5fe08a; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="inner">
+    <div class="header">
+      <button aria-label="Menu">☰</button>
+      <h1>Tableau de bord</h1>
+      <button aria-label="Notifications">🔔<span class="dot"></span></button>
+    </div>
+
+    <div class="profile">
+      <div class="avatar">🧑🏾</div>
+      <div>
+        <p class="welcome">Bienvenue,</p>
+        <div class="name-row">
+          <h2>Gildas</h2>
+          <span class="badge">Membre VIP</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="balance">
+      <div class="balance-top">
+        <span>Solde disponible</span>
+        <span id="eye-toggle" style="cursor:pointer;">👁️</span>
+      </div>
+      <p class="balance-amount" id="balance-amount">25 600 FCFA</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <p class="label">Revenus totaux</p>
+        <p class="value">125 600 FCFA</p>
+      </div>
+      <div class="stat-card center">
+        <p class="label">Terrains actifs</p>
+        <p class="value">3</p>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="action" onclick="alert('Dépôt à venir')">
+        <span class="icon-box">💰</span>
+        <span class="label">Dépôt</span>
+      </button>
+      <button class="action" onclick="alert('Retrait à venir')">
+        <span class="icon-box">🏦</span>
+        <span class="label">Retrait</span>
+      </button>
+      <button class="action" onclick="alert('Parrainage à venir')">
+        <span class="icon-box">👥</span>
+        <span class="label">Parrainage</span>
+      </button>
+      <button class="action" onclick="alert('Plus d\'options à venir')">
+        <span class="icon-box">⋯</span>
+        <span class="label">Plus</span>
+      </button>
+    </div>
+
+    <div class="summary">
+      <div class="summary-row">
+        <span class="label">Revenus du jour</span>
+        <span class="value">2 600 FCFA</span>
+      </div>
+      <div class="divider"></div>
+      <div class="summary-row">
+        <span class="label">Total gagné</span>
+        <span class="value">125 600 FCFA</span>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="bottom-nav">
+      <div class="nav-item active">
+        <span class="icon">🏠</span>
+        <span class="label">Accueil</span>
+      </div>
+      <div class="nav-item">
+        <span class="icon">🌳</span>
+        <span class="label">Terrains</span>
+      </div>
+      <div class="nav-item">
+        <span class="icon">📈</span>
+        <span class="label">Revenus</span>
+      </div>
+      <div class="nav-item">
+        <span class="icon">👤</span>
+        <span class="label">Profil</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Masquer/afficher le solde
+  let visible = true;
+  const amountEl = document.getElementById("balance-amount");
+  const eyeEl = document.getElementById("eye-toggle");
+  const realAmount = amountEl.textContent;
+
+  eyeEl.addEventListener("click", () => {
+    visible = !visible;
+    amountEl.textContent = visible ? realAmount : "•••••• FCFA";
+    eyeEl.textContent = visible ? "👁️" : "🙈";
+  });
+
+  // Navigation basse (simple changement d'onglet visuel)
+  document.querySelectorAll(".nav-item").forEach((item) => {
+    item.addEventListener("click", () => {
+      document.querySelectorAll(".nav-item").forEach((i) => i.classList.remove("active"));
+      item.classList.add("active");
+    });
+  });
+</script>
+
+</body>
+</html>
