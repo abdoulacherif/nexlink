@@ -7,35 +7,31 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   * { box-sizing: border-box; }
-  body {
+  html, body {
     margin: 0;
     min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 100%;
     background: #000;
     font-family: 'Segoe UI', Arial, sans-serif;
-    padding: 24px;
   }
 
   .phone {
-    width: 380px;
-    min-height: 720px;
-    border: 6px solid #1a1a1a;
-    border-radius: 42px;
-    overflow: hidden;
+    width: 100%;
+    min-height: 100vh;
     position: relative;
     background:
       radial-gradient(60% 60% at 50% 0%, rgba(212,175,55,0.15), transparent 70%),
       radial-gradient(120% 90% at 50% -10%, #0f3d24 0%, #0a1f14 45%, #050b08 100%);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
   }
 
   .inner {
     padding: 40px 24px 32px;
     display: flex;
     flex-direction: column;
-    height: 100%;
+    min-height: 100vh;
+    max-width: 420px;
+    margin: 0 auto;
+    justify-content: center;
   }
 
   .logo {
