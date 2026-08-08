@@ -14,6 +14,8 @@
     font-family: 'Segoe UI', Arial, sans-serif;
   }
 
+  a { text-decoration: none; color: inherit; }
+
   .phone {
     width: 100%;
     min-height: 100vh;
@@ -24,7 +26,7 @@
   }
 
   .inner {
-    padding: 20px 20px 24px;
+    padding: 20px 20px calc(100px + env(safe-area-inset-bottom));
     display: flex;
     flex-direction: column;
     min-height: 100vh;
@@ -36,13 +38,14 @@
     align-items: center;
     justify-content: space-between;
   }
-  .header button {
+  .header button, .header a.icon-btn {
     background: none;
     border: none;
     color: #d9c98a;
     font-size: 20px;
     cursor: pointer;
     position: relative;
+    display: inline-flex;
   }
   .header h1 {
     font-size: 15px;
@@ -189,27 +192,179 @@
 
   .spacer { flex: 1; }
 
-  /* Bottom nav */
+  /* Bottom nav - FIXE */
   .bottom-nav {
-    margin-top: 24px;
-    border-radius: 16px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 12px 24px;
-    background: rgba(0,0,0,0.35);
-    border: 1px solid rgba(217,201,138,0.15);
+    justify-content: space-around;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+    background: rgba(6, 14, 9, 0.92);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(217,201,138,0.15);
+    z-index: 50;
   }
   .nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 4px;
+    flex: 1;
   }
   .nav-item .icon { font-size: 18px; color: rgba(207,232,213,0.55); }
   .nav-item span.label { font-size: 10px; color: rgba(207,232,213,0.55); }
   .nav-item.active .icon,
   .nav-item.active span.label { color: #5fe08a; }
+
+  /* Modal menu (burger) */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 100;
+    display: none;
+    align-items: flex-end;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-panel {
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: linear-gradient(180deg, #123420 0%, #08150d 100%);
+    border-top: 1px solid rgba(217,201,138,0.3);
+    border-radius: 20px 20px 0 0;
+    padding: 20px;
+    animation: slideUp 0.2s ease-out;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .modal-header h3 {
+    margin: 0;
+    color: #f3efe0;
+    font-family: Georgia, serif;
+    font-size: 18px;
+  }
+  .modal-header button {
+    background: none;
+    border: none;
+    color: #cfe8d5;
+    font-size: 20px;
+    cursor: pointer;
+  }
+  .modal-list a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 8px;
+    color: #eef0e4;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(217,201,138,0.1);
+  }
+  .modal-list a:last-child { border-bottom: none; }
+  .modal-list span.mi { font-size: 18px; width: 24px; text-align: center; }
+
+  /* Sub-page content blocks */
+  .page-card {
+    margin-top: 24px;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid rgba(217,201,138,0.25);
+    background: rgba(255,255,255,0.02);
+  }
+  .page-card h3 {
+    margin: 0 0 4px;
+    color: #f3efe0;
+    font-family: Georgia, serif;
+    font-size: 18px;
+  }
+  .page-card p.desc { color: #9db9a3; font-size: 13px; margin: 0 0 16px; }
+  .field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(217,201,138,0.25);
+    margin-bottom: 12px;
+  }
+  .field input, .field select {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 13px 0;
+    font-size: 14px;
+    color: #eef0e4;
+  }
+  .field input::placeholder { color: #6f8a76; }
+  .btn-primary {
+    width: 100%;
+    padding: 13px 0;
+    border-radius: 12px;
+    border: 1px solid rgba(217,201,138,0.35);
+    background: linear-gradient(135deg,#1f6b3e,#124a29);
+    color: #f4fbf1;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(217,201,138,0.12);
+  }
+  .list-item:last-child { border-bottom: none; }
+  .list-item .li-left { display: flex; align-items: center; gap: 12px; }
+  .list-item .li-icon { font-size: 20px; }
+  .list-item .li-title { color: #eef0e4; font-size: 14px; }
+  .list-item .li-sub { color: #8fae96; font-size: 12px; margin-top: 2px; }
+  .list-item .li-value { color: #e8c46a; font-weight: 700; font-size: 14px; }
+  .empty-state {
+    text-align: center;
+    color: #7d9a84;
+    font-size: 13px;
+    padding: 24px 0;
+  }
+  .referral-code {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: rgba(232,196,106,0.1);
+    border: 1px dashed rgba(232,196,106,0.5);
+    margin-bottom: 16px;
+  }
+  .referral-code span.code {
+    font-size: 16px;
+    font-weight: 700;
+    color: #e8c46a;
+    letter-spacing: 1px;
+  }
+  .referral-code button {
+    background: rgba(232,196,106,0.2);
+    border: none;
+    color: #e8c46a;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -217,9 +372,9 @@
 <div class="phone">
   <div class="inner">
     <div class="header">
-      <button aria-label="Menu">☰</button>
+      <button data-open-menu aria-label="Menu">☰</button>
       <h1>Tableau de bord</h1>
-      <button aria-label="Notifications">🔔<span class="dot"></span></button>
+      <a class="icon-btn" href="#" aria-label="Notifications">🔔<span class="dot"></span></a>
     </div>
 
     <div class="profile">
@@ -253,22 +408,22 @@
     </div>
 
     <div class="actions">
-      <button class="action" onclick="alert('Dépôt à venir')">
+      <a class="action" href="depot.html">
         <span class="icon-box">💰</span>
         <span class="label">Dépôt</span>
-      </button>
-      <button class="action" onclick="alert('Retrait à venir')">
+      </a>
+      <a class="action" href="retrait.html">
         <span class="icon-box">🏦</span>
         <span class="label">Retrait</span>
-      </button>
-      <button class="action" onclick="alert('Parrainage à venir')">
+      </a>
+      <a class="action" href="parrainage.html">
         <span class="icon-box">👥</span>
         <span class="label">Parrainage</span>
-      </button>
-      <button class="action" onclick="alert('Plus d\'options à venir')">
+      </a>
+      <a class="action" href="plus.html">
         <span class="icon-box">⋯</span>
         <span class="label">Plus</span>
-      </button>
+      </a>
     </div>
 
     <div class="summary">
@@ -283,30 +438,58 @@
       </div>
     </div>
 
+
     <div class="spacer"></div>
 
     <div class="bottom-nav">
-      <div class="nav-item active">
-        <span class="icon">🏠</span>
-        <span class="label">Accueil</span>
-      </div>
-      <div class="nav-item">
-        <span class="icon">🌳</span>
-        <span class="label">Terrains</span>
-      </div>
-      <div class="nav-item">
-        <span class="icon">📈</span>
-        <span class="label">Revenus</span>
-      </div>
-      <div class="nav-item">
-        <span class="icon">👤</span>
-        <span class="label">Profil</span>
-      </div>
+      <a class="nav-item active" href="dashboard.html"><span class="icon">🏠</span><span class="label">Accueil</span></a>
+      <a class="nav-item" href="terrains.html"><span class="icon">🌳</span><span class="label">Terrains</span></a>
+      <a class="nav-item" href="revenus.html"><span class="icon">📈</span><span class="label">Revenus</span></a>
+      <a class="nav-item" href="profil.html"><span class="icon">👤</span><span class="label">Profil</span></a>
     </div>
   </div>
 </div>
 
+
+<div class="modal-overlay" id="menu-overlay">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <h3>Menu</h3>
+      <button id="menu-close" aria-label="Fermer">✕</button>
+    </div>
+    <div class="modal-list">
+      <a href="dashboard.html"><span class="mi">🏠</span> Accueil</a>
+      <a href="terrains.html"><span class="mi">🌳</span> Mes terrains</a>
+      <a href="revenus.html"><span class="mi">📈</span> Revenus</a>
+      <a href="parrainage.html"><span class="mi">👥</span> Parrainage</a>
+      <a href="profil.html"><span class="mi">👤</span> Profil</a>
+      <a href="#"><span class="mi">⚙️</span> Paramètres</a>
+      <a href="#"><span class="mi">🛟</span> Support</a>
+      <a href="#"><span class="mi">🚪</span> Déconnexion</a>
+    </div>
+  </div>
+</div>
+
+
 <script>
+
+  // Menu burger (modal)
+  const menuOverlay = document.getElementById("menu-overlay");
+  const menuOpenBtns = document.querySelectorAll("[data-open-menu]");
+  const menuCloseBtn = document.getElementById("menu-close");
+
+  menuOpenBtns.forEach((btn) => {
+    btn.addEventListener("click", () => menuOverlay.classList.add("show"));
+  });
+  menuCloseBtn.addEventListener("click", () => menuOverlay.classList.remove("show"));
+  menuOverlay.addEventListener("click", (e) => {
+    if (e.target === menuOverlay) menuOverlay.classList.remove("show");
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") menuOverlay.classList.remove("show");
+  });
+
+
   // Masquer/afficher le solde
   let visible = true;
   const amountEl = document.getElementById("balance-amount");
@@ -319,13 +502,6 @@
     eyeEl.textContent = visible ? "👁️" : "🙈";
   });
 
-  // Navigation basse (simple changement d'onglet visuel)
-  document.querySelectorAll(".nav-item").forEach((item) => {
-    item.addEventListener("click", () => {
-      document.querySelectorAll(".nav-item").forEach((i) => i.classList.remove("active"));
-      item.classList.add("active");
-    });
-  });
 </script>
 
 </body>
