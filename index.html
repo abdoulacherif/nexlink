@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Connexion / Inscription</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    padding: 24px;
+  }
+
+  .phone {
+    width: 380px;
+    min-height: 720px;
+    border: 6px solid #1a1a1a;
+    border-radius: 42px;
+    overflow: hidden;
+    position: relative;
+    background:
+      radial-gradient(60% 60% at 50% 0%, rgba(212,175,55,0.15), transparent 70%),
+      radial-gradient(120% 90% at 50% -10%, #0f3d24 0%, #0a1f14 45%, #050b08 100%);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+
+  .inner {
+    padding: 40px 24px 32px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .logo {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    background: linear-gradient(135deg,#1f6b3e,#124a29);
+    border: 1px solid rgba(217,201,138,0.35);
+  }
+
+  h1 {
+    text-align: center;
+    color: #f3efe0;
+    font-family: Georgia, serif;
+    font-size: 22px;
+    margin: 0;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #9db9a3;
+    font-size: 13px;
+    margin: 6px 0 24px;
+  }
+
+  .toggle {
+    display: flex;
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 24px;
+  }
+
+  .toggle button {
+    flex: 1;
+    padding: 10px 0;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #a9c9b0;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .toggle button.active {
+    background: linear-gradient(135deg,#e8c46a,#c99a3b);
+    color: #2b1d05;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(217,201,138,0.25);
+  }
+
+  .field span.icon {
+    font-size: 15px;
+    opacity: 0.7;
+  }
+
+  .field input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 13px 0;
+    font-size: 14px;
+    color: #eef0e4;
+  }
+
+  .field input::placeholder {
+    color: #6f8a76;
+  }
+
+  .hidden { display: none !important; }
+
+  .message {
+    font-size: 12px;
+    padding: 0 4px;
+    min-height: 16px;
+  }
+  .message.error { color: #f28b82; }
+  .message.success { color: #7fe0a0; }
+
+  button.submit {
+    margin-top: 4px;
+    padding: 13px 0;
+    border-radius: 12px;
+    border: 1px solid rgba(217,201,138,0.35);
+    background: linear-gradient(135deg,#1f6b3e,#124a29);
+    color: #f4fbf1;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button.submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .switch {
+    text-align: center;
+    font-size: 12px;
+    color: #7d9a84;
+    margin-top: 20px;
+  }
+
+  .switch a {
+    color: #e8c46a;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="inner">
+    <div class="logo">🌍</div>
+    <h1 id="title">Créer un compte</h1>
+    <p class="subtitle" id="subtitle">Rejoignez la plateforme en quelques secondes</p>
+
+    <div class="toggle">
+      <button id="tab-signup" class="active">Inscription</button>
+      <button id="tab-login">Connexion</button>
+    </div>
+
+    <form id="auth-form">
+      <div class="field" id="field-nom">
+        <span class="icon">👤</span>
+        <input type="text" id="nom" placeholder="Nom complet" />
+      </div>
+
+      <div class="field">
+        <span class="icon">✉️</span>
+        <input type="email" id="email" placeholder="Adresse email" />
+      </div>
+
+      <div class="field" id="field-numero">
+        <span class="icon">📞</span>
+        <input type="tel" id="numero" placeholder="Numéro de téléphone" />
+      </div>
+
+      <div class="field" id="field-parrainage">
+        <span class="icon">🎁</span>
+        <input type="text" id="parrainage" placeholder="Code de parrainage (optionnel)" />
+      </div>
+
+      <div class="field">
+        <span class="icon">🔒</span>
+        <input type="password" id="motdepasse" placeholder="Mot de passe" />
+      </div>
+
+      <p class="message" id="message"></p>
+
+      <button type="submit" class="submit" id="submit-btn">S'inscrire</button>
+    </form>
+
+    <p class="switch" id="switch-text">
+      Vous avez déjà un compte ? <a id="switch-link">Connexion</a>
+    </p>
+  </div>
+</div>
+
+<script>
+  const supabaseUrl = "https://onfdhazwxnoanhfdbiyf.supabase.co";
+  const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9uZmRoYXp3eG5vYW5oZmRiaXlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxODU1ODgsImV4cCI6MjEwMTc2MTU4OH0.ScjedgaH2Mu1mkTvedTxX-LCQuGE7zTmUcbzkAKbmCc";
+  const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+  let mode = "signup";
+
+  const title = document.getElementById("title");
+  const subtitle = document.getElementById("subtitle");
+  const tabSignup = document.getElementById("tab-signup");
+  const tabLogin = document.getElementById("tab-login");
+  const fieldNom = document.getElementById("field-nom");
+  const fieldNumero = document.getElementById("field-numero");
+  const fieldParrainage = document.getElementById("field-parrainage");
+  const submitBtn = document.getElementById("submit-btn");
+  const switchText = document.getElementById("switch-text");
+  const switchLink = document.getElementById("switch-link");
+  const messageEl = document.getElementById("message");
+  const form = document.getElementById("auth-form");
+
+  function setMode(newMode) {
+    mode = newMode;
+    messageEl.textContent = "";
+    messageEl.className = "message";
+
+    if (mode === "signup") {
+      title.textContent = "Créer un compte";
+      subtitle.textContent = "Rejoignez la plateforme en quelques secondes";
+      tabSignup.classList.add("active");
+      tabLogin.classList.remove("active");
+      fieldNom.classList.remove("hidden");
+      fieldNumero.classList.remove("hidden");
+      fieldParrainage.classList.remove("hidden");
+      submitBtn.textContent = "S'inscrire";
+      switchText.innerHTML = 'Vous avez déjà un compte ? <a id="switch-link">Connexion</a>';
+    } else {
+      title.textContent = "Bon retour";
+      subtitle.textContent = "Connectez-vous à votre compte";
+      tabLogin.classList.add("active");
+      tabSignup.classList.remove("active");
+      fieldNom.classList.add("hidden");
+      fieldNumero.classList.add("hidden");
+      fieldParrainage.classList.add("hidden");
+      submitBtn.textContent = "Se connecter";
+      switchText.innerHTML = 'Pas encore de compte ? <a id="switch-link">Inscription</a>';
+    }
+
+    document.getElementById("switch-link").addEventListener("click", () => {
+      setMode(mode === "signup" ? "login" : "signup");
+    });
+  }
+
+  tabSignup.addEventListener("click", () => setMode("signup"));
+  tabLogin.addEventListener("click", () => setMode("login"));
+  document.getElementById("switch-link").addEventListener("click", () => {
+    setMode(mode === "signup" ? "login" : "signup");
+  });
+
+  function showMessage(text, type) {
+    messageEl.textContent = text;
+    messageEl.className = "message " + type;
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    showMessage("", "");
+
+    const email = document.getElementById("email").value.trim();
+    const motdepasse = document.getElementById("motdepasse").value;
+
+    if (mode === "signup") {
+      const nom = document.getElementById("nom").value.trim();
+      const numero = document.getElementById("numero").value.trim();
+      const parrainage = document.getElementById("parrainage").value.trim();
+
+      if (!nom || !email || !numero || !motdepasse) {
+        showMessage("Merci de remplir tous les champs.", "error");
+        return;
+      }
+      if (motdepasse.length < 6) {
+        showMessage("Le mot de passe doit contenir au moins 6 caractères.", "error");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Inscription en cours...";
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: motdepasse,
+        options: {
+          data: { nom, numero, parrainage: parrainage || null }
+        }
+      });
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = "S'inscrire";
+
+      if (error) {
+        showMessage(error.message, "error");
+        return;
+      }
+
+      if (data && data.user) {
+        await supabase.from("profiles").upsert({
+          id: data.user.id,
+          nom,
+          email,
+          numero,
+          code_parrainage: parrainage || null
+        });
+      }
+
+      showMessage("Inscription réussie ! Vérifiez votre email pour confirmer votre compte.", "success");
+      form.reset();
+
+    } else {
+      if (!email || !motdepasse) {
+        showMessage("Merci de remplir tous les champs.", "error");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Connexion en cours...";
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password: motdepasse
+      });
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Se connecter";
+
+      if (error) {
+        showMessage(error.message, "error");
+        return;
+      }
+
+      showMessage("Connexion réussie !", "success");
+    }
+  });
+
+  setMode("signup");
+</script>
+
+</body>
+</html>
