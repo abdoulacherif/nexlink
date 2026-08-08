@@ -218,9 +218,19 @@
 </div>
 
 <script>
+  // --- Initialisation Supabase (protégée : ne doit jamais bloquer l'UI) ---
   const supabaseUrl = "https://onfdhazwxnoanhfdbiyf.supabase.co";
   const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9uZmRoYXp3eG5vYW5oZmRiaXlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxODU1ODgsImV4cCI6MjEwMTc2MTU4OH0.ScjedgaH2Mu1mkTvedTxX-LCQuGE7zTmUcbzkAKbmCc";
-  const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+  let supabase = null;
+  try {
+    if (window.supabase && typeof window.supabase.createClient === "function") {
+      supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+    } else {
+      console.error("Librairie Supabase non chargée (CDN indisponible).");
+    }
+  } catch (err) {
+    console.error("Erreur d'initialisation Supabase :", err);
+  }
 
   let mode = "signup";
 
@@ -283,6 +293,11 @@
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     showMessage("", "");
+
+    if (!supabase) {
+      showMessage("Service indisponible pour le moment. Vérifiez votre connexion et réessayez.", "error");
+      return;
+    }
 
     const email = document.getElementById("email").value.trim();
     const motdepasse = document.getElementById("motdepasse").value;
