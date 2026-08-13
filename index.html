@@ -6,6 +6,7 @@
 <title>Kontak — Trouve ton réseau</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --bg:#0E2A24;
@@ -16,6 +17,7 @@
     --wa:#25D366;
     --line:rgba(242,239,230,0.14);
     --muted:rgba(242,239,230,0.6);
+    --err:#D9534F;
   }
   *{box-sizing:border-box;}
   body{margin:0;background:var(--bg);color:var(--paper);font-family:'Sora',sans-serif;-webkit-font-smoothing:antialiased;}
@@ -25,8 +27,10 @@
   header{padding:22px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:10;}
   .logo{font-family:'Fraunces',serif;font-style:italic;font-size:22px;letter-spacing:0.3px;}
   .logo span{color:var(--accent);}
+  .header-actions{display:flex;gap:8px;}
   .add-btn{background:var(--accent);color:var(--ink);border:none;padding:10px 18px;border-radius:100px;font-weight:600;font-size:14px;cursor:pointer;font-family:'Sora',sans-serif;}
-  .add-btn:active{transform:scale(0.97);}
+  .login-btn{background:transparent;color:var(--paper);border:1px solid var(--line);padding:10px 16px;border-radius:100px;font-weight:600;font-size:14px;cursor:pointer;font-family:'Sora',sans-serif;}
+  .add-btn:active,.login-btn:active{transform:scale(0.97);}
 
   .hero{padding:48px 20px 28px;text-align:left;}
   .hero .eyebrow{font-family:'Space Mono',monospace;font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;}
@@ -55,7 +59,8 @@
   .card-name{font-family:'Fraunces',serif;font-size:18px;font-weight:600;line-height:1.2;}
   .card-city{font-size:12px;color:rgba(14,42,36,0.55);font-family:'Space Mono',monospace;margin-top:2px;}
   .card-cat{display:inline-block;margin-top:8px;font-size:11px;background:rgba(14,42,36,0.08);padding:4px 10px;border-radius:100px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;}
-  .card-desc{font-size:13.5px;line-height:1.5;margin-top:12px;color:rgba(14,42,36,0.8);min-height:38px;}
+  .card-desc{font-size:13.5px;line-height:1.5;margin-top:12px;color:rgba(14,42,36,0.8);}
+  .card-owner{font-size:12px;color:rgba(14,42,36,0.5);margin-top:4px;}
   .card-actions{display:flex;gap:8px;margin-top:16px;}
   .wa-btn{flex:1;background:var(--wa);color:#fff;text-decoration:none;text-align:center;padding:10px;border-radius:10px;font-weight:600;font-size:13.5px;display:flex;align-items:center;justify-content:center;gap:6px;}
   .empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted);}
@@ -63,7 +68,7 @@
 
   .modal-overlay{position:fixed;inset:0;background:rgba(14,42,36,0.75);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;z-index:100;}
   .modal-overlay.open{display:flex;}
-  .modal{background:var(--paper);color:var(--ink);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:26px 22px 30px;max-height:88vh;overflow-y:auto;}
+  .modal{background:var(--paper);color:var(--ink);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:26px 22px 30px;max-height:90vh;overflow-y:auto;position:relative;}
   @media(min-width:640px){.modal-overlay{align-items:center;}.modal{border-radius:20px;}}
   .modal h2{font-size:22px;margin-bottom:4px;}
   .modal .sub{color:rgba(14,42,36,0.55);font-size:13px;margin-bottom:20px;}
@@ -73,24 +78,38 @@
   .field textarea{resize:vertical;min-height:70px;}
   .modal-actions{display:flex;gap:10px;margin-top:20px;}
   .btn-primary{flex:1;background:var(--ink);color:var(--paper);border:none;padding:13px;border-radius:10px;font-weight:600;font-size:14.5px;cursor:pointer;font-family:'Sora',sans-serif;}
+  .btn-primary:disabled{opacity:0.6;}
   .btn-ghost{background:transparent;border:1.5px solid rgba(14,42,36,0.2);color:var(--ink);padding:13px 18px;border-radius:10px;font-weight:600;font-size:14.5px;cursor:pointer;font-family:'Sora',sans-serif;}
   .close-x{position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:rgba(14,42,36,0.5);}
   .hint{font-size:11.5px;color:rgba(14,42,36,0.5);margin-top:4px;}
-  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:12px 22px;border-radius:100px;font-size:13.5px;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none;}
+  .err-msg{font-size:12.5px;color:var(--err);margin-top:4px;display:none;}
+  .err-msg.show{display:block;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:12px 22px;border-radius:100px;font-size:13.5px;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none;max-width:90%;text-align:center;}
   .toast.show{opacity:1;}
+
+  .stepper{display:flex;gap:6px;margin-bottom:22px;}
+  .stepper .dot{flex:1;height:4px;border-radius:100px;background:rgba(14,42,36,0.12);}
+  .stepper .dot.active{background:var(--ink);}
+  .step-panel{display:none;}
+  .step-panel.active{display:block;}
+  .switch-link{text-align:center;font-size:13px;color:rgba(14,42,36,0.6);margin-top:16px;}
+  .switch-link a{color:var(--ink);font-weight:600;cursor:pointer;text-decoration:underline;}
 </style>
 </head>
 <body>
 
 <header>
   <div class="logo">Kon<span>tak</span></div>
-  <button class="add-btn" onclick="openModal()">+ Ajouter</button>
+  <div class="header-actions">
+    <button class="login-btn" onclick="openLogin()">Connexion</button>
+    <button class="add-btn" onclick="openSignup()">S'inscrire</button>
+  </div>
 </header>
 
 <section class="hero">
   <div class="eyebrow">Annuaire &amp; réseau business</div>
   <h1>Trouve des contacts,<br>fais connaître ton business.</h1>
-  <p>Ajoute ton numéro WhatsApp, décris ton activité, et laisse d'autres personnes te découvrir et te contacter directement.</p>
+  <p>Crée ton compte, ajoute ton numéro WhatsApp et ton activité, et laisse d'autres personnes te découvrir et te contacter directement.</p>
 </section>
 
 <div class="search-wrap">
@@ -105,86 +124,157 @@
 
 <div class="grid" id="grid"></div>
 
-<div class="modal-overlay" id="modalOverlay">
+<!-- SIGNUP MODAL -->
+<div class="modal-overlay" id="signupOverlay">
   <div class="modal">
-    <button class="close-x" onclick="closeModal()">✕</button>
-    <h2>Ajouter mon contact</h2>
-    <div class="sub">Visible par tous les visiteurs du site.</div>
-    <form id="addForm">
-      <div class="field">
-        <label>Nom</label>
-        <input type="text" id="f-name" required placeholder="Ex: Aïcha Diallo">
+    <button class="close-x" onclick="closeSignup()">✕</button>
+    <h2>Créer mon compte</h2>
+    <div class="sub" id="signupSub">Étape 1 sur 3 — Tes informations</div>
+    <div class="stepper">
+      <div class="dot active" id="dot1"></div>
+      <div class="dot" id="dot2"></div>
+      <div class="dot" id="dot3"></div>
+    </div>
+
+    <form id="signupForm">
+      <div class="step-panel active" id="step1">
+        <div class="field">
+          <label>Nom complet</label>
+          <input type="text" id="s-name" required placeholder="Ex: Aïcha Diallo">
+        </div>
+        <div class="field">
+          <label>Numéro WhatsApp</label>
+          <input type="tel" id="s-phone" required placeholder="Ex: +221771234567">
+          <div class="hint">Avec l'indicatif pays, sans espaces.</div>
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="s-email" required placeholder="Ex: aicha@email.com">
+        </div>
+        <div class="err-msg" id="err1"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn-ghost" onclick="closeSignup()">Annuler</button>
+          <button type="button" class="btn-primary" onclick="goToStep(2)">Suivant</button>
+        </div>
       </div>
-      <div class="field">
-        <label>Numéro WhatsApp</label>
-        <input type="tel" id="f-phone" required placeholder="Ex: +221771234567">
-        <div class="hint">Avec l'indicatif pays, sans espaces.</div>
+
+      <div class="step-panel" id="step2">
+        <div class="field">
+          <label>Pays</label>
+          <input type="text" id="s-country" required placeholder="Ex: Sénégal">
+        </div>
+        <div class="field">
+          <label>Ville</label>
+          <input type="text" id="s-city" required placeholder="Ex: Dakar">
+        </div>
+        <div class="field">
+          <label>Nom du business</label>
+          <input type="text" id="s-business" required placeholder="Ex: Aïcha Créations">
+        </div>
+        <div class="field">
+          <label>Secteur d'activité</label>
+          <select id="s-sector" required>
+            <option value="">Choisir…</option>
+            <option>Commerce</option>
+            <option>Mode & beauté</option>
+            <option>Restauration</option>
+            <option>Services</option>
+            <option>Tech & digital</option>
+            <option>Immobilier</option>
+            <option>Éducation</option>
+            <option>Autre</option>
+          </select>
+        </div>
+        <div class="err-msg" id="err2"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn-ghost" onclick="goToStep(1)">Retour</button>
+          <button type="button" class="btn-primary" onclick="goToStep(3)">Suivant</button>
+        </div>
       </div>
-      <div class="field">
-        <label>Ville</label>
-        <input type="text" id="f-city" required placeholder="Ex: Dakar">
-      </div>
-      <div class="field">
-        <label>Catégorie</label>
-        <select id="f-cat" required>
-          <option value="">Choisir…</option>
-          <option>Commerce</option>
-          <option>Mode & beauté</option>
-          <option>Restauration</option>
-          <option>Services</option>
-          <option>Tech & digital</option>
-          <option>Immobilier</option>
-          <option>Éducation</option>
-          <option>Autre</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Décris ton business</label>
-        <textarea id="f-desc" required placeholder="En quelques mots, ce que tu proposes…"></textarea>
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn-ghost" onclick="closeModal()">Annuler</button>
-        <button type="submit" class="btn-primary">Publier ma fiche</button>
+
+      <div class="step-panel" id="step3">
+        <div class="field">
+          <label>Mot de passe</label>
+          <input type="password" id="s-pass" required placeholder="Minimum 6 caractères">
+        </div>
+        <div class="field">
+          <label>Répéter le mot de passe</label>
+          <input type="password" id="s-pass2" required placeholder="Retape ton mot de passe">
+        </div>
+        <div class="err-msg" id="err3"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn-ghost" onclick="goToStep(2)">Retour</button>
+          <button type="submit" class="btn-primary" id="submitBtn">S'inscrire</button>
+        </div>
       </div>
     </form>
+    <div class="switch-link">Déjà inscrit ? <a onclick="switchToLogin()">Se connecter</a></div>
+  </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="loginOverlay">
+  <div class="modal">
+    <button class="close-x" onclick="closeLogin()">✕</button>
+    <h2>Connexion</h2>
+    <div class="sub">Accède à ton compte</div>
+    <form id="loginForm">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="l-email" required>
+      </div>
+      <div class="field">
+        <label>Mot de passe</label>
+        <input type="password" id="l-pass" required>
+      </div>
+      <div class="err-msg" id="errLogin"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" onclick="closeLogin()">Annuler</button>
+        <button type="submit" class="btn-primary">Se connecter</button>
+      </div>
+    </form>
+    <div class="switch-link">Pas encore de compte ? <a onclick="switchToSignup()">S'inscrire</a></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-let contacts = [];
+const SUPABASE_URL = "https://opzdertwtnssqgexzklt.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wemRlcnR3dG5zc3FnZXh6a2x0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MjIxNDIsImV4cCI6MjEwMjE5ODE0Mn0.CSJU-7Rp1Enc_Xfx-_GxtpgIKAgRhaqDU73IskP3yL0";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let profiles = [];
 let activeFilter = 'Tous';
-const CATS = ['Tous','Commerce','Mode & beauté','Restauration','Services','Tech & digital','Immobilier','Éducation','Autre'];
+const SECTORS = ['Tous','Commerce','Mode & beauté','Restauration','Services','Tech & digital','Immobilier','Éducation','Autre'];
 
 function initials(name){
-  return name.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  return (name||'').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
 }
-
 function waLink(phone){
-  const clean = phone.replace(/[^\d+]/g,'').replace('+','');
+  const clean = (phone||'').replace(/[^\d+]/g,'').replace('+','');
   return `https://wa.me/${clean}`;
+}
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
 }
 
 function renderFilters(){
   const el = document.getElementById('filters');
-  el.innerHTML = CATS.map(c=>`<button class="chip ${c===activeFilter?'active':''}" onclick="setFilter('${c}')">${c}</button>`).join('');
+  el.innerHTML = SECTORS.map(c=>`<button class="chip ${c===activeFilter?'active':''}" onclick="setFilter('${c}')">${c}</button>`).join('');
 }
 function setFilter(c){ activeFilter = c; render(); }
 
-async function loadContacts(){
+async function loadProfiles(){
   try{
-    const res = await window.storage.list('contact:', true);
-    if(!res || !res.keys || res.keys.length===0){ contacts = []; render(); return; }
-    const items = await Promise.all(res.keys.map(async k=>{
-      try{
-        const r = await window.storage.get(k, true);
-        return r ? JSON.parse(r.value) : null;
-      }catch(e){ return null; }
-    }));
-    contacts = items.filter(Boolean).sort((a,b)=>b.ts-a.ts);
+    const { data, error } = await sb.from('profiles').select('*').order('created_at', { ascending:false });
+    if(error) throw error;
+    profiles = data || [];
   }catch(e){
-    contacts = [];
+    profiles = [];
+    console.error(e);
   }
   render();
 }
@@ -192,81 +282,151 @@ async function loadContacts(){
 function render(){
   renderFilters();
   const q = document.getElementById('searchInput').value.toLowerCase().trim();
-  let list = contacts.filter(c=>{
-    const matchCat = activeFilter==='Tous' || c.cat===activeFilter;
-    const matchQ = !q || c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q) || c.cat.toLowerCase().includes(q);
+  let list = profiles.filter(c=>{
+    const matchCat = activeFilter==='Tous' || c.secteur===activeFilter;
+    const hay = [c.nom,c.ville,c.pays,c.business,c.secteur].join(' ').toLowerCase();
+    const matchQ = !q || hay.includes(q);
     return matchCat && matchQ;
   });
-  document.getElementById('statsBar').textContent = `${contacts.length} contact${contacts.length!==1?'s':''} au total · ${list.length} affiché${list.length!==1?'s':''}`;
+  document.getElementById('statsBar').textContent = `${profiles.length} membre${profiles.length!==1?'s':''} au total · ${list.length} affiché${list.length!==1?'s':''}`;
 
   const grid = document.getElementById('grid');
   if(list.length===0){
-    grid.innerHTML = `<div class="empty"><h3>Aucun contact pour l'instant</h3><p>Sois le premier à publier ta fiche.</p></div>`;
+    grid.innerHTML = `<div class="empty"><h3>Aucun membre pour l'instant</h3><p>Sois le premier à créer ton compte.</p></div>`;
     return;
   }
   grid.innerHTML = list.map(c=>`
     <div class="card">
       <div class="card-top">
-        <div class="avatar-ring"><div class="avatar">${initials(c.name)}</div></div>
+        <div class="avatar-ring"><div class="avatar">${initials(c.business || c.nom)}</div></div>
         <div>
-          <div class="card-name">${escapeHtml(c.name)}</div>
-          <div class="card-city">${escapeHtml(c.city)}</div>
-          <span class="card-cat">${escapeHtml(c.cat)}</span>
+          <div class="card-name">${escapeHtml(c.business || c.nom)}</div>
+          <div class="card-city">${escapeHtml(c.ville)}${c.pays ? ', '+escapeHtml(c.pays) : ''}</div>
+          <span class="card-cat">${escapeHtml(c.secteur)}</span>
         </div>
       </div>
-      <div class="card-desc">${escapeHtml(c.desc)}</div>
+      <div class="card-owner">Par ${escapeHtml(c.nom)}</div>
       <div class="card-actions">
-        <a class="wa-btn" href="${waLink(c.phone)}" target="_blank" rel="noopener">Discuter sur WhatsApp</a>
+        <a class="wa-btn" href="${waLink(c.whatsapp)}" target="_blank" rel="noopener">Discuter sur WhatsApp</a>
       </div>
     </div>
   `).join('');
 }
 
-function escapeHtml(s){
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
+// ---- Signup modal step logic ----
+function openSignup(){ document.getElementById('signupOverlay').classList.add('open'); }
+function closeSignup(){ document.getElementById('signupOverlay').classList.remove('open'); resetSignup(); }
+function resetSignup(){
+  goToStep(1);
+  document.getElementById('signupForm').reset();
+  ['err1','err2','err3'].forEach(id=>{document.getElementById(id).classList.remove('show');});
 }
+function switchToLogin(){ closeSignup(); openLogin(); }
+function switchToSignup(){ closeLogin(); openSignup(); }
 
-function openModal(){ document.getElementById('modalOverlay').classList.add('open'); }
-function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
-
-document.getElementById('addForm').addEventListener('submit', async (e)=>{
-  e.preventDefault();
-  const contact = {
-    id: 'c'+Date.now()+Math.random().toString(36).slice(2,7),
-    name: document.getElementById('f-name').value.trim(),
-    phone: document.getElementById('f-phone').value.trim(),
-    city: document.getElementById('f-city').value.trim(),
-    cat: document.getElementById('f-cat').value,
-    desc: document.getElementById('f-desc').value.trim(),
-    ts: Date.now()
-  };
-  try{
-    const result = await window.storage.set('contact:'+contact.id, JSON.stringify(contact), true);
-    if(!result){ throw new Error('save failed'); }
-    contacts.unshift(contact);
-    e.target.reset();
-    closeModal();
-    render();
-    showToast('Fiche publiée ✓');
-  }catch(err){
-    showToast("Erreur, réessaie");
+function goToStep(n){
+  if(n===2 && document.getElementById('step1').classList.contains('active')){
+    const name = document.getElementById('s-name').value.trim();
+    const phone = document.getElementById('s-phone').value.trim();
+    const email = document.getElementById('s-email').value.trim();
+    if(!name || !phone || !email){ showErr('err1','Merci de remplir tous les champs.'); return; }
+    hideErr('err1');
   }
+  if(n===3 && document.getElementById('step2').classList.contains('active')){
+    const country = document.getElementById('s-country').value.trim();
+    const city = document.getElementById('s-city').value.trim();
+    const business = document.getElementById('s-business').value.trim();
+    const sector = document.getElementById('s-sector').value;
+    if(!country || !city || !business || !sector){ showErr('err2','Merci de remplir tous les champs.'); return; }
+    hideErr('err2');
+  }
+  ['step1','step2','step3'].forEach((id,i)=>{
+    document.getElementById(id).classList.toggle('active', i===n-1);
+  });
+  ['dot1','dot2','dot3'].forEach((id,i)=>{
+    document.getElementById(id).classList.toggle('active', i<=n-1);
+  });
+  document.getElementById('signupSub').textContent = `Étape ${n} sur 3 — ` + (n===1?'Tes informations':n===2?'Ton business':'Sécurité');
+}
+function showErr(id,msg){ const e=document.getElementById(id); e.textContent=msg; e.classList.add('show'); }
+function hideErr(id){ document.getElementById(id).classList.remove('show'); }
+
+document.getElementById('signupForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const pass = document.getElementById('s-pass').value;
+  const pass2 = document.getElementById('s-pass2').value;
+  if(pass.length < 6){ showErr('err3','Le mot de passe doit contenir au moins 6 caractères.'); return; }
+  if(pass !== pass2){ showErr('err3','Les mots de passe ne correspondent pas.'); return; }
+  hideErr('err3');
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'Inscription…';
+
+  const name = document.getElementById('s-name').value.trim();
+  const phone = document.getElementById('s-phone').value.trim();
+  const email = document.getElementById('s-email').value.trim();
+  const country = document.getElementById('s-country').value.trim();
+  const city = document.getElementById('s-city').value.trim();
+  const business = document.getElementById('s-business').value.trim();
+  const sector = document.getElementById('s-sector').value;
+
+  try{
+    const { data, error } = await sb.auth.signUp({ email, password: pass });
+    if(error) throw error;
+    const userId = data.user ? data.user.id : null;
+    if(userId){
+      const { error: insertErr } = await sb.from('profiles').insert({
+        id: userId,
+        nom: name,
+        whatsapp: phone,
+        email: email,
+        pays: country,
+        ville: city,
+        business: business,
+        secteur: sector
+      });
+      if(insertErr) throw insertErr;
+    }
+    closeSignup();
+    showToast('Compte créé ✓ Vérifie ton email si besoin, puis reconnecte-toi.');
+    loadProfiles();
+  }catch(err){
+    showErr('err3', err.message || "Une erreur est survenue.");
+  }finally{
+    btn.disabled = false; btn.textContent = "S'inscrire";
+  }
+});
+
+// ---- Login modal ----
+function openLogin(){ document.getElementById('loginOverlay').classList.add('open'); }
+function closeLogin(){ document.getElementById('loginOverlay').classList.remove('open'); document.getElementById('loginForm').reset(); hideErr('errLogin'); }
+
+document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const email = document.getElementById('l-email').value.trim();
+  const pass = document.getElementById('l-pass').value;
+  try{
+    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if(error) throw error;
+    closeLogin();
+    showToast('Connecté ✓');
+  }catch(err){
+    showErr('errLogin', err.message || "Email ou mot de passe incorrect.");
+  }
+});
+
+[document.getElementById('signupOverlay'), document.getElementById('loginOverlay')].forEach(ov=>{
+  ov.addEventListener('click', (e)=>{ if(e.target===ov){ ov.classList.remove('open'); } });
 });
 
 function showToast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 2200);
+  setTimeout(()=>t.classList.remove('show'), 3200);
 }
 
-document.getElementById('modalOverlay').addEventListener('click', (e)=>{
-  if(e.target.id==='modalOverlay') closeModal();
-});
-
-loadContacts();
+loadProfiles();
 </script>
 </body>
 </html>
