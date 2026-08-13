@@ -1,377 +1,272 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Connexion / Inscription</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kontak — Trouve ton réseau</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0;
-    min-height: 100vh;
-    width: 100%;
-    background: #000;
-    font-family: 'Segoe UI', Arial, sans-serif;
+  :root{
+    --bg:#0E2A24;
+    --bg-alt:#123A31;
+    --paper:#F2EFE6;
+    --ink:#0E2A24;
+    --accent:#F2A65A;
+    --wa:#25D366;
+    --line:rgba(242,239,230,0.14);
+    --muted:rgba(242,239,230,0.6);
   }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--paper);font-family:'Sora',sans-serif;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+  .mono{font-family:'Space Mono',monospace;}
 
-  .phone {
-    width: 100%;
-    min-height: 100vh;
-    position: relative;
-    background:
-      radial-gradient(60% 60% at 50% 0%, rgba(212,175,55,0.15), transparent 70%),
-      radial-gradient(120% 90% at 50% -10%, #0f3d24 0%, #0a1f14 45%, #050b08 100%);
-  }
+  header{padding:22px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:10;}
+  .logo{font-family:'Fraunces',serif;font-style:italic;font-size:22px;letter-spacing:0.3px;}
+  .logo span{color:var(--accent);}
+  .add-btn{background:var(--accent);color:var(--ink);border:none;padding:10px 18px;border-radius:100px;font-weight:600;font-size:14px;cursor:pointer;font-family:'Sora',sans-serif;}
+  .add-btn:active{transform:scale(0.97);}
 
-  .inner {
-    padding: 40px 24px 32px;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    max-width: 420px;
-    margin: 0 auto;
-    justify-content: center;
-  }
+  .hero{padding:48px 20px 28px;text-align:left;}
+  .hero .eyebrow{font-family:'Space Mono',monospace;font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;}
+  .hero h1{font-size:clamp(30px,7vw,46px);line-height:1.08;max-width:520px;}
+  .hero p{color:var(--muted);max-width:440px;margin-top:14px;font-size:15px;line-height:1.5;}
 
-  .logo {
-    width: 64px;
-    height: 64px;
-    margin: 0 auto 16px;
-    border-radius: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 26px;
-    background: linear-gradient(135deg,#1f6b3e,#124a29);
-    border: 1px solid rgba(217,201,138,0.35);
-  }
+  .search-wrap{padding:0 20px 8px;}
+  .search-box{background:var(--bg-alt);border:1px solid var(--line);border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:8px;}
+  .search-box input{background:transparent;border:none;outline:none;color:var(--paper);font-family:'Sora',sans-serif;font-size:15px;flex:1;}
+  .search-box input::placeholder{color:var(--muted);}
+  .filters{display:flex;gap:8px;overflow-x:auto;padding:14px 20px 22px;-webkit-overflow-scrolling:touch;}
+  .filters::-webkit-scrollbar{display:none;}
+  .chip{flex-shrink:0;padding:7px 14px;border-radius:100px;border:1px solid var(--line);font-size:13px;color:var(--muted);background:transparent;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;}
+  .chip.active{background:var(--paper);color:var(--ink);border-color:var(--paper);font-weight:600;}
 
-  h1 {
-    text-align: center;
-    color: #f3efe0;
-    font-family: Georgia, serif;
-    font-size: 22px;
-    margin: 0;
-  }
+  .stats-bar{padding:0 20px 18px;font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);}
 
-  .subtitle {
-    text-align: center;
-    color: #9db9a3;
-    font-size: 13px;
-    margin: 6px 0 24px;
-  }
+  .grid{padding:0 20px 60px;display:grid;grid-template-columns:1fr;gap:14px;max-width:960px;margin:0 auto;}
+  @media(min-width:640px){.grid{grid-template-columns:1fr 1fr;}}
+  @media(min-width:960px){.grid{grid-template-columns:1fr 1fr 1fr;}}
 
-  .toggle {
-    display: flex;
-    background: rgba(255,255,255,0.03);
-    border-radius: 12px;
-    padding: 4px;
-    margin-bottom: 24px;
-  }
+  .card{background:var(--paper);color:var(--ink);border-radius:18px;padding:18px;position:relative;overflow:hidden;}
+  .card-top{display:flex;gap:12px;align-items:flex-start;}
+  .avatar-ring{width:54px;height:54px;border-radius:50%;flex-shrink:0;padding:3px;background:conic-gradient(var(--wa) 0deg, var(--accent) 120deg, var(--wa) 240deg, var(--accent) 360deg);}
+  .avatar{width:100%;height:100%;border-radius:50%;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:19px;border:2px solid var(--paper);}
+  .card-name{font-family:'Fraunces',serif;font-size:18px;font-weight:600;line-height:1.2;}
+  .card-city{font-size:12px;color:rgba(14,42,36,0.55);font-family:'Space Mono',monospace;margin-top:2px;}
+  .card-cat{display:inline-block;margin-top:8px;font-size:11px;background:rgba(14,42,36,0.08);padding:4px 10px;border-radius:100px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;}
+  .card-desc{font-size:13.5px;line-height:1.5;margin-top:12px;color:rgba(14,42,36,0.8);min-height:38px;}
+  .card-actions{display:flex;gap:8px;margin-top:16px;}
+  .wa-btn{flex:1;background:var(--wa);color:#fff;text-decoration:none;text-align:center;padding:10px;border-radius:10px;font-weight:600;font-size:13.5px;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted);}
+  .empty h3{color:var(--paper);margin-bottom:8px;}
 
-  .toggle button {
-    flex: 1;
-    padding: 10px 0;
-    border: none;
-    border-radius: 8px;
-    background: transparent;
-    color: #a9c9b0;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .toggle button.active {
-    background: linear-gradient(135deg,#e8c46a,#c99a3b);
-    color: #2b1d05;
-  }
-
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .field {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 12px;
-    border-radius: 12px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(217,201,138,0.25);
-  }
-
-  .field span.icon {
-    font-size: 15px;
-    opacity: 0.7;
-  }
-
-  .field input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    outline: none;
-    padding: 13px 0;
-    font-size: 14px;
-    color: #eef0e4;
-  }
-
-  .field input::placeholder {
-    color: #6f8a76;
-  }
-
-  .hidden { display: none !important; }
-
-  .message {
-    font-size: 12px;
-    padding: 0 4px;
-    min-height: 16px;
-  }
-  .message.error { color: #f28b82; }
-  .message.success { color: #7fe0a0; }
-
-  button.submit {
-    margin-top: 4px;
-    padding: 13px 0;
-    border-radius: 12px;
-    border: 1px solid rgba(217,201,138,0.35);
-    background: linear-gradient(135deg,#1f6b3e,#124a29);
-    color: #f4fbf1;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  button.submit:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .switch {
-    text-align: center;
-    font-size: 12px;
-    color: #7d9a84;
-    margin-top: 20px;
-  }
-
-  .switch a {
-    color: #e8c46a;
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-  }
+  .modal-overlay{position:fixed;inset:0;background:rgba(14,42,36,0.75);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;z-index:100;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--paper);color:var(--ink);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:26px 22px 30px;max-height:88vh;overflow-y:auto;}
+  @media(min-width:640px){.modal-overlay{align-items:center;}.modal{border-radius:20px;}}
+  .modal h2{font-size:22px;margin-bottom:4px;}
+  .modal .sub{color:rgba(14,42,36,0.55);font-size:13px;margin-bottom:20px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;color:rgba(14,42,36,0.6);margin-bottom:6px;}
+  .field input,.field select,.field textarea{width:100%;padding:11px 13px;border-radius:10px;border:1.5px solid rgba(14,42,36,0.15);font-family:'Sora',sans-serif;font-size:14.5px;background:#fff;color:var(--ink);}
+  .field textarea{resize:vertical;min-height:70px;}
+  .modal-actions{display:flex;gap:10px;margin-top:20px;}
+  .btn-primary{flex:1;background:var(--ink);color:var(--paper);border:none;padding:13px;border-radius:10px;font-weight:600;font-size:14.5px;cursor:pointer;font-family:'Sora',sans-serif;}
+  .btn-ghost{background:transparent;border:1.5px solid rgba(14,42,36,0.2);color:var(--ink);padding:13px 18px;border-radius:10px;font-weight:600;font-size:14.5px;cursor:pointer;font-family:'Sora',sans-serif;}
+  .close-x{position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:rgba(14,42,36,0.5);}
+  .hint{font-size:11.5px;color:rgba(14,42,36,0.5);margin-top:4px;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:12px 22px;border-radius:100px;font-size:13.5px;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none;}
+  .toast.show{opacity:1;}
 </style>
 </head>
 <body>
 
-<div class="phone">
-  <div class="inner">
-    <div class="logo">🌍</div>
-    <h1 id="title">Créer un compte</h1>
-    <p class="subtitle" id="subtitle">Rejoignez la plateforme en quelques secondes</p>
+<header>
+  <div class="logo">Kon<span>tak</span></div>
+  <button class="add-btn" onclick="openModal()">+ Ajouter</button>
+</header>
 
-    <div class="toggle">
-      <button id="tab-signup" class="active">Inscription</button>
-      <button id="tab-login">Connexion</button>
-    </div>
+<section class="hero">
+  <div class="eyebrow">Annuaire &amp; réseau business</div>
+  <h1>Trouve des contacts,<br>fais connaître ton business.</h1>
+  <p>Ajoute ton numéro WhatsApp, décris ton activité, et laisse d'autres personnes te découvrir et te contacter directement.</p>
+</section>
 
-    <form id="auth-form">
-      <div class="field" id="field-nom">
-        <span class="icon">👤</span>
-        <input type="text" id="nom" placeholder="Nom complet" />
-      </div>
-
-      <div class="field">
-        <span class="icon">✉️</span>
-        <input type="email" id="email" placeholder="Adresse email" />
-      </div>
-
-      <div class="field" id="field-numero">
-        <span class="icon">📞</span>
-        <input type="tel" id="numero" placeholder="Numéro de téléphone" />
-      </div>
-
-      <div class="field" id="field-parrainage">
-        <span class="icon">🎁</span>
-        <input type="text" id="parrainage" placeholder="Code de parrainage (optionnel)" />
-      </div>
-
-      <div class="field">
-        <span class="icon">🔒</span>
-        <input type="password" id="motdepasse" placeholder="Mot de passe" />
-      </div>
-
-      <p class="message" id="message"></p>
-
-      <button type="submit" class="submit" id="submit-btn">S'inscrire</button>
-    </form>
-
-    <p class="switch" id="switch-text">
-      Vous avez déjà un compte ? <a id="switch-link">Connexion</a>
-    </p>
+<div class="search-wrap">
+  <div class="search-box">
+    <span class="mono">⌕</span>
+    <input id="searchInput" placeholder="Chercher un nom, une ville, un business…" oninput="render()">
   </div>
 </div>
 
+<div class="filters" id="filters"></div>
+<div class="stats-bar" id="statsBar"></div>
+
+<div class="grid" id="grid"></div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="close-x" onclick="closeModal()">✕</button>
+    <h2>Ajouter mon contact</h2>
+    <div class="sub">Visible par tous les visiteurs du site.</div>
+    <form id="addForm">
+      <div class="field">
+        <label>Nom</label>
+        <input type="text" id="f-name" required placeholder="Ex: Aïcha Diallo">
+      </div>
+      <div class="field">
+        <label>Numéro WhatsApp</label>
+        <input type="tel" id="f-phone" required placeholder="Ex: +221771234567">
+        <div class="hint">Avec l'indicatif pays, sans espaces.</div>
+      </div>
+      <div class="field">
+        <label>Ville</label>
+        <input type="text" id="f-city" required placeholder="Ex: Dakar">
+      </div>
+      <div class="field">
+        <label>Catégorie</label>
+        <select id="f-cat" required>
+          <option value="">Choisir…</option>
+          <option>Commerce</option>
+          <option>Mode & beauté</option>
+          <option>Restauration</option>
+          <option>Services</option>
+          <option>Tech & digital</option>
+          <option>Immobilier</option>
+          <option>Éducation</option>
+          <option>Autre</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Décris ton business</label>
+        <textarea id="f-desc" required placeholder="En quelques mots, ce que tu proposes…"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" onclick="closeModal()">Annuler</button>
+        <button type="submit" class="btn-primary">Publier ma fiche</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
-  // --- Initialisation Supabase (protégée : ne doit jamais bloquer l'UI) ---
-  const supabaseUrl = "https://onfdhazwxnoanhfdbiyf.supabase.co";
-  const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9uZmRoYXp3eG5vYW5oZmRiaXlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxODU1ODgsImV4cCI6MjEwMTc2MTU4OH0.ScjedgaH2Mu1mkTvedTxX-LCQuGE7zTmUcbzkAKbmCc";
-  let supabase = null;
-  try {
-    if (window.supabase && typeof window.supabase.createClient === "function") {
-      supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
-    } else {
-      console.error("Librairie Supabase non chargée (CDN indisponible).");
-    }
-  } catch (err) {
-    console.error("Erreur d'initialisation Supabase :", err);
+let contacts = [];
+let activeFilter = 'Tous';
+const CATS = ['Tous','Commerce','Mode & beauté','Restauration','Services','Tech & digital','Immobilier','Éducation','Autre'];
+
+function initials(name){
+  return name.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+}
+
+function waLink(phone){
+  const clean = phone.replace(/[^\d+]/g,'').replace('+','');
+  return `https://wa.me/${clean}`;
+}
+
+function renderFilters(){
+  const el = document.getElementById('filters');
+  el.innerHTML = CATS.map(c=>`<button class="chip ${c===activeFilter?'active':''}" onclick="setFilter('${c}')">${c}</button>`).join('');
+}
+function setFilter(c){ activeFilter = c; render(); }
+
+async function loadContacts(){
+  try{
+    const res = await window.storage.list('contact:', true);
+    if(!res || !res.keys || res.keys.length===0){ contacts = []; render(); return; }
+    const items = await Promise.all(res.keys.map(async k=>{
+      try{
+        const r = await window.storage.get(k, true);
+        return r ? JSON.parse(r.value) : null;
+      }catch(e){ return null; }
+    }));
+    contacts = items.filter(Boolean).sort((a,b)=>b.ts-a.ts);
+  }catch(e){
+    contacts = [];
   }
+  render();
+}
 
-  let mode = "signup";
-
-  const title = document.getElementById("title");
-  const subtitle = document.getElementById("subtitle");
-  const tabSignup = document.getElementById("tab-signup");
-  const tabLogin = document.getElementById("tab-login");
-  const fieldNom = document.getElementById("field-nom");
-  const fieldNumero = document.getElementById("field-numero");
-  const fieldParrainage = document.getElementById("field-parrainage");
-  const submitBtn = document.getElementById("submit-btn");
-  const switchText = document.getElementById("switch-text");
-  const switchLink = document.getElementById("switch-link");
-  const messageEl = document.getElementById("message");
-  const form = document.getElementById("auth-form");
-
-  function setMode(newMode) {
-    mode = newMode;
-    messageEl.textContent = "";
-    messageEl.className = "message";
-
-    if (mode === "signup") {
-      title.textContent = "Créer un compte";
-      subtitle.textContent = "Rejoignez la plateforme en quelques secondes";
-      tabSignup.classList.add("active");
-      tabLogin.classList.remove("active");
-      fieldNom.classList.remove("hidden");
-      fieldNumero.classList.remove("hidden");
-      fieldParrainage.classList.remove("hidden");
-      submitBtn.textContent = "S'inscrire";
-      switchText.innerHTML = 'Vous avez déjà un compte ? <a id="switch-link">Connexion</a>';
-    } else {
-      title.textContent = "Bon retour";
-      subtitle.textContent = "Connectez-vous à votre compte";
-      tabLogin.classList.add("active");
-      tabSignup.classList.remove("active");
-      fieldNom.classList.add("hidden");
-      fieldNumero.classList.add("hidden");
-      fieldParrainage.classList.add("hidden");
-      submitBtn.textContent = "Se connecter";
-      switchText.innerHTML = 'Pas encore de compte ? <a id="switch-link">Inscription</a>';
-    }
-
-    document.getElementById("switch-link").addEventListener("click", () => {
-      setMode(mode === "signup" ? "login" : "signup");
-    });
-  }
-
-  tabSignup.addEventListener("click", () => setMode("signup"));
-  tabLogin.addEventListener("click", () => setMode("login"));
-  document.getElementById("switch-link").addEventListener("click", () => {
-    setMode(mode === "signup" ? "login" : "signup");
+function render(){
+  renderFilters();
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  let list = contacts.filter(c=>{
+    const matchCat = activeFilter==='Tous' || c.cat===activeFilter;
+    const matchQ = !q || c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q) || c.cat.toLowerCase().includes(q);
+    return matchCat && matchQ;
   });
+  document.getElementById('statsBar').textContent = `${contacts.length} contact${contacts.length!==1?'s':''} au total · ${list.length} affiché${list.length!==1?'s':''}`;
 
-  function showMessage(text, type) {
-    messageEl.textContent = text;
-    messageEl.className = "message " + type;
+  const grid = document.getElementById('grid');
+  if(list.length===0){
+    grid.innerHTML = `<div class="empty"><h3>Aucun contact pour l'instant</h3><p>Sois le premier à publier ta fiche.</p></div>`;
+    return;
   }
+  grid.innerHTML = list.map(c=>`
+    <div class="card">
+      <div class="card-top">
+        <div class="avatar-ring"><div class="avatar">${initials(c.name)}</div></div>
+        <div>
+          <div class="card-name">${escapeHtml(c.name)}</div>
+          <div class="card-city">${escapeHtml(c.city)}</div>
+          <span class="card-cat">${escapeHtml(c.cat)}</span>
+        </div>
+      </div>
+      <div class="card-desc">${escapeHtml(c.desc)}</div>
+      <div class="card-actions">
+        <a class="wa-btn" href="${waLink(c.phone)}" target="_blank" rel="noopener">Discuter sur WhatsApp</a>
+      </div>
+    </div>
+  `).join('');
+}
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    showMessage("", "");
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
 
-    if (!supabase) {
-      showMessage("Service indisponible pour le moment. Vérifiez votre connexion et réessayez.", "error");
-      return;
-    }
+function openModal(){ document.getElementById('modalOverlay').classList.add('open'); }
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
 
-    const email = document.getElementById("email").value.trim();
-    const motdepasse = document.getElementById("motdepasse").value;
+document.getElementById('addForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const contact = {
+    id: 'c'+Date.now()+Math.random().toString(36).slice(2,7),
+    name: document.getElementById('f-name').value.trim(),
+    phone: document.getElementById('f-phone').value.trim(),
+    city: document.getElementById('f-city').value.trim(),
+    cat: document.getElementById('f-cat').value,
+    desc: document.getElementById('f-desc').value.trim(),
+    ts: Date.now()
+  };
+  try{
+    const result = await window.storage.set('contact:'+contact.id, JSON.stringify(contact), true);
+    if(!result){ throw new Error('save failed'); }
+    contacts.unshift(contact);
+    e.target.reset();
+    closeModal();
+    render();
+    showToast('Fiche publiée ✓');
+  }catch(err){
+    showToast("Erreur, réessaie");
+  }
+});
 
-    if (mode === "signup") {
-      const nom = document.getElementById("nom").value.trim();
-      const numero = document.getElementById("numero").value.trim();
-      const parrainage = document.getElementById("parrainage").value.trim();
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
 
-      if (!nom || !email || !numero || !motdepasse) {
-        showMessage("Merci de remplir tous les champs.", "error");
-        return;
-      }
-      if (motdepasse.length < 6) {
-        showMessage("Le mot de passe doit contenir au moins 6 caractères.", "error");
-        return;
-      }
+document.getElementById('modalOverlay').addEventListener('click', (e)=>{
+  if(e.target.id==='modalOverlay') closeModal();
+});
 
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Inscription en cours...";
-
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password: motdepasse,
-        options: {
-          data: { nom, numero, parrainage: parrainage || null }
-        }
-      });
-
-      submitBtn.disabled = false;
-      submitBtn.textContent = "S'inscrire";
-
-      if (error) {
-        showMessage(error.message, "error");
-        return;
-      }
-
-      if (data && data.user) {
-        await supabase.from("profiles").upsert({
-          id: data.user.id,
-          nom,
-          email,
-          numero,
-          code_parrainage: parrainage || null
-        });
-      }
-
-      showMessage("Inscription réussie ! Vérifiez votre email pour confirmer votre compte.", "success");
-      form.reset();
-
-    } else {
-      if (!email || !motdepasse) {
-        showMessage("Merci de remplir tous les champs.", "error");
-        return;
-      }
-
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Connexion en cours...";
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password: motdepasse
-      });
-
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Se connecter";
-
-      if (error) {
-        showMessage(error.message, "error");
-        return;
-      }
-
-      showMessage("Connexion réussie !", "success");
-    }
-  });
-
-  setMode("signup");
+loadContacts();
 </script>
-
 </body>
 </html>
