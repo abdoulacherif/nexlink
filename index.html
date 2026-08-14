@@ -100,12 +100,13 @@
 
 <header>
   <div class="logo">Kon<span>tak</span></div>
-  <div class="header-actions">
+  <div class="header-actions" id="headerActions">
     <button class="login-btn" onclick="openLogin()">Connexion</button>
     <button class="add-btn" onclick="openSignup()">S'inscrire</button>
   </div>
 </header>
 
+<main id="homeView">
 <section class="hero">
   <div class="eyebrow">Annuaire &amp; réseau business</div>
   <h1>Trouve des contacts,<br>fais connaître ton business.</h1>
@@ -123,6 +124,71 @@
 <div class="stats-bar" id="statsBar"></div>
 
 <div class="grid" id="grid"></div>
+</main>
+
+<main id="dashboardView" style="display:none;">
+  <section class="hero" style="padding-bottom:20px;">
+    <div class="eyebrow">Mon espace</div>
+    <h1 id="dashGreeting">Tableau de bord</h1>
+    <p>Gère les informations visibles sur ta fiche dans l'annuaire.</p>
+  </section>
+
+  <div style="padding:0 20px 60px;max-width:520px;">
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-top">
+        <div class="avatar-ring"><div class="avatar" id="dashAvatar">--</div></div>
+        <div>
+          <div class="card-name" id="dashBusiness">—</div>
+          <div class="card-city" id="dashLocation">—</div>
+          <span class="card-cat" id="dashSector">—</span>
+        </div>
+      </div>
+      <div class="card-owner" id="dashOwner">—</div>
+    </div>
+
+    <form id="dashForm">
+      <div class="field">
+        <label>Nom complet</label>
+        <input type="text" id="d-name" required>
+      </div>
+      <div class="field">
+        <label>Numéro WhatsApp</label>
+        <input type="tel" id="d-phone" required>
+      </div>
+      <div class="field">
+        <label>Pays</label>
+        <input type="text" id="d-country" required>
+      </div>
+      <div class="field">
+        <label>Ville</label>
+        <input type="text" id="d-city" required>
+      </div>
+      <div class="field">
+        <label>Nom du business</label>
+        <input type="text" id="d-business" required>
+      </div>
+      <div class="field">
+        <label>Secteur d'activité</label>
+        <select id="d-sector" required>
+          <option>Commerce</option>
+          <option>Mode & beauté</option>
+          <option>Restauration</option>
+          <option>Services</option>
+          <option>Tech & digital</option>
+          <option>Immobilier</option>
+          <option>Éducation</option>
+          <option>Autre</option>
+        </select>
+      </div>
+      <div class="err-msg" id="errDash"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" onclick="goHome()">Retour à l'annuaire</button>
+        <button type="submit" class="btn-primary" id="dashSaveBtn">Enregistrer</button>
+      </div>
+    </form>
+    <div class="switch-link"><a onclick="logout()">Se déconnecter</a></div>
+  </div>
+</main>
 
 <!-- SIGNUP MODAL -->
 <div class="modal-overlay" id="signupOverlay">
@@ -246,6 +312,8 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let profiles = [];
 let activeFilter = 'Tous';
+let currentUser = null;
+let currentProfile = null;
 const SECTORS = ['Tous','Commerce','Mode & beauté','Restauration','Services','Tech & digital','Immobilier','Éducation','Autre'];
 
 function initials(name){
@@ -426,6 +494,105 @@ function showToast(msg){
   setTimeout(()=>t.classList.remove('show'), 3200);
 }
 
+function renderHeader(){
+  const el = document.getElementById('headerActions');
+  if(currentUser){
+    el.innerHTML = `
+      <button class="login-btn" onclick="showDashboard()">Tableau de bord</button>
+      <button class="add-btn" onclick="logout()">Déconnexion</button>`;
+  }else{
+    el.innerHTML = `
+      <button class="login-btn" onclick="openLogin()">Connexion</button>
+      <button class="add-btn" onclick="openSignup()">S'inscrire</button>`;
+  }
+}
+
+async function checkSession(){
+  const { data } = await sb.auth.getSession();
+  currentUser = data.session ? data.session.user : null;
+  renderHeader();
+}
+
+sb.auth.onAuthStateChange((event, session)=>{
+  currentUser = session ? session.user : null;
+  renderHeader();
+  if(event === 'SIGNED_IN'){ showDashboard(); }
+  if(event === 'SIGNED_OUT'){ goHome(); }
+});
+
+function goHome(){
+  document.getElementById('homeView').style.display = '';
+  document.getElementById('dashboardView').style.display = 'none';
+}
+
+async function showDashboard(){
+  if(!currentUser){ openLogin(); return; }
+  document.getElementById('homeView').style.display = 'none';
+  document.getElementById('dashboardView').style.display = '';
+  await loadMyProfile();
+}
+
+async function loadMyProfile(){
+  try{
+    const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+    if(error) throw error;
+    currentProfile = data;
+    fillDashboard(data);
+  }catch(e){
+    hideErr('errDash');
+  }
+}
+
+function fillDashboard(p){
+  document.getElementById('dashGreeting').textContent = 'Bonjour ' + (p.nom || '');
+  document.getElementById('dashAvatar').textContent = initials(p.business || p.nom);
+  document.getElementById('dashBusiness').textContent = p.business || p.nom || '—';
+  document.getElementById('dashLocation').textContent = [p.ville,p.pays].filter(Boolean).join(', ') || '—';
+  document.getElementById('dashSector').textContent = p.secteur || '—';
+  document.getElementById('dashOwner').textContent = 'Par ' + (p.nom || '—');
+  document.getElementById('d-name').value = p.nom || '';
+  document.getElementById('d-phone').value = p.whatsapp || '';
+  document.getElementById('d-country').value = p.pays || '';
+  document.getElementById('d-city').value = p.ville || '';
+  document.getElementById('d-business').value = p.business || '';
+  document.getElementById('d-sector').value = p.secteur || '';
+}
+
+document.getElementById('dashForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const btn = document.getElementById('dashSaveBtn');
+  btn.disabled = true; btn.textContent = 'Enregistrement…';
+  const updated = {
+    nom: document.getElementById('d-name').value.trim(),
+    whatsapp: document.getElementById('d-phone').value.trim(),
+    pays: document.getElementById('d-country').value.trim(),
+    ville: document.getElementById('d-city').value.trim(),
+    business: document.getElementById('d-business').value.trim(),
+    secteur: document.getElementById('d-sector').value
+  };
+  try{
+    const { error } = await sb.from('profiles').update(updated).eq('id', currentUser.id);
+    if(error) throw error;
+    hideErr('errDash');
+    fillDashboard(updated);
+    showToast('Profil mis à jour ✓');
+    loadProfiles();
+  }catch(err){
+    showErr('errDash', err.message || "Erreur lors de l'enregistrement.");
+  }finally{
+    btn.disabled = false; btn.textContent = 'Enregistrer';
+  }
+});
+
+async function logout(){
+  await sb.auth.signOut();
+  currentUser = null;
+  currentProfile = null;
+  renderHeader();
+  showToast('Déconnecté');
+}
+
+checkSession();
 loadProfiles();
 </script>
 </body>
