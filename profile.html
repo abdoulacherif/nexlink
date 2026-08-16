@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Profil — Kontak</title>
+<title>Mon profil — Kontak</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -130,35 +130,194 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
 .ic-svg svg{width:100%;height:100%;}
 
 /* ---- Barre de navigation fixe (dashboard) ---- */
-.fixed-navbar{position:sticky;top:0;z-index:25;background:#fff;border-bottom:1px solid var(--line);display:flex;gap:6px;padding:10px 20px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.fixed-navbar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center;gap:2px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(14,42,27,0.06);}
 .fixed-navbar::-webkit-scrollbar{display:none;}
-.fnav-btn{display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:11px;background:var(--bg-soft);color:var(--ink);text-decoration:none;font-size:13.5px;font-weight:700;white-space:nowrap;border:1.5px solid transparent;}
-.fnav-btn:hover{border-color:var(--green);}
-.fnav-btn .ic-svg{width:17px;height:17px;color:var(--green-dark);}
+.fnav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px 10px;border-radius:12px;background:transparent;color:var(--ink);text-decoration:none;font-size:11px;font-weight:600;white-space:nowrap;flex:1;text-align:center;}
+.fnav-btn:hover{background:var(--bg-soft);}
+.fnav-btn .ic-svg{width:20px;height:20px;color:var(--green-dark);}
+body{padding-bottom:74px;}
 
-.soon-box{max-width:480px;margin:60px auto;text-align:center;padding:40px 24px;}
-.soon-icon{width:56px;height:56px;border-radius:16px;background:var(--bg-soft);color:var(--green-dark);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
-.soon-icon svg{width:26px;height:26px;}
+
+/* ---- Dashboard shell ---- */
+.dash-topbar{display:none;padding:14px 18px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:30;}
+.burger{width:38px;height:38px;border-radius:10px;border:1.5px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-direction:column;gap:4px;}
+.burger span{display:block;width:16px;height:2px;background:var(--ink);border-radius:2px;}
+
+.dash-shell{display:flex;min-height:100vh;}
+.sidebar{width:250px;flex-shrink:0;background:var(--bg-soft);border-right:1px solid var(--line);padding:24px 16px;position:sticky;top:0;height:100vh;overflow-y:auto;padding-bottom:90px;}
+.sidebar .logo{display:block;margin-bottom:30px;}
+.side-section{margin-bottom:22px;}
+.side-label{font-family:'Space Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:0 12px;margin-bottom:8px;}
+.side-link{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;cursor:pointer;margin-bottom:2px;}
+.side-link:hover{background:#fff;}
+.side-link.active{background:var(--green);color:#fff;}
+.side-link .ic{font-size:16px;width:20px;text-align:center;}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(14,42,27,0.5);z-index:35;}
+.sidebar-overlay.open{display:block;}
+
+.dash-main{flex:1;min-width:0;}
+.dash-header{padding:36px 28px 8px;}
+.dash-header .eyebrow{font-family:'Space Mono',monospace;font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:8px;}
+.dash-header h1{font-size:28px;}
+
+.profile-summary{margin:20px 28px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;box-shadow:0 2px 12px rgba(14,42,27,0.04);}
+.profile-summary .avatar-ring{width:64px;height:64px;}
+.profile-summary .avatar{font-size:22px;}
+.profile-summary .name{font-family:'Fraunces',serif;font-size:20px;}
+.profile-summary .meta{font-size:13px;color:var(--muted);margin-top:4px;}
+.status-pill{margin-left:auto;background:var(--bg-soft);color:var(--green-dark);font-size:12px;font-weight:700;padding:6px 14px;border-radius:100px;display:flex;align-items:center;gap:6px;}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);}
+
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 28px 20px;}
+.stat-box{background:var(--bg-soft);border-radius:14px;padding:16px;}
+.stat-box .num{font-family:'Fraunces',serif;font-size:20px;}
+.stat-box .lbl{font-size:11.5px;color:var(--muted);margin-top:2px;}
+
+.dash-body{padding:0 28px 60px;max-width:640px;}
+
+@media(max-width:880px){
+  .dash-topbar{display:flex;}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:40;transform:translateX(-100%);transition:transform .25s ease;box-shadow:0 0 0 rgba(0,0,0,0);}
+  .sidebar.open{transform:translateX(0);box-shadow:8px 0 24px rgba(0,0,0,0.15);}
+  .dash-header,.profile-summary,.stat-row,.dash-body{padding-left:20px;padding-right:20px;}
+  .stat-row{grid-template-columns:1fr 1fr;}
+}
 </style>
 </head>
 <body>
 
-<header>
-  <a class="logo" href="index.html">Kon<span>tak</span></a>
-  <div class="header-actions">
-    <a class="btn-line" href="dashboard.html">Tableau de bord</a>
-    <a class="btn-line" href="annuaire.html">Annuaire</a>
-    <a class="btn-fill" href="#" data-action="logout">Déconnexion</a>
-  </div>
-</header>
+<div class="dash-topbar">
+  <button class="burger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+  <a class="logo" href="index.html" style="font-size:19px;">Kon<span>tak</span></a>
+  <div style="width:38px;"></div>
+</div>
 
-<div class="soon-box">
-  <div class="soon-icon" id="soonIcon"></div>
-  <div class="eyebrow" style="margin-bottom:10px;">Mon identité</div>
-  <h1 style="font-size:26px;margin-bottom:12px;">Profil</h1>
-  <p style="color:var(--muted);font-size:14.5px;">Cette page est en cours de construction. Elle sera bientôt disponible.</p>
-  <br>
-  <a class="btn-fill" href="dashboard.html">Retour au tableau de bord</a>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<nav class="fixed-navbar" id="fixedNavbar"></nav>
+
+<div class="dash-shell">
+  <aside class="sidebar" id="sidebar">
+    <a class="logo" href="index.html">Kon<span>tak</span></a>
+
+    <div class="side-section">
+      <div class="side-label">Mon compte</div>
+      <a class="side-link" href="dashboard.html"><span class="ic-svg" id="icOverview"></span> Vue d'ensemble</a>
+      <a class="side-link active"><span class="ic-svg" id="icProfile"></span> Mon profil</a>
+    </div>
+
+    <div class="side-section">
+      <div class="side-label">Naviguer</div>
+      <a class="side-link" href="annuaire.html"><span class="ic-svg" id="icAnnuaire"></span> Annuaire</a>
+      <a class="side-link" href="admin.html" data-auth="admin"><span class="ic-svg" id="icAdmin"></span> Administration</a>
+    </div>
+
+    <div class="side-section">
+      <div class="side-label">Session</div>
+      <a class="side-link" href="#" data-action="logout"><span class="ic-svg" id="icLogout"></span> Déconnexion</a>
+    </div>
+  </aside>
+
+  <main class="dash-main">
+    <div id="gateMsg" class="gate" style="display:none;">
+      <h2>Connexion requise</h2>
+      <p>Tu dois être connecté pour accéder à ton tableau de bord.</p>
+      <br>
+      <a class="btn-fill" href="connexion.html">Se connecter</a>
+    </div>
+
+    <div id="completeContent" style="display:none;">
+      <div class="dash-header">
+        <div class="eyebrow">Dernière étape</div>
+        <h1>Complète ta fiche</h1>
+      </div>
+      <div class="dash-body">
+        <div class="panel">
+          <div class="sub">Ton compte existe mais aucune fiche n'y est associée. Remplis ces informations pour apparaître dans l'annuaire.</div>
+          <form id="completeForm">
+            <div class="field"><label>Nom complet</label><input type="text" id="c-name" required></div>
+            <div class="field"><label>Numéro WhatsApp</label><input type="tel" id="c-phone" required></div>
+            <div class="field"><label>Pays</label><input type="text" id="c-country" required></div>
+            <div class="field"><label>Ville</label><input type="text" id="c-city" required></div>
+            <div class="field"><label>Nom du business</label><input type="text" id="c-business" required></div>
+            <div class="field"><label>Secteur d'activité</label><select id="c-sector" required></select></div>
+            <div class="err-msg" id="errComplete"></div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary" id="completeSaveBtn">Créer ma fiche</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div id="dashContent" style="display:none;">
+      <div class="dash-header">
+        <div class="eyebrow">Mon compte</div>
+        <h1 id="dashGreeting">Mon profil</h1>
+      </div>
+
+      <div class="profile-summary">
+        <div class="avatar-ring"><div class="avatar" id="dashAvatar">--</div></div>
+        <div>
+          <div class="name" id="dashBusiness">—</div>
+          <div class="meta" id="dashLocation">—</div>
+        </div>
+        <div class="status-pill"><span class="status-dot"></span> Fiche publiée</div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-box"><div class="num" id="statSector">—</div><div class="lbl">Secteur</div></div>
+        <div class="stat-box"><div class="num" id="statOwner">—</div><div class="lbl">Contact</div></div>
+        <div class="stat-box"><div class="num" id="statSince">—</div><div class="lbl">Membre depuis</div></div>
+      </div>
+
+      <div class="dash-body">
+        <div class="panel" style="margin-bottom:20px;">
+          <h3 style="margin-bottom:4px;">Informations du profil</h3>
+          <div class="sub">Ces informations sont visibles dans l'annuaire public.</div>
+          <form id="dashForm">
+            <div class="field"><label>Nom complet</label><input type="text" id="d-name" required></div>
+            <div class="field"><label>Numéro WhatsApp</label><input type="tel" id="d-phone" required></div>
+            <div class="field"><label>Pays</label><input type="text" id="d-country" required></div>
+            <div class="field"><label>Ville</label><input type="text" id="d-city" required></div>
+            <div class="field"><label>Nom du business</label><input type="text" id="d-business" required></div>
+            <div class="field"><label>Secteur d'activité</label><select id="d-sector" required></select></div>
+            <div class="err-msg" id="errDash"></div>
+            <div class="form-actions">
+              <button type="button" class="btn-ghost" onclick="deleteMyProfile()">Supprimer ma fiche</button>
+              <button type="submit" class="btn-primary" id="dashSaveBtn">Enregistrer</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel" style="margin-bottom:20px;">
+          <h3 style="margin-bottom:4px;">Sécurité</h3>
+          <div class="sub">Modifie le mot de passe de ton compte.</div>
+          <form id="pwForm">
+            <div class="field"><label>Nouveau mot de passe</label><input type="password" id="pw-new" required placeholder="Minimum 6 caractères"></div>
+            <div class="field"><label>Répéter le mot de passe</label><input type="password" id="pw-confirm" required></div>
+            <div class="err-msg" id="errPw"></div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary" id="pwSaveBtn">Mettre à jour le mot de passe</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin-bottom:4px;">Mon compte</h3>
+          <div class="sub">Informations liées à ta connexion.</div>
+          <div class="field">
+            <label>Adresse email</label>
+            <input type="email" id="acc-email" disabled style="opacity:0.65;">
+          </div>
+          <div class="field">
+            <label>Membre depuis</label>
+            <input type="text" id="acc-since" disabled style="opacity:0.65;">
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -268,8 +427,159 @@ async function loadNavItems(){
   }catch(e){ console.error(e); return []; }
 }
 
-document.getElementById('soonIcon').innerHTML = ICONS.user;
-initNav();
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+document.getElementById('icOverview').innerHTML = ICONS.home;
+document.getElementById('icProfile').innerHTML = ICONS.user;
+document.getElementById('icAnnuaire').innerHTML = ICONS.grid;
+document.getElementById('icAdmin').innerHTML = ICONS.settings;
+document.getElementById('icLogout').innerHTML = ICONS.logout;
+
+async function renderFixedNavbar(){
+  const items = await loadNavItems();
+  const bar = document.getElementById('fixedNavbar');
+  if(items.length===0){ bar.style.display='none'; return; }
+  bar.innerHTML = items.map(it=>`
+    <a class="fnav-btn" href="${escapeHtml(it.url)}">${icon(it.icon)}<span>${escapeHtml(it.label)}</span></a>
+  `).join('');
+}
+renderFixedNavbar();
+
+document.getElementById('d-sector').innerHTML = SECTORS.map(s=>`<option>${s}</option>`).join('');
+
+function fillDashboard(p){
+  document.getElementById('dashGreeting').textContent = 'Bonjour ' + (p.nom || '');
+  document.getElementById('dashAvatar').textContent = initials(p.business || p.nom);
+  document.getElementById('dashBusiness').textContent = p.business || p.nom || '—';
+  document.getElementById('dashLocation').textContent = [p.ville,p.pays].filter(Boolean).join(', ') || '—';
+  document.getElementById('statSector').textContent = p.secteur || '—';
+  document.getElementById('statOwner').textContent = p.nom || '—';
+  if(p.created_at){
+    const d = new Date(p.created_at);
+    document.getElementById('statSince').textContent = d.toLocaleDateString('fr-FR', {month:'short', year:'numeric'});
+    document.getElementById('acc-since').value = d.toLocaleDateString('fr-FR', {day:'numeric', month:'long', year:'numeric'});
+  }
+  document.getElementById('acc-email').value = (CURRENT_USER && CURRENT_USER.email) || p.email || '';
+  document.getElementById('d-name').value = p.nom || '';
+  document.getElementById('d-phone').value = p.whatsapp || '';
+  document.getElementById('d-country').value = p.pays || '';
+  document.getElementById('d-city').value = p.ville || '';
+  document.getElementById('d-business').value = p.business || '';
+  document.getElementById('d-sector').value = p.secteur || '';
+}
+
+document.getElementById('pwForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const pw = document.getElementById('pw-new').value;
+  const pw2 = document.getElementById('pw-confirm').value;
+  if(pw.length < 6){ showErr('errPw','Le mot de passe doit contenir au moins 6 caractères.'); return; }
+  if(pw !== pw2){ showErr('errPw','Les mots de passe ne correspondent pas.'); return; }
+  hideErr('errPw');
+  const btn = document.getElementById('pwSaveBtn');
+  btn.disabled = true; btn.textContent = 'Mise à jour…';
+  try{
+    const { error } = await sb.auth.updateUser({ password: pw });
+    if(error) throw error;
+    document.getElementById('pwForm').reset();
+    showToast('Mot de passe mis à jour ✓');
+  }catch(err){
+    showErr('errPw', err.message || "Erreur lors de la mise à jour.");
+  }finally{
+    btn.disabled = false; btn.textContent = 'Mettre à jour le mot de passe';
+  }
+});
+
+document.getElementById('dashForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const btn = document.getElementById('dashSaveBtn');
+  btn.disabled = true; btn.textContent = 'Enregistrement…';
+  const updated = {
+    nom: document.getElementById('d-name').value.trim(),
+    whatsapp: document.getElementById('d-phone').value.trim(),
+    pays: document.getElementById('d-country').value.trim(),
+    ville: document.getElementById('d-city').value.trim(),
+    business: document.getElementById('d-business').value.trim(),
+    secteur: document.getElementById('d-sector').value
+  };
+  try{
+    const { error } = await sb.from('profiles').update(updated).eq('user_id', CURRENT_USER.id);
+    if(error) throw error;
+    hideErr('errDash');
+    fillDashboard({...CURRENT_PROFILE, ...updated});
+    showToast('Profil mis à jour ✓');
+  }catch(err){
+    showErr('errDash', err.message || "Erreur lors de l'enregistrement.");
+  }finally{
+    btn.disabled = false; btn.textContent = 'Enregistrer';
+  }
+});
+
+async function deleteMyProfile(){
+  if(!confirm('Supprimer définitivement ta fiche de l\'annuaire ?')) return;
+  try{
+    const { error } = await sb.from('profiles').delete().eq('user_id', CURRENT_USER.id);
+    if(error) throw error;
+    showToast('Fiche supprimée');
+    await sb.auth.signOut();
+    window.location.href = 'index.html';
+  }catch(err){
+    showErr('errDash', err.message || "Erreur lors de la suppression.");
+  }
+}
+
+document.getElementById('c-sector').innerHTML = SECTORS.map(s=>`<option>${s}</option>`).join('');
+
+document.getElementById('completeForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const btn = document.getElementById('completeSaveBtn');
+  btn.disabled = true; btn.textContent = 'Création…';
+  const payload = {
+    user_id: CURRENT_USER.id,
+    email: CURRENT_USER.email,
+    nom: document.getElementById('c-name').value.trim(),
+    whatsapp: document.getElementById('c-phone').value.trim(),
+    pays: document.getElementById('c-country').value.trim(),
+    ville: document.getElementById('c-city').value.trim(),
+    business: document.getElementById('c-business').value.trim(),
+    secteur: document.getElementById('c-sector').value
+  };
+  try{
+    const { data, error } = await sb.from('profiles').insert(payload).select().single();
+    if(error) throw error;
+    hideErr('errComplete');
+    CURRENT_PROFILE = data;
+    document.getElementById('completeContent').style.display = 'none';
+    document.getElementById('dashContent').style.display = '';
+    fillDashboard(data);
+    showToast('Fiche créée ✓');
+  }catch(err){
+    showErr('errComplete', err.message || "Erreur lors de la création.");
+  }finally{
+    btn.disabled = false; btn.textContent = 'Créer ma fiche';
+  }
+});
+
+(async ()=>{
+  const { user, profile } = await initNav();
+  if(!user){
+    document.getElementById('gateMsg').style.display = '';
+    return;
+  }
+  if(!profile){
+    document.getElementById('completeContent').style.display = '';
+    return;
+  }
+  document.getElementById('dashContent').style.display = '';
+  fillDashboard(profile);
+})();
 </script>
 </body>
 </html>
