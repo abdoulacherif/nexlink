@@ -124,6 +124,17 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
 @media(min-width:640px){.modal-overlay{align-items:center;}.modal{border-radius:20px;}}
 .close-x{position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);}
 
+/* ---- Icônes SVG ---- */
+.ic-svg{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex-shrink:0;}
+.ic-svg svg{width:100%;height:100%;}
+
+/* ---- Barre de navigation fixe (dashboard) ---- */
+.fixed-navbar{position:sticky;top:0;z-index:25;background:#fff;border-bottom:1px solid var(--line);display:flex;gap:6px;padding:10px 20px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.fixed-navbar::-webkit-scrollbar{display:none;}
+.fnav-btn{display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:11px;background:var(--bg-soft);color:var(--ink);text-decoration:none;font-size:13.5px;font-weight:700;white-space:nowrap;border:1.5px solid transparent;}
+.fnav-btn:hover{border-color:var(--green);}
+.fnav-btn .ic-svg{width:17px;height:17px;color:var(--green-dark);}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -167,6 +178,25 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
       <tbody id="adminRows"></tbody>
     </table>
   </div>
+
+  <div class="admin-toolbar" style="margin-top:10px;">
+    <div>
+      <div class="section-title" style="font-size:19px;">Barre de navigation</div>
+      <div class="stats-bar" id="navStats" style="padding:0;">Boutons affichés sur le tableau de bord</div>
+    </div>
+    <button class="btn-fill" onclick="openNavEditor(null)">+ Nouveau bouton</button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Ordre</th><th>Label</th><th>Icône</th><th>Lien</th><th>Visible</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="navRows"></tbody>
+    </table>
+  </div>
 </div>
 
 <div class="modal-overlay" id="editOverlay">
@@ -191,6 +221,43 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
       <div class="form-actions">
         <button type="button" class="btn-ghost" onclick="closeEditor()">Annuler</button>
         <button type="submit" class="btn-primary" id="editSaveBtn">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="navEditOverlay">
+  <div class="modal">
+    <button class="close-x" onclick="closeNavEditor()">✕</button>
+    <h2 id="navEditTitle">Nouveau bouton</h2>
+    <div class="sub">Visible dans la barre de navigation du tableau de bord.</div>
+    <form id="navEditForm">
+      <input type="hidden" id="n-id">
+      <div class="field"><label>Label</label><input type="text" id="n-label" required placeholder="Ex: Business"></div>
+      <div class="field"><label>Lien (URL de la page)</label><input type="text" id="n-url" required placeholder="Ex: business.html"></div>
+      <div class="field">
+        <label>Icône</label>
+        <select id="n-icon">
+          <option value="business">Mallette (business)</option>
+          <option value="mail">Enveloppe (mail)</option>
+          <option value="server">Serveur</option>
+          <option value="user">Profil</option>
+          <option value="grid">Grille</option>
+          <option value="settings">Réglages</option>
+          <option value="home">Accueil</option>
+          <option value="idcard">Carte</option>
+          <option value="message">Message</option>
+        </select>
+      </div>
+      <div class="field"><label>Position (ordre d'affichage)</label><input type="number" id="n-position" value="1" min="0"></div>
+      <div class="field">
+        <label>Visible</label>
+        <select id="n-visible"><option value="true">Oui</option><option value="false">Non</option></select>
+      </div>
+      <div class="err-msg" id="errNavEdit"></div>
+      <div class="form-actions">
+        <button type="button" class="btn-ghost" onclick="closeNavEditor()">Annuler</button>
+        <button type="submit" class="btn-primary" id="navEditSaveBtn">Enregistrer</button>
       </div>
     </form>
   </div>
@@ -274,6 +341,34 @@ document.addEventListener('click', (e)=>{
     logout();
   }
 });
+
+// ---- Icônes SVG (jamais d'emoji) ----
+const ICONS = {
+  business: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
+  mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>',
+  server: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="7" rx="1.5"/><rect x="2" y="14" width="20" height="7" rx="1.5"/><line x1="6" y1="6.5" x2="6.01" y2="6.5"/><line x1="6" y1="17.5" x2="6.01" y2="17.5"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>',
+  grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+  settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.2M12 18.8V21M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M3 12h2.2M18.8 12H21M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/></svg>',
+  logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  idcard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="12" r="2"/><line x1="14" y1="10" x2="18" y2="10"/><line x1="14" y1="14" x2="18" y2="14"/></svg>',
+  message: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.4 8.4 0 0 1-4-1L3 20l1-4.5A8.4 8.4 0 0 1 3 11.5 8.5 8.5 0 0 1 11.5 3 8.5 8.5 0 0 1 21 11.5z"/></svg>',
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7"/><path d="M9 22V12h6v10"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+};
+function icon(key, cls){
+  return `<span class="ic-svg ${cls||''}">${ICONS[key] || ICONS.grid}</span>`;
+}
+
+// ---- Barre de navigation dynamique (gérée par l'admin) ----
+async function loadNavItems(){
+  try{
+    const { data, error } = await sb.from('nav_items').select('*').eq('visible', true).order('position', { ascending:true });
+    if(error) throw error;
+    return data || [];
+  }catch(e){ console.error(e); return []; }
+}
 
 </script>
 <script>
@@ -385,6 +480,107 @@ document.getElementById('editOverlay').addEventListener('click', (e)=>{
   if(e.target.id==='editOverlay') closeEditor();
 });
 
+// ---- Gestion de la barre de navigation ----
+let navItems = [];
+
+async function loadNavAdmin(){
+  try{
+    const { data, error } = await sb.from('nav_items').select('*').order('position', { ascending:true });
+    if(error) throw error;
+    navItems = data || [];
+  }catch(e){ navItems = []; console.error(e); }
+  renderNavTable();
+}
+
+function renderNavTable(){
+  const tbody = document.getElementById('navRows');
+  if(navItems.length===0){
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted);">Aucun bouton pour l'instant.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = navItems.map(n=>`
+    <tr>
+      <td>${n.position ?? 0}</td>
+      <td>${escapeHtml(n.label)}</td>
+      <td>${icon(n.icon)}</td>
+      <td><span class="mono">${escapeHtml(n.url)}</span></td>
+      <td>${n.visible ? 'Oui' : 'Non'}</td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" onclick='openNavEditor(${JSON.stringify(n).replace(/'/g,"&apos;")})'>Modifier</button>
+          <button class="icon-btn" onclick="deleteNavItem('${n.id}')">Supprimer</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openNavEditor(n){
+  document.getElementById('navEditForm').reset();
+  hideErr('errNavEdit');
+  if(n){
+    document.getElementById('navEditTitle').textContent = 'Modifier le bouton';
+    document.getElementById('n-id').value = n.id;
+    document.getElementById('n-label').value = n.label || '';
+    document.getElementById('n-url').value = n.url || '';
+    document.getElementById('n-icon').value = n.icon || 'grid';
+    document.getElementById('n-position').value = n.position ?? 0;
+    document.getElementById('n-visible').value = n.visible ? 'true' : 'false';
+  }else{
+    document.getElementById('navEditTitle').textContent = 'Nouveau bouton';
+    document.getElementById('n-id').value = '';
+    document.getElementById('n-position').value = navItems.length + 1;
+  }
+  document.getElementById('navEditOverlay').classList.add('open');
+}
+function closeNavEditor(){ document.getElementById('navEditOverlay').classList.remove('open'); }
+
+document.getElementById('navEditForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const btn = document.getElementById('navEditSaveBtn');
+  btn.disabled = true; btn.textContent = 'Enregistrement…';
+  const id = document.getElementById('n-id').value;
+  const payload = {
+    label: document.getElementById('n-label').value.trim(),
+    url: document.getElementById('n-url').value.trim(),
+    icon: document.getElementById('n-icon').value,
+    position: parseInt(document.getElementById('n-position').value, 10) || 0,
+    visible: document.getElementById('n-visible').value === 'true'
+  };
+  try{
+    let error;
+    if(id){
+      ({ error } = await sb.from('nav_items').update(payload).eq('id', id));
+    }else{
+      ({ error } = await sb.from('nav_items').insert(payload));
+    }
+    if(error) throw error;
+    closeNavEditor();
+    showToast('Bouton enregistré ✓');
+    loadNavAdmin();
+  }catch(err){
+    showErr('errNavEdit', err.message || "Erreur lors de l'enregistrement.");
+  }finally{
+    btn.disabled = false; btn.textContent = 'Enregistrer';
+  }
+});
+
+async function deleteNavItem(id){
+  if(!confirm('Supprimer ce bouton de la barre de navigation ?')) return;
+  try{
+    const { error } = await sb.from('nav_items').delete().eq('id', id);
+    if(error) throw error;
+    showToast('Bouton supprimé');
+    loadNavAdmin();
+  }catch(err){
+    showToast(err.message || "Erreur lors de la suppression.");
+  }
+}
+
+document.getElementById('navEditOverlay').addEventListener('click', (e)=>{
+  if(e.target.id==='navEditOverlay') closeNavEditor();
+});
+
 (async ()=>{
   const { user, isAdmin } = await initNav();
   if(!user || !isAdmin){
@@ -393,6 +589,7 @@ document.getElementById('editOverlay').addEventListener('click', (e)=>{
   }
   document.getElementById('adminContent').style.display = '';
   loadAll();
+  loadNavAdmin();
 })();
 </script>
 </body>
