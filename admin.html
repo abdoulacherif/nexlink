@@ -172,7 +172,7 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
     <table class="admin-table">
       <thead>
         <tr>
-          <th>Nom</th><th>Business</th><th>WhatsApp</th><th>Ville / Pays</th><th>Secteur</th><th>Email</th><th>Actions</th>
+          <th>Nom</th><th>Business</th><th>WhatsApp</th><th>Ville / Pays</th><th>Secteur</th><th>Crédits</th><th>Email</th><th>Actions</th>
         </tr>
       </thead>
       <tbody id="adminRows"></tbody>
@@ -213,6 +213,7 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
       <div class="field"><label>Ville</label><input type="text" id="e-city" required></div>
       <div class="field"><label>Nom du business</label><input type="text" id="e-business" required></div>
       <div class="field"><label>Secteur d'activité</label><select id="e-sector" required></select></div>
+      <div class="field"><label>Crédits</label><input type="number" id="e-credits" min="0" value="50"></div>
       <div class="field">
         <label>Administrateur</label>
         <select id="e-isadmin"><option value="false">Non</option><option value="true">Oui</option></select>
@@ -388,7 +389,7 @@ function renderTable(){
   document.getElementById('adminStats').textContent = `${allProfiles.length} fiche${allProfiles.length!==1?'s':''} au total`;
   const tbody = document.getElementById('adminRows');
   if(allProfiles.length===0){
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:rgba(14,42,36,0.5);">Aucune fiche pour l'instant.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:rgba(14,42,36,0.5);">Aucune fiche pour l'instant.</td></tr>`;
     return;
   }
   tbody.innerHTML = allProfiles.map(p=>`
@@ -398,6 +399,7 @@ function renderTable(){
       <td>${escapeHtml(p.whatsapp)}</td>
       <td>${escapeHtml(p.ville)}${p.pays?', '+escapeHtml(p.pays):''}</td>
       <td>${escapeHtml(p.secteur)}</td>
+      <td class="mono">${p.credits ?? 0}</td>
       <td>${escapeHtml(p.email)}</td>
       <td>
         <div class="row-actions">
@@ -422,10 +424,12 @@ function openEditor(p){
     document.getElementById('e-city').value = p.ville || '';
     document.getElementById('e-business').value = p.business || '';
     document.getElementById('e-sector').value = p.secteur || '';
+    document.getElementById('e-credits').value = p.credits ?? 0;
     document.getElementById('e-isadmin').value = p.is_admin ? 'true' : 'false';
   }else{
     document.getElementById('editTitle').textContent = 'Nouvelle fiche';
     document.getElementById('e-id').value = '';
+    document.getElementById('e-credits').value = 50;
   }
   document.getElementById('editOverlay').classList.add('open');
 }
@@ -444,6 +448,7 @@ document.getElementById('editForm').addEventListener('submit', async (e)=>{
     ville: document.getElementById('e-city').value.trim(),
     business: document.getElementById('e-business').value.trim(),
     secteur: document.getElementById('e-sector').value,
+    credits: parseInt(document.getElementById('e-credits').value, 10) || 0,
     is_admin: document.getElementById('e-isadmin').value === 'true'
   };
   try{
