@@ -383,19 +383,17 @@ document.getElementById('signupForm').addEventListener('submit', async (e)=>{
     const { data, error } = await sb.auth.signUp({ email, password: pass });
     if(error) throw error;
     const userId = data.user ? data.user.id : null;
-    if(userId){
+    if(userId && data.session){
       const { error: insertErr } = await sb.from('profiles').insert({
         user_id: userId, nom: name, whatsapp: phone, email: email,
         pays: country, ville: city, business: business, secteur: sector
       });
       if(insertErr) throw insertErr;
-    }
-    sendWelcomeEmail(name, email);
-    sendAdminNotifEmail(name, email, phone);
-    if(data.session){
+      sendWelcomeEmail(name, email);
+      sendAdminNotifEmail(name, email, phone);
       window.location.href = 'dashboard.html';
     }else{
-      showToast('Compte créé ✓ Vérifie ton email pour confirmer, puis connecte-toi.');
+      showToast('Compte créé ✓ Vérifie ton email pour confirmer, puis connecte-toi pour compléter ta fiche.');
       setTimeout(()=> window.location.href = 'connexion.html', 2500);
     }
   }catch(err){
