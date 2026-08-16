@@ -332,11 +332,13 @@ emailjs.init(EMAILJS_PUBLIC_KEY);
 
 function sendWelcomeEmail(name, email){
   emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_WELCOME, { to_name: name, to_email: email })
-    .catch(e => console.error('EmailJS welcome error', e));
+    .then(()=> console.log('EmailJS: email de bienvenue envoyé'))
+    .catch(e => { console.error('EmailJS welcome error', e); showToast('Email bienvenue: ' + (e.text || e.message || JSON.stringify(e))); });
 }
 function sendAdminNotifEmail(name, email, phone){
   emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ADMIN, { member_name: name, member_email: email, member_phone: phone })
-    .catch(e => console.error('EmailJS admin notif error', e));
+    .then(()=> console.log('EmailJS: notif admin envoyée'))
+    .catch(e => { console.error('EmailJS admin notif error', e); showToast('Email admin: ' + (e.text || e.message || JSON.stringify(e))); });
 }
 
 function goToStep(n){
