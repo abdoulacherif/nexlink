@@ -211,6 +211,30 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
       <a class="btn-fill" href="connexion.html">Se connecter</a>
     </div>
 
+    <div id="completeContent" style="display:none;">
+      <div class="dash-header">
+        <div class="eyebrow">Dernière étape</div>
+        <h1>Complète ta fiche</h1>
+      </div>
+      <div class="dash-body">
+        <div class="panel">
+          <div class="sub">Ton compte existe mais aucune fiche n'y est associée. Remplis ces informations pour apparaître dans l'annuaire.</div>
+          <form id="completeForm">
+            <div class="field"><label>Nom complet</label><input type="text" id="c-name" required></div>
+            <div class="field"><label>Numéro WhatsApp</label><input type="tel" id="c-phone" required></div>
+            <div class="field"><label>Pays</label><input type="text" id="c-country" required></div>
+            <div class="field"><label>Ville</label><input type="text" id="c-city" required></div>
+            <div class="field"><label>Nom du business</label><input type="text" id="c-business" required></div>
+            <div class="field"><label>Secteur d'activité</label><select id="c-sector" required></select></div>
+            <div class="err-msg" id="errComplete"></div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary" id="completeSaveBtn">Créer ma fiche</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
     <div id="dashContent" style="display:none;">
       <div class="dash-header">
         <div class="eyebrow">Mon espace</div>
@@ -403,6 +427,38 @@ async function deleteMyProfile(){
   }
 }
 
+document.getElementById('c-sector').innerHTML = SECTORS.map(s=>`<option>${s}</option>`).join('');
+
+document.getElementById('completeForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const btn = document.getElementById('completeSaveBtn');
+  btn.disabled = true; btn.textContent = 'Création…';
+  const payload = {
+    user_id: CURRENT_USER.id,
+    email: CURRENT_USER.email,
+    nom: document.getElementById('c-name').value.trim(),
+    whatsapp: document.getElementById('c-phone').value.trim(),
+    pays: document.getElementById('c-country').value.trim(),
+    ville: document.getElementById('c-city').value.trim(),
+    business: document.getElementById('c-business').value.trim(),
+    secteur: document.getElementById('c-sector').value
+  };
+  try{
+    const { data, error } = await sb.from('profiles').insert(payload).select().single();
+    if(error) throw error;
+    hideErr('errComplete');
+    CURRENT_PROFILE = data;
+    document.getElementById('completeContent').style.display = 'none';
+    document.getElementById('dashContent').style.display = '';
+    fillDashboard(data);
+    showToast('Fiche créée ✓');
+  }catch(err){
+    showErr('errComplete', err.message || "Erreur lors de la création.");
+  }finally{
+    btn.disabled = false; btn.textContent = 'Créer ma fiche';
+  }
+});
+
 (async ()=>{
   const { user, profile } = await initNav();
   if(!user){
@@ -410,8 +466,7 @@ async function deleteMyProfile(){
     return;
   }
   if(!profile){
-    document.getElementById('gateMsg').style.display = '';
-    document.getElementById('gateMsg').innerHTML = '<h2>Profil introuvable</h2><p>Contacte l\'administrateur.</p>';
+    document.getElementById('completeContent').style.display = '';
     return;
   }
   document.getElementById('dashContent').style.display = '';
