@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confirmation — Kontak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#FFFFFF;
+  --bg-soft:#F3FBF5;
+  --ink:#0E2A1B;
+  --green:#25D366;
+  --green-dark:#128C4A;
+  --orange:#FF8A3D;
+  --gold:#E8A33D;
+  --line:rgba(14,42,27,0.10);
+  --muted:rgba(14,42,27,0.55);
+  --err:#D9534F;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Sora',sans-serif;-webkit-font-smoothing:antialiased;}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+.mono{font-family:'Space Mono',monospace;}
+a{color:inherit;}
+
+header{padding:20px 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:10;flex-wrap:wrap;gap:12px;}
+.logo{font-family:'Fraunces',serif;font-style:italic;font-size:22px;letter-spacing:0.3px;text-decoration:none;color:var(--ink);}
+.logo span{color:var(--green-dark);}
+.header-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.btn-fill{background:var(--green);color:#fff;border:none;padding:10px 18px;border-radius:100px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Sora',sans-serif;text-decoration:none;display:inline-block;}
+.btn-line{background:transparent;color:var(--ink);border:1.5px solid var(--line);padding:9px 16px;border-radius:100px;font-weight:600;font-size:14px;cursor:pointer;font-family:'Sora',sans-serif;text-decoration:none;display:inline-block;}
+.btn-fill:active,.btn-line:active{transform:scale(0.97);}
+
+.hero{padding:56px 24px 32px;text-align:left;background:linear-gradient(180deg,var(--bg-soft) 0%, #fff 100%);}
+.hero .eyebrow{font-family:'Space Mono',monospace;font-size:12px;color:var(--orange);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;font-weight:700;}
+.hero h1{font-size:clamp(30px,7vw,50px);line-height:1.1;max-width:640px;color:var(--ink);}
+.hero h1 em{color:var(--green-dark);font-style:normal;}
+.hero p{color:var(--muted);max-width:480px;margin-top:16px;font-size:16px;line-height:1.55;}
+.hero-actions{display:flex;gap:12px;margin-top:28px;flex-wrap:wrap;}
+
+.section{padding:44px 24px;}
+.section-title{font-size:24px;margin-bottom:8px;}
+.section-sub{color:var(--muted);font-size:14.5px;margin-bottom:26px;max-width:480px;}
+.feature-grid{display:grid;grid-template-columns:1fr;gap:16px;max-width:960px;}
+@media(min-width:720px){.feature-grid{grid-template-columns:1fr 1fr 1fr;}}
+.feature-card{background:var(--bg-soft);border:1px solid var(--line);border-radius:18px;padding:22px;}
+.feature-card .icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:14px;}
+.feature-card h3{font-size:17px;margin-bottom:8px;}
+.feature-card p{font-size:13.5px;color:var(--muted);line-height:1.5;margin:0;}
+
+.page-narrow{max-width:520px;margin:0 auto;padding:0 20px 60px;}
+
+.search-wrap{padding:0 20px 8px;}
+.search-box{background:var(--bg-soft);border:1px solid var(--line);border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:8px;}
+.search-box input{background:transparent;border:none;outline:none;color:var(--ink);font-family:'Sora',sans-serif;font-size:15px;flex:1;}
+.search-box input::placeholder{color:var(--muted);}
+.filters{display:flex;gap:8px;overflow-x:auto;padding:14px 20px 22px;-webkit-overflow-scrolling:touch;}
+.filters::-webkit-scrollbar{display:none;}
+.chip{flex-shrink:0;padding:7px 14px;border-radius:100px;border:1.5px solid var(--line);font-size:13px;color:var(--muted);background:#fff;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;}
+.chip.active{background:var(--green);color:#fff;border-color:var(--green);font-weight:700;}
+
+.stats-bar{padding:0 20px 18px;font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);}
+
+.grid{padding:0 20px 60px;display:grid;grid-template-columns:1fr;gap:14px;max-width:960px;margin:0 auto;}
+@media(min-width:640px){.grid{grid-template-columns:1fr 1fr;}}
+@media(min-width:960px){.grid{grid-template-columns:1fr 1fr 1fr;}}
+
+.card{background:#fff;color:var(--ink);border-radius:18px;padding:18px;position:relative;overflow:hidden;border:1px solid var(--line);box-shadow:0 2px 10px rgba(14,42,27,0.04);}
+.card-top{display:flex;gap:12px;align-items:flex-start;}
+.avatar-ring{width:54px;height:54px;border-radius:50%;flex-shrink:0;padding:3px;background:conic-gradient(var(--green) 0deg, var(--gold) 120deg, var(--orange) 240deg, var(--green) 360deg);}
+.avatar{width:100%;height:100%;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:19px;border:2px solid #fff;}
+.card-name{font-family:'Fraunces',serif;font-size:18px;font-weight:600;line-height:1.2;}
+.card-city{font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;margin-top:2px;}
+.card-cat{display:inline-block;margin-top:8px;font-size:11px;background:var(--bg-soft);color:var(--green-dark);padding:4px 10px;border-radius:100px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;}
+.card-owner{font-size:12px;color:var(--muted);margin-top:4px;}
+.card-actions{display:flex;gap:8px;margin-top:16px;}
+.wa-btn{flex:1;background:var(--green);color:#fff;text-decoration:none;text-align:center;padding:10px;border-radius:10px;font-weight:700;font-size:13.5px;display:flex;align-items:center;justify-content:center;gap:6px;}
+.empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted);}
+.empty h3{color:var(--ink);margin-bottom:8px;}
+
+.panel{background:#fff;color:var(--ink);border-radius:18px;padding:24px 22px;border:1px solid var(--line);box-shadow:0 2px 14px rgba(14,42,27,0.05);}
+.panel .sub{color:var(--muted);font-size:13px;margin-bottom:20px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px;}
+.field input,.field select,.field textarea{width:100%;padding:11px 13px;border-radius:10px;border:1.5px solid var(--line);font-family:'Sora',sans-serif;font-size:14.5px;background:#fff;color:var(--ink);}
+.field textarea{resize:vertical;min-height:70px;}
+.form-actions{display:flex;gap:10px;margin-top:20px;}
+.btn-primary{flex:1;background:var(--green);color:#fff;border:none;padding:13px;border-radius:10px;font-weight:700;font-size:14.5px;cursor:pointer;font-family:'Sora',sans-serif;}
+.btn-primary:disabled{opacity:0.6;}
+.btn-ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink);padding:13px 18px;border-radius:10px;font-weight:600;font-size:14.5px;cursor:pointer;font-family:'Sora',sans-serif;}
+.btn-danger{background:var(--err);color:#fff;border:none;padding:10px 14px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Sora',sans-serif;}
+.hint{font-size:11.5px;color:var(--muted);margin-top:4px;}
+.err-msg{font-size:12.5px;color:var(--err);margin-top:4px;display:none;}
+.err-msg.show{display:block;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 22px;border-radius:100px;font-size:13.5px;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none;max-width:90%;text-align:center;}
+.toast.show{opacity:1;}
+
+.stepper{display:flex;gap:6px;margin-bottom:22px;}
+.stepper .dot{flex:1;height:4px;border-radius:100px;background:var(--line);}
+.stepper .dot.active{background:var(--green);}
+.step-panel{display:none;}
+.step-panel.active{display:block;}
+.switch-link{text-align:center;font-size:13px;color:var(--muted);margin-top:16px;}
+.switch-link a{color:var(--green-dark);font-weight:700;cursor:pointer;text-decoration:underline;}
+
+.gate{padding:80px 20px;text-align:center;color:var(--muted);}
+.gate h2{color:var(--ink);margin-bottom:10px;}
+
+.admin-toolbar{display:flex;justify-content:space-between;align-items:center;padding:0 20px 16px;flex-wrap:wrap;gap:10px;}
+.table-wrap{padding:0 20px 60px;overflow-x:auto;}
+table.admin-table{width:100%;border-collapse:collapse;background:#fff;color:var(--ink);border-radius:14px;overflow:hidden;font-size:13.5px;min-width:820px;border:1px solid var(--line);}
+table.admin-table th{background:var(--bg-soft);text-align:left;padding:10px 12px;font-family:'Space Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);}
+table.admin-table td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:middle;}
+table.admin-table tr:hover td{background:var(--bg-soft);}
+.row-actions{display:flex;gap:6px;}
+.icon-btn{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-family:'Sora',sans-serif;color:var(--ink);}
+.badge-admin{background:var(--gold);color:var(--ink);font-size:10px;padding:2px 8px;border-radius:100px;font-weight:700;margin-left:6px;}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(14,42,27,0.55);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;z-index:100;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;color:var(--ink);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:26px 22px 30px;max-height:90vh;overflow-y:auto;position:relative;border:1px solid var(--line);}
+@media(min-width:640px){.modal-overlay{align-items:center;}.modal{border-radius:20px;}}
+.close-x{position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);}
+
+/* ---- Icônes SVG ---- */
+.ic-svg{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex-shrink:0;}
+.ic-svg svg{width:100%;height:100%;}
+
+/* ---- Barre de navigation fixe (dashboard) ---- */
+.fixed-navbar{position:sticky;top:0;z-index:25;background:#fff;border-bottom:1px solid var(--line);display:flex;gap:6px;padding:10px 20px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.fixed-navbar::-webkit-scrollbar{display:none;}
+.fnav-btn{display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:11px;background:var(--bg-soft);color:var(--ink);text-decoration:none;font-size:13.5px;font-weight:700;white-space:nowrap;border:1.5px solid transparent;}
+.fnav-btn:hover{border-color:var(--green);}
+.fnav-btn .ic-svg{width:17px;height:17px;color:var(--green-dark);}
+
+
+.confirm-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.confirm-card{max-width:440px;width:100%;text-align:center;padding:20px 8px;}
+.confirm-icon{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 22px;}
+.confirm-icon.success{background:var(--bg-soft);color:var(--green-dark);}
+.confirm-icon.error{background:#FDEDEB;color:var(--err);}
+.confirm-icon.loading{background:var(--bg-soft);color:var(--green-dark);}
+.confirm-icon svg{width:34px;height:34px;}
+.confirm-icon.loading svg{animation:spin 1s linear infinite;}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="index.html">Kon<span>tak</span></a>
+</header>
+
+<div class="confirm-wrap">
+  <div class="confirm-card">
+    <div class="confirm-icon loading" id="confirmIcon"></div>
+    <h1 id="confirmTitle" style="font-size:24px;">Vérification…</h1>
+    <p id="confirmText" style="color:var(--muted);font-size:14.5px;margin-top:10px;">Un instant, on confirme ton compte.</p>
+    <div style="margin-top:26px;">
+      <a class="btn-fill" id="confirmBtn" href="dashboard.html" style="display:none;">Accéder à mon compte</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---- Config Supabase (partagée par toutes les pages) ----
+const SUPABASE_URL = "https://opzdertwtnssqgexzklt.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wemRlcnR3dG5zc3FnZXh6a2x0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MjIxNDIsImV4cCI6MjEwMjE5ODE0Mn0.CSJU-7Rp1Enc_Xfx-_GxtpgIKAgRhaqDU73IskP3yL0";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const SECTORS = ['Commerce','Mode & beauté','Restauration','Services','Tech & digital','Immobilier','Éducation','Autre'];
+
+// ---- Helpers ----
+function initials(name){
+  return (name||'').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+}
+function waLink(phone){
+  const clean = (phone||'').replace(/[^\d+]/g,'').replace('+','');
+  return `https://wa.me/${clean}`;
+}
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+function showToast(msg){
+  let t = document.getElementById('toast');
+  if(!t){
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.className = 'toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3200);
+}
+function showErr(id,msg){ const e=document.getElementById(id); if(!e) return; e.textContent=msg; e.classList.add('show'); }
+function hideErr(id){ const e=document.getElementById(id); if(e) e.classList.remove('show'); }
+
+// ---- Session / nav ----
+let CURRENT_USER = null;
+let CURRENT_PROFILE = null;
+
+async function getSessionUser(){
+  const { data } = await sb.auth.getSession();
+  return data.session ? data.session.user : null;
+}
+
+async function loadMyProfile(user){
+  if(!user) return null;
+  const { data, error } = await sb.from('profiles').select('*').eq('user_id', user.id).maybeSingle();
+  if(error){ console.error(error); return null; }
+  return data;
+}
+
+// Toggle elements with data-auth="guest" | "user" | "admin"
+async function initNav(){
+  CURRENT_USER = await getSessionUser();
+  CURRENT_PROFILE = await loadMyProfile(CURRENT_USER);
+  const isAdmin = !!(CURRENT_PROFILE && CURRENT_PROFILE.is_admin);
+
+  document.querySelectorAll('[data-auth="guest"]').forEach(el=> el.style.display = CURRENT_USER ? 'none' : '');
+  document.querySelectorAll('[data-auth="user"]').forEach(el=> el.style.display = CURRENT_USER ? '' : 'none');
+  document.querySelectorAll('[data-auth="admin"]').forEach(el=> el.style.display = isAdmin ? '' : 'none');
+
+  return { user: CURRENT_USER, profile: CURRENT_PROFILE, isAdmin };
+}
+
+async function logout(){
+  await sb.auth.signOut();
+  window.location.href = 'index.html';
+}
+
+document.addEventListener('click', (e)=>{
+  if(e.target && e.target.matches('[data-action="logout"]')){
+    e.preventDefault();
+    logout();
+  }
+});
+
+// ---- Icônes SVG (jamais d'emoji) ----
+const ICONS = {
+  business: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
+  mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>',
+  server: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="7" rx="1.5"/><rect x="2" y="14" width="20" height="7" rx="1.5"/><line x1="6" y1="6.5" x2="6.01" y2="6.5"/><line x1="6" y1="17.5" x2="6.01" y2="17.5"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>',
+  grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+  settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.2M12 18.8V21M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M3 12h2.2M18.8 12H21M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/></svg>',
+  logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  idcard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="12" r="2"/><line x1="14" y1="10" x2="18" y2="10"/><line x1="14" y1="14" x2="18" y2="14"/></svg>',
+  message: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.4 8.4 0 0 1-4-1L3 20l1-4.5A8.4 8.4 0 0 1 3 11.5 8.5 8.5 0 0 1 11.5 3 8.5 8.5 0 0 1 21 11.5z"/></svg>',
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7"/><path d="M9 22V12h6v10"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  support: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="m5.2 5.2 3.3 3.3M18.8 5.2l-3.3 3.3M5.2 18.8l3.3-3.3M18.8 18.8l-3.3-3.3"/></svg>',
+  faq: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 2-2.4 3.7"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  referral: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><path d="M2 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17.5" cy="8.5" r="2.3"/><path d="M15.2 14.6c2.6.2 4.8 2.2 4.8 5.4"/></svg>',
+  network: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M8.2 7.3 10.5 16M15.8 7.3 13.5 16M8.3 6h7.4"/></svg>',
+  gain: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>',
+  document: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 11 4.6-2.3 8-6 8-11V5l-8-3Z"/></svg>',
+  wallet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v3"/><path d="M3 7v11a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-5a2 2 0 0 0 0 4h5.5"/></svg>',
+  menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>',
+  chevronDown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'
+};
+function icon(key, cls){
+  return `<span class="ic-svg ${cls||''}">${ICONS[key] || ICONS.grid}</span>`;
+}
+
+// ---- Barre de navigation dynamique (gérée par l'admin) ----
+async function loadNavItems(){
+  try{
+    const { data, error } = await sb.from('nav_items').select('*').eq('visible', true).order('position', { ascending:true });
+    if(error) throw error;
+    return data || [];
+  }catch(e){ console.error(e); return []; }
+}
+
+
+function setState(state, title, text, btnLabel, btnHref){
+  const icon = document.getElementById('confirmIcon');
+  icon.className = 'confirm-icon ' + state;
+  const icons = { success: ICONS.support, error: ICONS.support, loading: ICONS.server };
+  icon.innerHTML = state === 'success'
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+    : state === 'error'
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.9" y1="4.9" x2="7.8" y2="7.8"/><line x1="16.2" y1="16.2" x2="19.1" y2="19.1"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.9" y1="19.1" x2="7.8" y2="16.2"/><line x1="16.2" y1="7.8" x2="19.1" y2="4.9"/></svg>';
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmText').textContent = text;
+  const btn = document.getElementById('confirmBtn');
+  if(btnLabel){
+    btn.style.display = 'inline-block';
+    btn.textContent = btnLabel;
+    btn.href = btnHref;
+  }else{
+    btn.style.display = 'none';
+  }
+}
+
+(async ()=>{
+  // supabase-js détecte automatiquement le token dans l'URL (#access_token=...) et crée la session
+  await new Promise(r => setTimeout(r, 800));
+  const { data, error } = await sb.auth.getSession();
+
+  const hash = window.location.hash;
+  const hasError = hash.includes('error=') || hash.includes('error_description=');
+
+  if(hasError){
+    const params = new URLSearchParams(hash.replace('#','?'));
+    const desc = params.get('error_description') || 'Le lien de confirmation est invalide ou a expiré.';
+    setState('error', 'Confirmation échouée', decodeURIComponent(desc).replace(/\+/g,' '), 'Se réinscrire', 'inscription.html');
+    return;
+  }
+
+  if(data.session){
+    setState('success', 'Compte confirmé !', 'Ton adresse email a été vérifiée avec succès. Tu peux maintenant compléter ta fiche.', 'Accéder à mon compte', 'dashboard.html');
+  }else{
+    setState('success', 'Email confirmé !', 'Ton compte est vérifié. Connecte-toi pour continuer.', 'Se connecter', 'connexion.html');
+  }
+})();
+</script>
+</body>
+</html>
