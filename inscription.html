@@ -330,15 +330,23 @@ const EMAILJS_TEMPLATE_WELCOME = "template_aks186b";
 const EMAILJS_TEMPLATE_ADMIN = "template_dzquprb";
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
-function sendWelcomeEmail(name, email){
-  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_WELCOME, { to_name: name, to_email: email })
-    .then(()=> console.log('EmailJS: email de bienvenue envoyé'))
-    .catch(e => { console.error('EmailJS welcome error', e); showToast('Email bienvenue: ' + (e.text || e.message || JSON.stringify(e))); });
+async function sendWelcomeEmail(name, email){
+  try{
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_WELCOME, { to_name: name, to_email: email });
+    console.log('EmailJS: bienvenue OK');
+  }catch(e){
+    console.error('EmailJS welcome error', e);
+    showToast('✗ Erreur bienvenue: ' + (e.text || e.message || JSON.stringify(e)));
+  }
 }
-function sendAdminNotifEmail(name, email, phone){
-  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ADMIN, { member_name: name, member_email: email, member_phone: phone })
-    .then(()=> console.log('EmailJS: notif admin envoyée'))
-    .catch(e => { console.error('EmailJS admin notif error', e); showToast('Email admin: ' + (e.text || e.message || JSON.stringify(e))); });
+async function sendAdminNotifEmail(name, email, phone){
+  try{
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ADMIN, { member_name: name, member_email: email, member_phone: phone });
+    console.log('EmailJS: notif admin OK');
+  }catch(e){
+    console.error('EmailJS admin notif error', e);
+    showToast('✗ Erreur notif admin: ' + (e.text || e.message || JSON.stringify(e)));
+  }
 }
 
 function goToStep(n){
@@ -391,8 +399,10 @@ document.getElementById('signupForm').addEventListener('submit', async (e)=>{
         pays: country, ville: city, business: business, secteur: sector
       });
       if(insertErr) throw insertErr;
-      sendWelcomeEmail(name, email);
-      sendAdminNotifEmail(name, email, phone);
+      await Promise.allSettled([
+        sendWelcomeEmail(name, email),
+        sendAdminNotifEmail(name, email, phone)
+      ]);
       window.location.href = 'dashboard.html';
     }else{
       showToast('Compte créé ✓ Vérifie ton email pour confirmer, puis connecte-toi pour compléter ta fiche.');
