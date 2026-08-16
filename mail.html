@@ -130,35 +130,200 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
 .ic-svg svg{width:100%;height:100%;}
 
 /* ---- Barre de navigation fixe (dashboard) ---- */
-.fixed-navbar{position:sticky;top:0;z-index:25;background:#fff;border-bottom:1px solid var(--line);display:flex;gap:6px;padding:10px 20px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.fixed-navbar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center;gap:2px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(14,42,27,0.06);}
 .fixed-navbar::-webkit-scrollbar{display:none;}
-.fnav-btn{display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:11px;background:var(--bg-soft);color:var(--ink);text-decoration:none;font-size:13.5px;font-weight:700;white-space:nowrap;border:1.5px solid transparent;}
-.fnav-btn:hover{border-color:var(--green);}
-.fnav-btn .ic-svg{width:17px;height:17px;color:var(--green-dark);}
+.fnav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px 10px;border-radius:12px;background:transparent;color:var(--ink);text-decoration:none;font-size:11px;font-weight:600;white-space:nowrap;flex:1;text-align:center;}
+.fnav-btn:hover{background:var(--bg-soft);}
+.fnav-btn .ic-svg{width:20px;height:20px;color:var(--green-dark);}
+body{padding-bottom:74px;}
 
-.soon-box{max-width:480px;margin:60px auto;text-align:center;padding:40px 24px;}
-.soon-icon{width:56px;height:56px;border-radius:16px;background:var(--bg-soft);color:var(--green-dark);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
-.soon-icon svg{width:26px;height:26px;}
+
+/* ---- Dashboard shell ---- */
+.dash-topbar{display:none;padding:14px 18px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:30;}
+.burger{width:38px;height:38px;border-radius:10px;border:1.5px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-direction:column;gap:4px;}
+.burger span{display:block;width:16px;height:2px;background:var(--ink);border-radius:2px;}
+
+.dash-shell{display:flex;min-height:100vh;}
+.sidebar{width:250px;flex-shrink:0;background:var(--bg-soft);border-right:1px solid var(--line);padding:24px 16px;position:sticky;top:0;height:100vh;overflow-y:auto;padding-bottom:90px;}
+.sidebar .logo{display:block;margin-bottom:30px;}
+.side-section{margin-bottom:22px;}
+.side-label{font-family:'Space Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:0 12px;margin-bottom:8px;}
+.side-link{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;cursor:pointer;margin-bottom:2px;}
+.side-link:hover{background:#fff;}
+.side-link.active{background:var(--green);color:#fff;}
+.side-link .ic{font-size:16px;width:20px;text-align:center;}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(14,42,27,0.5);z-index:35;}
+.sidebar-overlay.open{display:block;}
+
+.dash-main{flex:1;min-width:0;}
+.dash-header{padding:36px 28px 8px;}
+.dash-header .eyebrow{font-family:'Space Mono',monospace;font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:8px;}
+.dash-header h1{font-size:28px;}
+
+.dash-body{padding:0 28px 60px;max-width:640px;}
+
+.recipient-toolbar{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--muted);margin:14px 0 8px;flex-wrap:wrap;gap:8px;}
+.recipient-toolbar .icon-btn{padding:5px 10px;font-size:11.5px;}
+.recipient-list{max-height:280px;overflow-y:auto;border:1.5px solid var(--line);border-radius:12px;padding:6px;}
+.recipient-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-size:13.5px;}
+.recipient-row:hover{background:var(--bg-soft);}
+.recipient-row input{width:16px;height:16px;accent-color:var(--green);}
+.recipient-row .r-name{font-weight:600;}
+.recipient-row .r-meta{color:var(--muted);font-size:12px;margin-left:auto;font-family:'Space Mono',monospace;}
+.recipient-empty{padding:20px;text-align:center;color:var(--muted);font-size:13px;}
+
+.campaign-item{border-bottom:1px solid var(--line);padding:14px 0;}
+.campaign-item:last-child{border-bottom:none;}
+.campaign-subject{font-weight:700;font-size:14px;}
+.campaign-meta{font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;margin-top:2px;}
+
+.profile-strip{display:flex;align-items:center;gap:12px;padding:14px 28px;}
+.strip-name{font-weight:700;font-size:14.5px;}
+.strip-email{font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;}
+
+.tab-nav{display:flex;gap:4px;padding:4px 28px 0;border-bottom:1px solid var(--line);margin-bottom:24px;overflow-x:auto;}
+.tab-btn{background:none;border:none;padding:12px 16px;font-family:'Sora',sans-serif;font-weight:700;font-size:13.5px;color:var(--muted);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;}
+.tab-btn.active{color:var(--green-dark);border-bottom-color:var(--green);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+@media(max-width:880px){
+  .dash-topbar{display:flex;}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:40;transform:translateX(-100%);transition:transform .25s ease;box-shadow:0 0 0 rgba(0,0,0,0);}
+  .sidebar.open{transform:translateX(0);box-shadow:8px 0 24px rgba(0,0,0,0.15);}
+  .dash-header,.profile-strip,.tab-nav,.dash-body{padding-left:20px;padding-right:20px;}
+}
 </style>
 </head>
 <body>
 
-<header>
-  <a class="logo" href="index.html">Kon<span>tak</span></a>
-  <div class="header-actions">
-    <a class="btn-line" href="dashboard.html">Tableau de bord</a>
-    <a class="btn-line" href="annuaire.html">Annuaire</a>
-    <a class="btn-fill" href="#" data-action="logout">Déconnexion</a>
-  </div>
-</header>
+<div class="dash-topbar">
+  <button class="burger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+  <a class="logo" href="index.html" style="font-size:19px;">Kon<span>tak</span></a>
+  <div style="width:38px;"></div>
+</div>
 
-<div class="soon-box">
-  <div class="soon-icon" id="soonIcon"></div>
-  <div class="eyebrow" style="margin-bottom:10px;">Messagerie</div>
-  <h1 style="font-size:26px;margin-bottom:12px;">Mail</h1>
-  <p style="color:var(--muted);font-size:14.5px;">Cette page est en cours de construction. Elle sera bientôt disponible.</p>
-  <br>
-  <a class="btn-fill" href="dashboard.html">Retour au tableau de bord</a>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<nav class="fixed-navbar" id="fixedNavbar"></nav>
+
+<div class="dash-shell">
+  <aside class="sidebar" id="sidebar">
+    <a class="logo" href="index.html">Kon<span>tak</span></a>
+
+    <div class="side-section">
+      <div class="side-label">Mon compte</div>
+      <a class="side-link" href="dashboard.html"><span class="ic-svg" id="icOverview"></span> Vue d'ensemble</a>
+      <a class="side-link" href="profile.html"><span class="ic-svg" id="icProfile"></span> Mon profil</a>
+    </div>
+
+    <div class="side-section">
+      <div class="side-label">Naviguer</div>
+      <a class="side-link" href="annuaire.html"><span class="ic-svg" id="icAnnuaire"></span> Annuaire</a>
+      <a class="side-link" href="admin.html" data-auth="admin"><span class="ic-svg" id="icAdmin"></span> Administration</a>
+    </div>
+
+    <div class="side-section">
+      <div class="side-label">Session</div>
+      <a class="side-link" href="#" data-action="logout"><span class="ic-svg" id="icLogout"></span> Déconnexion</a>
+    </div>
+  </aside>
+
+  <main class="dash-main">
+    <div id="gateMsg" class="gate" style="display:none;">
+      <h2>Connexion requise</h2>
+      <p>Tu dois être connecté pour accéder à ton tableau de bord.</p>
+      <br>
+      <a class="btn-fill" href="connexion.html">Se connecter</a>
+    </div>
+
+    <div id="completeContent" style="display:none;">
+      <div class="dash-header">
+        <div class="eyebrow">Dernière étape</div>
+        <h1>Complète ta fiche</h1>
+      </div>
+      <div class="dash-body">
+        <div class="panel">
+          <div class="sub">Ton compte existe mais aucune fiche n'y est associée. Remplis ces informations pour apparaître dans l'annuaire.</div>
+          <form id="completeForm">
+            <div class="field"><label>Nom complet</label><input type="text" id="c-name" required></div>
+            <div class="field"><label>Numéro WhatsApp</label><input type="tel" id="c-phone" required></div>
+            <div class="field"><label>Pays</label><input type="text" id="c-country" required></div>
+            <div class="field"><label>Ville</label><input type="text" id="c-city" required></div>
+            <div class="field"><label>Nom du business</label><input type="text" id="c-business" required></div>
+            <div class="field"><label>Secteur d'activité</label><select id="c-sector" required></select></div>
+            <div class="err-msg" id="errComplete"></div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary" id="completeSaveBtn">Créer ma fiche</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div id="dashContent" style="display:none;">
+      <div class="dash-header" style="padding-bottom:0;">
+        <div class="eyebrow">Communication</div>
+        <h1>Campagnes mail</h1>
+      </div>
+
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="tab-compose" onclick="switchTab('tab-compose')">Nouvelle campagne</button>
+        <button class="tab-btn" data-tab="tab-history" onclick="switchTab('tab-history')">Historique</button>
+      </div>
+
+      <div class="dash-body" style="max-width:720px;">
+        <div class="tab-content active" id="tab-compose">
+          <div class="panel" style="margin-bottom:20px;">
+            <h3 style="margin-bottom:4px;">Destinataires</h3>
+            <div class="sub">Choisis à qui envoyer cette campagne.</div>
+            <div class="field">
+              <label>Filtrer par secteur</label>
+              <select id="m-sector-filter"><option value="">Tous les secteurs</option></select>
+            </div>
+            <div class="field">
+              <label>Filtrer par ville</label>
+              <input type="text" id="m-city-filter" placeholder="Ex: Dakar (laisser vide pour toutes)">
+            </div>
+            <div class="recipient-toolbar">
+              <span id="recipientCount">0 destinataire(s) sélectionné(s)</span>
+              <div>
+                <button type="button" class="icon-btn" onclick="selectAllRecipients(true)">Tout cocher</button>
+                <button type="button" class="icon-btn" onclick="selectAllRecipients(false)">Tout décocher</button>
+              </div>
+            </div>
+            <div class="recipient-list" id="recipientList"></div>
+
+            <div class="field" style="margin-top:16px;">
+              <label>Ou coller des emails manuellement</label>
+              <textarea id="m-manual" placeholder="email1@exemple.com, email2@exemple.com…"></textarea>
+              <div class="hint">Séparés par des virgules. S'ajoutent aux destinataires cochés ci-dessus.</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3 style="margin-bottom:4px;">Message</h3>
+            <div class="sub">Rédige le contenu de ta campagne.</div>
+            <div class="field"><label>Objet</label><input type="text" id="m-subject" placeholder="Ex: Nouvelle offre spéciale…"></div>
+            <div class="field"><label>Message</label><textarea id="m-body" style="min-height:160px;" placeholder="Écris ton message ici…"></textarea></div>
+            <div class="err-msg" id="errMail"></div>
+            <div class="form-actions">
+              <button type="button" class="btn-primary" id="sendCampaignBtn" onclick="sendCampaign()">Générer l'envoi groupé</button>
+            </div>
+            <div class="hint" style="margin-top:10px;">Ton application mail par défaut s'ouvrira avec tous les destinataires en copie cachée (Cci). Tu n'as plus qu'à cliquer sur envoyer.</div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-history">
+          <div class="panel">
+            <h3 style="margin-bottom:4px;">Mes campagnes précédentes</h3>
+            <div class="sub">Historique de tes envois groupés.</div>
+            <div id="campaignHistory"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -268,8 +433,181 @@ async function loadNavItems(){
   }catch(e){ console.error(e); return []; }
 }
 
-document.getElementById('soonIcon').innerHTML = ICONS.mail;
-initNav();
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+document.getElementById('icOverview').innerHTML = ICONS.home;
+document.getElementById('icProfile').innerHTML = ICONS.user;
+document.getElementById('icAnnuaire').innerHTML = ICONS.grid;
+document.getElementById('icAdmin').innerHTML = ICONS.settings;
+document.getElementById('icLogout').innerHTML = ICONS.logout;
+
+async function renderFixedNavbar(){
+  const items = await loadNavItems();
+  const bar = document.getElementById('fixedNavbar');
+  if(items.length===0){ bar.style.display='none'; return; }
+  bar.innerHTML = items.map(it=>`
+    <a class="fnav-btn" href="${escapeHtml(it.url)}">${icon(it.icon)}<span>${escapeHtml(it.label)}</span></a>
+  `).join('');
+}
+renderFixedNavbar();
+
+function switchTab(id){
+  document.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===id));
+  document.querySelectorAll('.tab-content').forEach(c=> c.classList.toggle('active', c.id===id));
+  if(id==='tab-history') loadCampaignHistory();
+}
+
+let allDirectory = [];
+
+async function loadDirectory(){
+  try{
+    const { data, error } = await sb.from('profiles').select('nom,email,secteur,ville,business').not('email','is',null);
+    if(error) throw error;
+    allDirectory = (data || []).filter(p=>p.email);
+  }catch(e){ allDirectory = []; }
+  document.getElementById('m-sector-filter').innerHTML = '<option value="">Tous les secteurs</option>' + SECTORS.map(s=>`<option>${s}</option>`).join('');
+  renderRecipients();
+}
+
+function renderRecipients(){
+  const sector = document.getElementById('m-sector-filter').value;
+  const city = document.getElementById('m-city-filter').value.trim().toLowerCase();
+  const list = allDirectory.filter(p=>{
+    const matchSector = !sector || p.secteur === sector;
+    const matchCity = !city || (p.ville||'').toLowerCase().includes(city);
+    return matchSector && matchCity;
+  });
+  const el = document.getElementById('recipientList');
+  if(list.length===0){
+    el.innerHTML = `<div class="recipient-empty">Aucun membre ne correspond à ces filtres.</div>`;
+  }else{
+    el.innerHTML = list.map(p=>`
+      <label class="recipient-row">
+        <input type="checkbox" class="recipient-check" value="${escapeHtml(p.email)}">
+        <span class="r-name">${escapeHtml(p.business || p.nom)}</span>
+        <span class="r-meta">${escapeHtml(p.ville||'')}</span>
+      </label>
+    `).join('');
+  }
+  updateRecipientCount();
+}
+document.getElementById('m-sector-filter').addEventListener('change', renderRecipients);
+document.getElementById('m-city-filter').addEventListener('input', renderRecipients);
+document.getElementById('recipientList').addEventListener('change', updateRecipientCount);
+
+function updateRecipientCount(){
+  const n = document.querySelectorAll('.recipient-check:checked').length;
+  document.getElementById('recipientCount').textContent = `${n} destinataire${n!==1?'s':''} sélectionné${n!==1?'s':''}`;
+}
+function selectAllRecipients(state){
+  document.querySelectorAll('.recipient-check').forEach(cb=> cb.checked = state);
+  updateRecipientCount();
+}
+
+async function sendCampaign(){
+  const checked = Array.from(document.querySelectorAll('.recipient-check:checked')).map(cb=>cb.value);
+  const manual = document.getElementById('m-manual').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const recipients = Array.from(new Set([...checked, ...manual]));
+  const subject = document.getElementById('m-subject').value.trim();
+  const body = document.getElementById('m-body').value.trim();
+
+  if(recipients.length===0){ showErr('errMail','Sélectionne au moins un destinataire.'); return; }
+  if(!subject || !body){ showErr('errMail','Ajoute un objet et un message.'); return; }
+  hideErr('errMail');
+
+  const btn = document.getElementById('sendCampaignBtn');
+  btn.disabled = true; btn.textContent = 'Préparation…';
+
+  try{
+    await sb.from('mail_campaigns').insert({
+      user_id: CURRENT_USER.id,
+      subject: subject,
+      body: body,
+      recipients_count: recipients.length
+    });
+  }catch(e){ /* l'historique est secondaire, on continue même si ça échoue */ }
+
+  const mailto = `mailto:?bcc=${encodeURIComponent(recipients.join(','))}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailto;
+
+  showToast('Campagne prête ✓ Envoie depuis ton application mail.');
+  btn.disabled = false; btn.textContent = "Générer l'envoi groupé";
+}
+
+async function loadCampaignHistory(){
+  const el = document.getElementById('campaignHistory');
+  el.innerHTML = '<div class="recipient-empty">Chargement…</div>';
+  try{
+    const { data, error } = await sb.from('mail_campaigns').select('*').eq('user_id', CURRENT_USER.id).order('created_at', { ascending:false });
+    if(error) throw error;
+    if(!data || data.length===0){
+      el.innerHTML = '<div class="recipient-empty">Aucune campagne envoyée pour l\'instant.</div>';
+      return;
+    }
+    el.innerHTML = data.map(c=>`
+      <div class="campaign-item">
+        <div class="campaign-subject">${escapeHtml(c.subject)}</div>
+        <div class="campaign-meta">${c.recipients_count} destinataire(s) · ${new Date(c.created_at).toLocaleDateString('fr-FR', {day:'numeric', month:'short', year:'numeric'})}</div>
+      </div>
+    `).join('');
+  }catch(e){
+    el.innerHTML = '<div class="recipient-empty">Impossible de charger l\'historique.</div>';
+  }
+}
+
+document.getElementById('c-sector').innerHTML = SECTORS.map(s=>`<option>${s}</option>`).join('');
+
+document.getElementById('completeForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const btn = document.getElementById('completeSaveBtn');
+  btn.disabled = true; btn.textContent = 'Création…';
+  const payload = {
+    user_id: CURRENT_USER.id,
+    email: CURRENT_USER.email,
+    nom: document.getElementById('c-name').value.trim(),
+    whatsapp: document.getElementById('c-phone').value.trim(),
+    pays: document.getElementById('c-country').value.trim(),
+    ville: document.getElementById('c-city').value.trim(),
+    business: document.getElementById('c-business').value.trim(),
+    secteur: document.getElementById('c-sector').value
+  };
+  try{
+    const { data, error } = await sb.from('profiles').insert(payload).select().single();
+    if(error) throw error;
+    hideErr('errComplete');
+    CURRENT_PROFILE = data;
+    document.getElementById('completeContent').style.display = 'none';
+    document.getElementById('dashContent').style.display = '';
+    fillDashboard(data);
+    showToast('Fiche créée ✓');
+  }catch(err){
+    showErr('errComplete', err.message || "Erreur lors de la création.");
+  }finally{
+    btn.disabled = false; btn.textContent = 'Créer ma fiche';
+  }
+});
+
+(async ()=>{
+  const { user, profile } = await initNav();
+  if(!user){
+    document.getElementById('gateMsg').style.display = '';
+    return;
+  }
+  if(!profile){
+    document.getElementById('completeContent').style.display = '';
+    return;
+  }
+  document.getElementById('dashContent').style.display = '';
+  loadDirectory();
+})();
 </script>
 </body>
 </html>
