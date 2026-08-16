@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
 :root{
   --bg:#FFFFFF;
@@ -658,6 +659,22 @@ document.getElementById('withdrawForm').addEventListener('submit', async (e)=>{
 
 document.getElementById('c-sector').innerHTML = SECTORS.map(s=>`<option>${s}</option>`).join('');
 
+// ---- EmailJS ----
+const EMAILJS_PUBLIC_KEY = "fNyhiux6zn4u2CtRj";
+const EMAILJS_SERVICE_ID = "service_ps61bla";
+const EMAILJS_TEMPLATE_WELCOME = "template_aks186b";
+const EMAILJS_TEMPLATE_ADMIN = "template_dzquprb";
+emailjs.init(EMAILJS_PUBLIC_KEY);
+
+function sendWelcomeEmail(name, email){
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_WELCOME, { to_name: name, to_email: email })
+    .catch(e => console.error('EmailJS welcome error', e));
+}
+function sendAdminNotifEmail(name, email, phone){
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ADMIN, { member_name: name, member_email: email, member_phone: phone })
+    .catch(e => console.error('EmailJS admin notif error', e));
+}
+
 document.getElementById('completeForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
   const btn = document.getElementById('completeSaveBtn');
@@ -680,6 +697,8 @@ document.getElementById('completeForm').addEventListener('submit', async (e)=>{
     document.getElementById('completeContent').style.display = 'none';
     document.getElementById('dashContent').style.display = '';
     fillDashboard(data);
+    sendWelcomeEmail(payload.nom, payload.email);
+    sendAdminNotifEmail(payload.nom, payload.email, payload.whatsapp);
     showToast('Fiche créée ✓');
   }catch(err){
     showErr('errComplete', err.message || "Erreur lors de la création.");
