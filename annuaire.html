@@ -77,6 +77,25 @@ header{padding:20px 24px;display:flex;justify-content:space-between;align-items:
 .card-cat{display:inline-block;margin-top:8px;font-size:11px;background:var(--bg-soft);color:var(--green-dark);padding:4px 10px;border-radius:100px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;}
 .card-owner{font-size:12px;color:var(--muted);margin-top:4px;}
 .card-actions{display:flex;gap:8px;margin-top:16px;}
+.card-actions-secondary{display:flex;gap:8px;margin-top:8px;}
+.sec-btn{flex:1;background:var(--bg-soft);color:var(--ink);border:1.5px solid var(--line);padding:8px;border-radius:9px;font-weight:700;font-size:12.5px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-family:'Sora',sans-serif;}
+.sec-btn:hover{border-color:var(--green);}
+.sec-btn .ic-svg{width:15px;height:15px;color:var(--green-dark);}
+
+.bulk-bar{padding:0 20px 16px;display:flex;justify-content:flex-end;max-width:960px;margin:0 auto;}
+.bulk-btn{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#fff;border:none;padding:11px 18px;border-radius:100px;font-weight:700;font-size:13.5px;cursor:pointer;font-family:'Sora',sans-serif;}
+.bulk-btn .ic-svg{width:16px;height:16px;color:var(--gold);}
+
+.kontak-tag{display:inline-flex;align-items:center;gap:4px;background:var(--bg-soft);color:var(--green-dark);font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:100px;margin-bottom:6px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;}
+.detail-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+.detail-row:last-child{border-bottom:none;}
+.detail-row .k{color:var(--muted);}
+.detail-row .v{font-weight:700;text-align:right;}
+.dl-option{display:flex;align-items:center;gap:12px;padding:14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;cursor:pointer;margin-bottom:10px;width:100%;text-align:left;font-family:'Sora',sans-serif;}
+.dl-option:hover{border-color:var(--green);}
+.dl-option .ic-svg{width:20px;height:20px;color:var(--green-dark);flex-shrink:0;}
+.dl-option .dl-title{font-weight:700;font-size:14px;}
+.dl-option .dl-sub{font-size:12px;color:var(--muted);margin-top:1px;}
 .wa-btn{flex:1;background:var(--green);color:#fff;text-decoration:none;text-align:center;padding:10px;border-radius:10px;font-weight:700;font-size:13.5px;display:flex;align-items:center;justify-content:center;gap:6px;border:none;cursor:pointer;font-family:'Sora',sans-serif;}
 .empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted);}
 .empty h3{color:var(--ink);margin-bottom:8px;}
@@ -166,7 +185,77 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
 
 <div class="filters" id="filters"></div>
 <div class="stats-bar" id="statsBar"></div>
+
+<div class="bulk-bar">
+  <button class="bulk-btn" id="bulkBtnOpen" onclick="openBulkDownload()"><span class="ic-svg" id="icBulk"></span> Télécharger des contacts</button>
+</div>
+
 <div class="grid" id="grid"></div>
+
+<!-- Menu de téléchargement d'un contact -->
+<div class="modal-overlay" id="downloadOverlay">
+  <div class="modal">
+    <button class="close-x" onclick="closeDownloadMenu()">✕</button>
+    <h2>Télécharger ce contact</h2>
+    <div class="sub" id="dlContactName">—</div>
+    <button class="dl-option" onclick="downloadContactCSV(activeContact)">
+      <span class="ic-svg" id="icCsv"></span>
+      <div><div class="dl-title">Fichier CSV</div><div class="dl-sub">Compatible tableur (Excel, Sheets…)</div></div>
+    </button>
+    <button class="dl-option" onclick="downloadContactVCF(activeContact)">
+      <span class="ic-svg" id="icVcf"></span>
+      <div><div class="dl-title">Enregistrer sur le téléphone</div><div class="dl-sub">Fichier .vcf — ajoute le contact directement</div></div>
+    </button>
+  </div>
+</div>
+
+<!-- Fiche détaillée d'un contact -->
+<div class="modal-overlay" id="detailOverlay">
+  <div class="modal">
+    <button class="close-x" onclick="closeContactDetail()">✕</button>
+    <span class="kontak-tag" id="detailTag"></span>
+    <div style="display:flex;gap:14px;align-items:center;margin-bottom:16px;">
+      <div class="avatar-ring" style="width:56px;height:56px;"><div class="avatar" id="detailAvatar" style="font-size:18px;">--</div></div>
+      <div>
+        <h2 id="detailName" style="font-size:19px;">—</h2>
+        <div class="card-city" id="detailOwner">—</div>
+      </div>
+    </div>
+    <div class="detail-row"><span class="k">Ville / Pays</span><span class="v" id="detailLoc">—</span></div>
+    <div class="detail-row"><span class="k">Secteur</span><span class="v" id="detailSector">—</span></div>
+    <div class="detail-row"><span class="k">WhatsApp</span><span class="v" id="detailPhone">—</span></div>
+    <div class="form-actions">
+      <button class="btn-primary" id="detailWaBtn">Discuter sur WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<!-- Téléchargement groupé -->
+<div class="modal-overlay" id="bulkOverlay">
+  <div class="modal">
+    <button class="close-x" onclick="closeBulkDownload()">✕</button>
+    <h2>Téléchargement groupé</h2>
+    <div class="sub">Choisis un secteur et le nombre de contacts à exporter (2 à 25).</div>
+    <div class="field">
+      <label>Secteur d'activité</label>
+      <select id="bulk-sector"><option value="">Tous les secteurs</option></select>
+    </div>
+    <div class="field">
+      <label>Nombre de contacts</label>
+      <input type="number" id="bulk-count" min="2" max="25" value="10">
+      <div class="hint">Minimum 2, maximum 25 par téléchargement.</div>
+    </div>
+    <div class="err-msg" id="errBulk"></div>
+    <button class="dl-option" onclick="generateBulkDownload('csv')">
+      <span class="ic-svg" id="icBulkCsv"></span>
+      <div><div class="dl-title">Fichier CSV</div><div class="dl-sub">Tous les contacts dans un seul fichier</div></div>
+    </button>
+    <button class="dl-option" onclick="generateBulkDownload('vcf')">
+      <span class="ic-svg" id="icBulkVcf"></span>
+      <div><div class="dl-title">Fichier contacts (.vcf)</div><div class="dl-sub">À importer directement dans le téléphone</div></div>
+    </button>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -324,6 +413,10 @@ function render(){
       <div class="card-actions">
         <button class="wa-btn" data-wa="${escapeHtml(waLink(c.whatsapp))}" onclick="contactViaWhatsapp(this.dataset.wa)">Discuter sur WhatsApp</button>
       </div>
+      <div class="card-actions-secondary">
+        <button class="sec-btn" onclick='openDownloadMenu(${JSON.stringify(c).replace(/'/g,"&apos;")})'>${ICON_DOWNLOAD} Télécharger</button>
+        <button class="sec-btn" onclick='openContactDetail(${JSON.stringify(c).replace(/'/g,"&apos;")})'>${ICON_EYE} Voir la fiche</button>
+      </div>
     </div>
   `).join('');
 }
@@ -358,6 +451,124 @@ async function contactViaWhatsapp(waUrl){
   }
   window.open(waUrl, '_blank', 'noopener');
 }
+
+// ---- Icônes locales pour les téléchargements ----
+const ICON_DOWNLOAD = '<span class="ic-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg></span>';
+const ICON_EYE = '<span class="ic-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></span>';
+document.getElementById('icBulk').innerHTML = ICONS.grid;
+document.getElementById('icCsv').innerHTML = ICONS.idcard;
+document.getElementById('icVcf').innerHTML = ICONS.user;
+document.getElementById('icBulkCsv').innerHTML = ICONS.idcard;
+document.getElementById('icBulkVcf').innerHTML = ICONS.user;
+
+let activeContact = null;
+
+function triggerFileDownload(filename, content, mime){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function contactToCSVRow(c){
+  const name = `Kontak • ${c.nom || ''}`;
+  const cells = [name, c.business||'', c.whatsapp||'', c.ville||'', c.pays||'', c.secteur||'', 'Kontak'];
+  return cells.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
+}
+function contactToVCard(c){
+  const name = `Kontak • ${c.nom || ''}`;
+  return [
+    'BEGIN:VCARD','VERSION:3.0',
+    `N:${c.nom||''};;;;`,
+    `FN:${name}`,
+    `ORG:Kontak`,
+    `TITLE:${c.secteur||''}`,
+    c.whatsapp ? `TEL;TYPE=CELL:${c.whatsapp}` : '',
+    `ADR:;;${c.ville||''};;;${c.pays||''}`,
+    `NOTE:${c.business||''} — via annuaire Kontak`,
+    'END:VCARD'
+  ].filter(Boolean).join('\n');
+}
+
+// ---- Menu de téléchargement d'un contact ----
+function openDownloadMenu(c){
+  activeContact = c;
+  document.getElementById('dlContactName').textContent = c.business || c.nom || '';
+  document.getElementById('downloadOverlay').classList.add('open');
+}
+function closeDownloadMenu(){ document.getElementById('downloadOverlay').classList.remove('open'); }
+
+function downloadContactCSV(c){
+  if(!c) return;
+  const csv = 'Nom,Business,WhatsApp,Ville,Pays,Secteur,Source\n' + contactToCSVRow(c);
+  triggerFileDownload(`kontak-${(c.nom||'contact').replace(/\s+/g,'-').toLowerCase()}.csv`, csv, 'text/csv');
+  closeDownloadMenu();
+}
+function downloadContactVCF(c){
+  if(!c) return;
+  triggerFileDownload(`kontak-${(c.nom||'contact').replace(/\s+/g,'-').toLowerCase()}.vcf`, contactToVCard(c), 'text/vcard');
+  closeDownloadMenu();
+}
+
+// ---- Fiche détaillée ----
+function openContactDetail(c){
+  document.getElementById('detailTag').textContent = 'Via Kontak';
+  document.getElementById('detailAvatar').textContent = initials(c.business || c.nom);
+  document.getElementById('detailName').textContent = c.business || c.nom || '—';
+  document.getElementById('detailOwner').textContent = 'Par ' + (c.nom || '—');
+  document.getElementById('detailLoc').textContent = [c.ville, c.pays].filter(Boolean).join(', ') || '—';
+  document.getElementById('detailSector').textContent = c.secteur || '—';
+  document.getElementById('detailPhone').textContent = c.whatsapp || '—';
+  const btn = document.getElementById('detailWaBtn');
+  btn.onclick = ()=> { closeContactDetail(); contactViaWhatsapp(waLink(c.whatsapp)); };
+  document.getElementById('detailOverlay').classList.add('open');
+}
+function closeContactDetail(){ document.getElementById('detailOverlay').classList.remove('open'); }
+
+// ---- Téléchargement groupé ----
+function openBulkDownload(){
+  document.getElementById('bulk-sector').innerHTML = '<option value="">Tous les secteurs</option>' + SECTORS.map(s=>`<option>${s}</option>`).join('');
+  hideErr('errBulk');
+  document.getElementById('bulkOverlay').classList.add('open');
+}
+function closeBulkDownload(){ document.getElementById('bulkOverlay').classList.remove('open'); }
+
+async function generateBulkDownload(format){
+  const user = await getSessionUser();
+  if(!user){
+    showToast('Connecte-toi pour télécharger des contacts en masse');
+    setTimeout(()=> window.location.href = 'connexion.html', 1300);
+    return;
+  }
+  const sector = document.getElementById('bulk-sector').value;
+  const count = parseInt(document.getElementById('bulk-count').value, 10);
+  if(!count || count < 2 || count > 25){
+    showErr('errBulk','Choisis un nombre de contacts entre 2 et 25.');
+    return;
+  }
+  hideErr('errBulk');
+  const pool = sector ? profiles.filter(c=>c.secteur===sector) : profiles;
+  if(pool.length < 2){
+    showErr('errBulk','Pas assez de contacts disponibles pour ce secteur.');
+    return;
+  }
+  const selection = pool.slice(0, count);
+  if(format==='csv'){
+    const rows = ['Nom,Business,WhatsApp,Ville,Pays,Secteur,Source', ...selection.map(contactToCSVRow)];
+    triggerFileDownload(`kontak-contacts-${selection.length}.csv`, rows.join('\n'), 'text/csv');
+  }else{
+    const vcards = selection.map(contactToVCard).join('\n');
+    triggerFileDownload(`kontak-contacts-${selection.length}.vcf`, vcards, 'text/vcard');
+  }
+  closeBulkDownload();
+  showToast(`${selection.length} contact(s) téléchargé(s) ✓`);
+}
+
+[document.getElementById('downloadOverlay'), document.getElementById('detailOverlay'), document.getElementById('bulkOverlay')].forEach(ov=>{
+  ov.addEventListener('click', (e)=>{ if(e.target===ov) ov.classList.remove('open'); });
+});
 
 initNav();
 loadProfiles();
