@@ -160,27 +160,23 @@ body{padding-bottom:74px;}
 .dash-header .eyebrow{font-family:'Space Mono',monospace;font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:8px;}
 .dash-header h1{font-size:28px;}
 
-.profile-summary{margin:20px 28px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;box-shadow:0 2px 12px rgba(14,42,27,0.04);}
-.profile-summary .avatar-ring{width:64px;height:64px;}
-.profile-summary .avatar{font-size:22px;}
-.profile-summary .name{font-family:'Fraunces',serif;font-size:20px;}
-.profile-summary .meta{font-size:13px;color:var(--muted);margin-top:4px;}
-.status-pill{margin-left:auto;background:var(--bg-soft);color:var(--green-dark);font-size:12px;font-weight:700;padding:6px 14px;border-radius:100px;display:flex;align-items:center;gap:6px;}
-.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);}
-
-.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 28px 20px;}
-.stat-box{background:var(--bg-soft);border-radius:14px;padding:16px;}
-.stat-box .num{font-family:'Fraunces',serif;font-size:20px;}
-.stat-box .lbl{font-size:11.5px;color:var(--muted);margin-top:2px;}
-
 .dash-body{padding:0 28px 60px;max-width:640px;}
+
+.profile-strip{display:flex;align-items:center;gap:12px;padding:14px 28px;}
+.strip-name{font-weight:700;font-size:14.5px;}
+.strip-email{font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;}
+
+.tab-nav{display:flex;gap:4px;padding:4px 28px 0;border-bottom:1px solid var(--line);margin-bottom:24px;overflow-x:auto;}
+.tab-btn{background:none;border:none;padding:12px 16px;font-family:'Sora',sans-serif;font-weight:700;font-size:13.5px;color:var(--muted);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;}
+.tab-btn.active{color:var(--green-dark);border-bottom-color:var(--green);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
 
 @media(max-width:880px){
   .dash-topbar{display:flex;}
   .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:40;transform:translateX(-100%);transition:transform .25s ease;box-shadow:0 0 0 rgba(0,0,0,0);}
   .sidebar.open{transform:translateX(0);box-shadow:8px 0 24px rgba(0,0,0,0.15);}
-  .dash-header,.profile-summary,.stat-row,.dash-body{padding-left:20px;padding-right:20px;}
-  .stat-row{grid-template-columns:1fr 1fr;}
+  .dash-header,.profile-strip,.tab-nav,.dash-body{padding-left:20px;padding-right:20px;}
 }
 </style>
 </head>
@@ -251,68 +247,73 @@ body{padding-bottom:74px;}
     </div>
 
     <div id="dashContent" style="display:none;">
-      <div class="dash-header">
-        <div class="eyebrow">Mon compte</div>
+      <div class="dash-header" style="padding-bottom:0;">
+        <div class="eyebrow">Réglages du compte</div>
         <h1 id="dashGreeting">Mon profil</h1>
       </div>
 
-      <div class="profile-summary">
-        <div class="avatar-ring"><div class="avatar" id="dashAvatar">--</div></div>
+      <div class="profile-strip">
+        <div class="avatar-ring" style="width:44px;height:44px;"><div class="avatar" id="dashAvatar" style="font-size:15px;">--</div></div>
         <div>
-          <div class="name" id="dashBusiness">—</div>
-          <div class="meta" id="dashLocation">—</div>
+          <div class="strip-name" id="dashBusiness">—</div>
+          <div class="strip-email" id="stripEmail">—</div>
         </div>
-        <div class="status-pill"><span class="status-dot"></span> Fiche publiée</div>
       </div>
 
-      <div class="stat-row">
-        <div class="stat-box"><div class="num" id="statSector">—</div><div class="lbl">Secteur</div></div>
-        <div class="stat-box"><div class="num" id="statOwner">—</div><div class="lbl">Contact</div></div>
-        <div class="stat-box"><div class="num" id="statSince">—</div><div class="lbl">Membre depuis</div></div>
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="tab-info" onclick="switchTab('tab-info')">Informations</button>
+        <button class="tab-btn" data-tab="tab-security" onclick="switchTab('tab-security')">Sécurité</button>
+        <button class="tab-btn" data-tab="tab-account" onclick="switchTab('tab-account')">Compte</button>
       </div>
 
       <div class="dash-body">
-        <div class="panel" style="margin-bottom:20px;">
-          <h3 style="margin-bottom:4px;">Informations du profil</h3>
-          <div class="sub">Ces informations sont visibles dans l'annuaire public.</div>
-          <form id="dashForm">
-            <div class="field"><label>Nom complet</label><input type="text" id="d-name" required></div>
-            <div class="field"><label>Numéro WhatsApp</label><input type="tel" id="d-phone" required></div>
-            <div class="field"><label>Pays</label><input type="text" id="d-country" required></div>
-            <div class="field"><label>Ville</label><input type="text" id="d-city" required></div>
-            <div class="field"><label>Nom du business</label><input type="text" id="d-business" required></div>
-            <div class="field"><label>Secteur d'activité</label><select id="d-sector" required></select></div>
-            <div class="err-msg" id="errDash"></div>
-            <div class="form-actions">
-              <button type="button" class="btn-ghost" onclick="deleteMyProfile()">Supprimer ma fiche</button>
-              <button type="submit" class="btn-primary" id="dashSaveBtn">Enregistrer</button>
-            </div>
-          </form>
+        <div class="tab-content active" id="tab-info">
+          <div class="panel">
+            <h3 style="margin-bottom:4px;">Informations du profil</h3>
+            <div class="sub">Ces informations sont visibles dans l'annuaire public.</div>
+            <form id="dashForm">
+              <div class="field"><label>Nom complet</label><input type="text" id="d-name" required></div>
+              <div class="field"><label>Numéro WhatsApp</label><input type="tel" id="d-phone" required></div>
+              <div class="field"><label>Pays</label><input type="text" id="d-country" required></div>
+              <div class="field"><label>Ville</label><input type="text" id="d-city" required></div>
+              <div class="field"><label>Nom du business</label><input type="text" id="d-business" required></div>
+              <div class="field"><label>Secteur d'activité</label><select id="d-sector" required></select></div>
+              <div class="err-msg" id="errDash"></div>
+              <div class="form-actions">
+                <button type="button" class="btn-ghost" onclick="deleteMyProfile()">Supprimer ma fiche</button>
+                <button type="submit" class="btn-primary" id="dashSaveBtn">Enregistrer</button>
+              </div>
+            </form>
+          </div>
         </div>
 
-        <div class="panel" style="margin-bottom:20px;">
-          <h3 style="margin-bottom:4px;">Sécurité</h3>
-          <div class="sub">Modifie le mot de passe de ton compte.</div>
-          <form id="pwForm">
+        <div class="tab-content" id="tab-security">
+          <div class="panel">
+            <h3 style="margin-bottom:4px;">Sécurité</h3>
+            <div class="sub">Modifie le mot de passe de ton compte.</div>
+            <form id="pwForm">
             <div class="field"><label>Nouveau mot de passe</label><input type="password" id="pw-new" required placeholder="Minimum 6 caractères"></div>
             <div class="field"><label>Répéter le mot de passe</label><input type="password" id="pw-confirm" required></div>
             <div class="err-msg" id="errPw"></div>
             <div class="form-actions">
               <button type="submit" class="btn-primary" id="pwSaveBtn">Mettre à jour le mot de passe</button>
             </div>
-          </form>
+            </form>
+          </div>
         </div>
 
-        <div class="panel">
-          <h3 style="margin-bottom:4px;">Mon compte</h3>
-          <div class="sub">Informations liées à ta connexion.</div>
-          <div class="field">
-            <label>Adresse email</label>
-            <input type="email" id="acc-email" disabled style="opacity:0.65;">
-          </div>
-          <div class="field">
-            <label>Membre depuis</label>
-            <input type="text" id="acc-since" disabled style="opacity:0.65;">
+        <div class="tab-content" id="tab-account">
+          <div class="panel">
+            <h3 style="margin-bottom:4px;">Mon compte</h3>
+            <div class="sub">Informations liées à ta connexion.</div>
+            <div class="field">
+              <label>Adresse email</label>
+              <input type="email" id="acc-email" disabled style="opacity:0.65;">
+            </div>
+            <div class="field">
+              <label>Membre depuis</label>
+              <input type="text" id="acc-since" disabled style="opacity:0.65;">
+            </div>
           </div>
         </div>
       </div>
@@ -455,16 +456,18 @@ renderFixedNavbar();
 
 document.getElementById('d-sector').innerHTML = SECTORS.map(s=>`<option>${s}</option>`).join('');
 
+function switchTab(id){
+  document.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===id));
+  document.querySelectorAll('.tab-content').forEach(c=> c.classList.toggle('active', c.id===id));
+}
+
 function fillDashboard(p){
   document.getElementById('dashGreeting').textContent = 'Bonjour ' + (p.nom || '');
   document.getElementById('dashAvatar').textContent = initials(p.business || p.nom);
   document.getElementById('dashBusiness').textContent = p.business || p.nom || '—';
-  document.getElementById('dashLocation').textContent = [p.ville,p.pays].filter(Boolean).join(', ') || '—';
-  document.getElementById('statSector').textContent = p.secteur || '—';
-  document.getElementById('statOwner').textContent = p.nom || '—';
+  document.getElementById('stripEmail').textContent = (CURRENT_USER && CURRENT_USER.email) || p.email || '—';
   if(p.created_at){
     const d = new Date(p.created_at);
-    document.getElementById('statSince').textContent = d.toLocaleDateString('fr-FR', {month:'short', year:'numeric'});
     document.getElementById('acc-since').value = d.toLocaleDateString('fr-FR', {day:'numeric', month:'long', year:'numeric'});
   }
   document.getElementById('acc-email').value = (CURRENT_USER && CURRENT_USER.email) || p.email || '';
