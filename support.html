@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
 :root{
   --bg:#FFFFFF;
@@ -136,9 +137,16 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
 .fnav-btn:hover{border-color:var(--green);}
 .fnav-btn .ic-svg{width:17px;height:17px;color:var(--green-dark);}
 
-.soon-box{max-width:480px;margin:60px auto;text-align:center;padding:40px 24px;}
-.soon-icon{width:56px;height:56px;border-radius:16px;background:var(--bg-soft);color:var(--green-dark);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
-.soon-icon svg{width:26px;height:26px;}
+
+.support-hero{padding:44px 20px 8px;max-width:640px;margin:0 auto;}
+.support-options{display:grid;grid-template-columns:1fr;gap:12px;padding:20px;max-width:640px;margin:0 auto;}
+@media(min-width:640px){.support-options{grid-template-columns:1fr 1fr;}}
+.support-opt{background:var(--bg-soft);border:1.5px solid var(--line);border-radius:16px;padding:18px;text-decoration:none;color:var(--ink);display:flex;gap:12px;align-items:flex-start;}
+.support-opt:hover{border-color:var(--green);}
+.support-opt .ic-svg{width:22px;height:22px;color:var(--green-dark);flex-shrink:0;}
+.support-opt h3{font-size:15px;margin-bottom:3px;}
+.support-opt p{font-size:12.5px;color:var(--muted);margin:0;}
+.support-form-wrap{padding:8px 20px 60px;max-width:640px;margin:0 auto;}
 </style>
 </head>
 <body>
@@ -152,13 +160,46 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
   </div>
 </header>
 
-<div class="soon-box">
-  <div class="soon-icon" id="soonIcon"></div>
-  <div class="eyebrow" style="margin-bottom:10px;">Aide & assistance</div>
-  <h1 style="font-size:26px;margin-bottom:12px;">Support</h1>
-  <p style="color:var(--muted);font-size:14.5px;">Cette page est en cours de construction. L'équipe support sera bientôt joignable directement ici.</p>
-  <br>
-  <a class="btn-fill" href="dashboard.html">Retour au tableau de bord</a>
+<div class="support-hero">
+  <div class="eyebrow">Aide & assistance</div>
+  <h1 style="font-size:28px;">Comment pouvons-nous t'aider ?</h1>
+  <p style="color:var(--muted);font-size:14.5px;margin-top:10px;">Choisis un moyen de nous contacter, ou écris-nous directement ci-dessous.</p>
+</div>
+
+<div class="support-options">
+  <a class="support-opt" id="waSupport" href="#" target="_blank" rel="noopener">
+    <span class="ic-svg" id="icWaSupport"></span>
+    <div><h3>WhatsApp</h3><p>Réponse rapide aux heures ouvrées</p></div>
+  </a>
+  <a class="support-opt" id="mailSupport" href="#">
+    <span class="ic-svg" id="icMailSupport"></span>
+    <div><h3>Email</h3><p>abdoula13cherif@gmail.com</p></div>
+  </a>
+  <a class="support-opt" href="faq.html">
+    <span class="ic-svg" id="icFaqSupport"></span>
+    <div><h3>FAQ</h3><p>Les réponses aux questions fréquentes</p></div>
+  </a>
+  <a class="support-opt" href="conditions.html">
+    <span class="ic-svg" id="icDocSupport"></span>
+    <div><h3>Conditions</h3><p>Consulter les règles d'utilisation</p></div>
+  </a>
+</div>
+
+<div class="support-form-wrap">
+  <div class="panel">
+    <h3 style="margin-bottom:4px;">Envoyer un message</h3>
+    <div class="sub">On te répond directement par email.</div>
+    <form id="supportForm">
+      <div class="field"><label>Nom</label><input type="text" id="sp-name" required></div>
+      <div class="field"><label>Email</label><input type="email" id="sp-email" required></div>
+      <div class="field"><label>Sujet</label><input type="text" id="sp-subject" required placeholder="Ex: Problème de connexion"></div>
+      <div class="field"><label>Message</label><textarea id="sp-message" style="min-height:120px;" required></textarea></div>
+      <div class="err-msg" id="errSupport"></div>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" id="supportSendBtn">Envoyer</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -278,8 +319,70 @@ async function loadNavItems(){
   }catch(e){ console.error(e); return []; }
 }
 
-document.getElementById('soonIcon').innerHTML = ICONS.support;
-initNav();
+
+// ---- EmailJS ----
+const EMAILJS_PUBLIC_KEY = "fNyhiux6zn4u2CtRj";
+const EMAILJS_SERVICE_ID = "service_ps61bla";
+const EMAILJS_TEMPLATE_SUPPORT = "template_dzquprb";
+emailjs.init(EMAILJS_PUBLIC_KEY);
+
+document.getElementById('icWaSupport').innerHTML = ICONS.message;
+document.getElementById('icMailSupport').innerHTML = ICONS.mail;
+document.getElementById('icFaqSupport').innerHTML = ICONS.faq;
+document.getElementById('icDocSupport').innerHTML = ICONS.document;
+document.getElementById('mailSupport').href = 'mailto:abdoula13cherif@gmail.com';
+
+async function setupWaSupport(){
+  try{
+    const { data } = await sb.from('profiles').select('whatsapp').eq('is_admin', true).limit(1).maybeSingle();
+    if(data && data.whatsapp){
+      document.getElementById('waSupport').href = waLink(data.whatsapp);
+    }else{
+      document.getElementById('waSupport').style.display = 'none';
+    }
+  }catch(e){ document.getElementById('waSupport').style.display = 'none'; }
+}
+
+document.getElementById('supportForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const name = document.getElementById('sp-name').value.trim();
+  const email = document.getElementById('sp-email').value.trim();
+  const subject = document.getElementById('sp-subject').value.trim();
+  const message = document.getElementById('sp-message').value.trim();
+  hideErr('errSupport');
+  const btn = document.getElementById('supportSendBtn');
+  btn.disabled = true; btn.textContent = 'Envoi…';
+
+  try{
+    await sb.from('support_messages').insert({
+      user_id: CURRENT_USER ? CURRENT_USER.id : null,
+      name, email, subject, message
+    });
+  }catch(e){ /* l'historique est secondaire */ }
+
+  try{
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_SUPPORT, {
+      member_name: name,
+      member_email: email,
+      member_phone: `${subject} — ${message}`
+    });
+    document.getElementById('supportForm').reset();
+    showToast('✓ Message envoyé, on te répond bientôt');
+  }catch(err){
+    showErr('errSupport', 'Erreur d\\'envoi : ' + (err.text || err.message || JSON.stringify(err)));
+  }finally{
+    btn.disabled = false; btn.textContent = 'Envoyer';
+  }
+});
+
+(async ()=>{
+  const { user } = await initNav();
+  if(user && CURRENT_PROFILE){
+    document.getElementById('sp-name').value = CURRENT_PROFILE.nom || '';
+    document.getElementById('sp-email').value = CURRENT_USER.email || '';
+  }
+  setupWaSupport();
+})();
 </script>
 </body>
 </html>
