@@ -77,7 +77,7 @@ header{padding:20px 24px;display:flex;justify-content:space-between;align-items:
 .card-cat{display:inline-block;margin-top:8px;font-size:11px;background:var(--bg-soft);color:var(--green-dark);padding:4px 10px;border-radius:100px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;}
 .card-owner{font-size:12px;color:var(--muted);margin-top:4px;}
 .card-actions{display:flex;gap:8px;margin-top:16px;}
-.wa-btn{flex:1;background:var(--green);color:#fff;text-decoration:none;text-align:center;padding:10px;border-radius:10px;font-weight:700;font-size:13.5px;display:flex;align-items:center;justify-content:center;gap:6px;}
+.wa-btn{flex:1;background:var(--green);color:#fff;text-decoration:none;text-align:center;padding:10px;border-radius:10px;font-weight:700;font-size:13.5px;display:flex;align-items:center;justify-content:center;gap:6px;border:none;cursor:pointer;font-family:'Sora',sans-serif;}
 .empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted);}
 .empty h3{color:var(--ink);margin-bottom:8px;}
 
@@ -124,6 +124,17 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
 .modal{background:#fff;color:var(--ink);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:26px 22px 30px;max-height:90vh;overflow-y:auto;position:relative;border:1px solid var(--line);}
 @media(min-width:640px){.modal-overlay{align-items:center;}.modal{border-radius:20px;}}
 .close-x{position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);}
+
+/* ---- Icônes SVG ---- */
+.ic-svg{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex-shrink:0;}
+.ic-svg svg{width:100%;height:100%;}
+
+/* ---- Barre de navigation fixe (dashboard) ---- */
+.fixed-navbar{position:sticky;top:0;z-index:25;background:#fff;border-bottom:1px solid var(--line);display:flex;gap:6px;padding:10px 20px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.fixed-navbar::-webkit-scrollbar{display:none;}
+.fnav-btn{display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:11px;background:var(--bg-soft);color:var(--ink);text-decoration:none;font-size:13.5px;font-weight:700;white-space:nowrap;border:1.5px solid transparent;}
+.fnav-btn:hover{border-color:var(--green);}
+.fnav-btn .ic-svg{width:17px;height:17px;color:var(--green-dark);}
 
 </style>
 </head>
@@ -236,6 +247,34 @@ document.addEventListener('click', (e)=>{
   }
 });
 
+// ---- Icônes SVG (jamais d'emoji) ----
+const ICONS = {
+  business: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
+  mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>',
+  server: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="7" rx="1.5"/><rect x="2" y="14" width="20" height="7" rx="1.5"/><line x1="6" y1="6.5" x2="6.01" y2="6.5"/><line x1="6" y1="17.5" x2="6.01" y2="17.5"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>',
+  grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+  settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.2M12 18.8V21M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M3 12h2.2M18.8 12H21M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/></svg>',
+  logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  idcard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="12" r="2"/><line x1="14" y1="10" x2="18" y2="10"/><line x1="14" y1="14" x2="18" y2="14"/></svg>',
+  message: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.4 8.4 0 0 1-4-1L3 20l1-4.5A8.4 8.4 0 0 1 3 11.5 8.5 8.5 0 0 1 11.5 3 8.5 8.5 0 0 1 21 11.5z"/></svg>',
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7"/><path d="M9 22V12h6v10"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+};
+function icon(key, cls){
+  return `<span class="ic-svg ${cls||''}">${ICONS[key] || ICONS.grid}</span>`;
+}
+
+// ---- Barre de navigation dynamique (gérée par l'admin) ----
+async function loadNavItems(){
+  try{
+    const { data, error } = await sb.from('nav_items').select('*').eq('visible', true).order('position', { ascending:true });
+    if(error) throw error;
+    return data || [];
+  }catch(e){ console.error(e); return []; }
+}
+
 
 let profiles = [];
 let activeFilter = 'Tous';
@@ -283,10 +322,41 @@ function render(){
       </div>
       <div class="card-owner">Par ${escapeHtml(c.nom)}</div>
       <div class="card-actions">
-        <a class="wa-btn" href="${waLink(c.whatsapp)}" target="_blank" rel="noopener">Discuter sur WhatsApp</a>
+        <button class="wa-btn" data-wa="${escapeHtml(waLink(c.whatsapp))}" onclick="contactViaWhatsapp(this.dataset.wa)">Discuter sur WhatsApp</button>
       </div>
     </div>
   `).join('');
+}
+
+async function contactViaWhatsapp(waUrl){
+  const user = await getSessionUser();
+  if(!user){
+    showToast('Connecte-toi pour contacter ce membre');
+    setTimeout(()=> window.location.href = 'connexion.html', 1300);
+    return;
+  }
+  let credits = 0;
+  try{
+    const { data, error } = await sb.from('profiles').select('credits').eq('user_id', user.id).single();
+    if(error) throw error;
+    credits = data.credits ?? 0;
+  }catch(e){
+    showToast('Impossible de vérifier tes crédits');
+    return;
+  }
+  if(credits < 2){
+    showToast('Crédits insuffisants — recharge ton compte');
+    setTimeout(()=> window.location.href = 'dashboard.html', 1300);
+    return;
+  }
+  try{
+    const { error } = await sb.rpc('decrement_credits', { amount: 2 });
+    if(error) throw error;
+  }catch(e){
+    showToast('Erreur : crédits insuffisants');
+    return;
+  }
+  window.open(waUrl, '_blank', 'noopener');
 }
 
 initNav();
