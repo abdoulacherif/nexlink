@@ -175,6 +175,27 @@ body{padding-bottom:74px;}
 
 .dash-body{padding:0 28px 60px;max-width:640px;}
 
+.credit-card-visual{background:linear-gradient(135deg,#0E2A1B 0%,#128C4A 55%,#25D366 100%);color:#fff;border-radius:20px;padding:24px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 10px 30px rgba(18,140,74,0.25);}
+.credit-card-visual::after{content:"";position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,0.08);}
+.cc-top{display:flex;justify-content:space-between;align-items:center;}
+.cc-brand{font-family:'Fraunces',serif;font-style:italic;font-size:18px;}
+.cc-brand em{color:#E8A33D;font-style:normal;}
+.cc-chip{width:26px;height:26px;background:rgba(255,255,255,0.18);border-radius:6px;padding:5px;}
+.cc-balance{margin-top:26px;font-family:'Fraunces',serif;font-size:38px;display:flex;align-items:baseline;gap:8px;}
+.cc-balance small{font-family:'Space Mono',monospace;font-size:13px;opacity:0.8;font-weight:400;}
+.cc-bottom{display:flex;justify-content:space-between;margin-top:22px;font-family:'Space Mono',monospace;font-size:11.5px;opacity:0.9;text-transform:uppercase;letter-spacing:0.5px;}
+
+.balance-panel{position:relative;}
+.balance-line{display:flex;align-items:baseline;gap:8px;margin:16px 0 4px;}
+.balance-num{font-family:'Fraunces',serif;font-size:30px;color:var(--green-dark);}
+.balance-lbl{font-size:13px;color:var(--muted);}
+
+.credit-packs{display:grid;grid-template-columns:1fr;gap:10px;margin-top:16px;}
+.credit-pack{display:block;background:var(--bg-soft);border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;text-decoration:none;color:var(--ink);}
+.credit-pack:hover{border-color:var(--green);}
+.pack-amount{font-family:'Fraunces',serif;font-size:18px;}
+.pack-price{font-size:12.5px;color:var(--muted);margin-top:2px;}
+
 @media(max-width:880px){
   .dash-topbar{display:flex;}
   .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:40;transform:translateX(-100%);transition:transform .25s ease;box-shadow:0 0 0 rgba(0,0,0,0);}
@@ -271,26 +292,55 @@ body{padding-bottom:74px;}
       </div>
 
       <div class="dash-body">
-        <div class="panel">
-          <h3 style="margin-bottom:4px;">Modifier mon profil</h3>
-          <div class="sub">Ces informations sont visibles dans l'annuaire public.</div>
-          <form id="dashForm">
-            <div class="field"><label>Nom complet</label><input type="text" id="d-name" required></div>
-            <div class="field"><label>Numéro WhatsApp</label><input type="tel" id="d-phone" required></div>
-            <div class="field"><label>Pays</label><input type="text" id="d-country" required></div>
-            <div class="field"><label>Ville</label><input type="text" id="d-city" required></div>
-            <div class="field"><label>Nom du business</label><input type="text" id="d-business" required></div>
-            <div class="field"><label>Secteur d'activité</label><select id="d-sector" required></select></div>
-            <div class="err-msg" id="errDash"></div>
-            <div class="form-actions">
-              <button type="button" class="btn-ghost" onclick="deleteMyProfile()">Supprimer ma fiche</button>
-              <button type="submit" class="btn-primary" id="dashSaveBtn">Enregistrer</button>
-            </div>
-          </form>
+        <div class="credit-card-visual">
+          <div class="cc-top">
+            <span class="cc-brand">Kon<em>tak</em></span>
+            <span class="ic-svg cc-chip" id="ccChip"></span>
+          </div>
+          <div class="cc-balance"><span id="ccBalance">—</span><small>crédits</small></div>
+          <div class="cc-bottom">
+            <span class="cc-holder" id="ccHolder">—</span>
+            <span class="cc-since" id="ccSince">—</span>
+          </div>
+        </div>
+
+        <div class="panel balance-panel">
+          <h3 style="margin-bottom:4px;">Solde de crédits</h3>
+          <div class="sub">Contacter un membre sur WhatsApp coûte 2 crédits.</div>
+          <div class="balance-line">
+            <span class="balance-num" id="balanceNum">—</span>
+            <span class="balance-lbl">crédits restants</span>
+          </div>
+          <div class="form-actions">
+            <button class="btn-primary" onclick="openBuyCredits()">Acheter des crédits</button>
+          </div>
         </div>
       </div>
     </div>
   </main>
+</div>
+
+<div class="modal-overlay" id="buyOverlay">
+  <div class="modal">
+    <button class="close-x" onclick="closeBuyCredits()">✕</button>
+    <h2>Acheter des crédits</h2>
+    <div class="sub">Choisis un pack, l'administrateur confirme ton crédit après paiement.</div>
+    <div class="credit-packs">
+      <a class="credit-pack" id="pack1" href="#">
+        <div class="pack-amount">50 crédits</div>
+        <div class="pack-price">Pack Starter</div>
+      </a>
+      <a class="credit-pack" id="pack2" href="#">
+        <div class="pack-amount">150 crédits</div>
+        <div class="pack-price">Pack Pro</div>
+      </a>
+      <a class="credit-pack" id="pack3" href="#">
+        <div class="pack-amount">400 crédits</div>
+        <div class="pack-price">Pack Business</div>
+      </a>
+    </div>
+    <div class="hint" style="margin-top:14px;">Cliquer sur un pack ouvre un email pré-rempli vers l'administrateur pour finaliser l'achat.</div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -414,6 +464,7 @@ document.getElementById('icOverview').innerHTML = ICONS.home;
 document.getElementById('icAnnuaire').innerHTML = ICONS.grid;
 document.getElementById('icAdmin').innerHTML = ICONS.settings;
 document.getElementById('icLogout').innerHTML = ICONS.logout;
+document.getElementById('ccChip').innerHTML = ICONS.server;
 
 async function renderFixedNavbar(){
   const items = await loadNavItems();
@@ -425,8 +476,6 @@ async function renderFixedNavbar(){
 }
 renderFixedNavbar();
 
-document.getElementById('d-sector').innerHTML = SECTORS.map(s=>`<option>${s}</option>`).join('');
-
 function fillDashboard(p){
   document.getElementById('dashGreeting').textContent = 'Bonjour ' + (p.nom || '');
   document.getElementById('dashAvatar').textContent = initials(p.business || p.nom);
@@ -434,55 +483,29 @@ function fillDashboard(p){
   document.getElementById('dashLocation').textContent = [p.ville,p.pays].filter(Boolean).join(', ') || '—';
   document.getElementById('statSector').textContent = p.secteur || '—';
   document.getElementById('statOwner').textContent = p.nom || '—';
+  const credits = p.credits ?? 0;
+  document.getElementById('ccBalance').textContent = credits;
+  document.getElementById('ccHolder').textContent = (p.nom || '—').toUpperCase();
+  document.getElementById('balanceNum').textContent = credits;
   if(p.created_at){
     const d = new Date(p.created_at);
     document.getElementById('statSince').textContent = d.toLocaleDateString('fr-FR', {month:'short', year:'numeric'});
+    document.getElementById('ccSince').textContent = 'Depuis ' + d.toLocaleDateString('fr-FR', {month:'short', year:'numeric'});
   }
-  document.getElementById('d-name').value = p.nom || '';
-  document.getElementById('d-phone').value = p.whatsapp || '';
-  document.getElementById('d-country').value = p.pays || '';
-  document.getElementById('d-city').value = p.ville || '';
-  document.getElementById('d-business').value = p.business || '';
-  document.getElementById('d-sector').value = p.secteur || '';
 }
 
-document.getElementById('dashForm').addEventListener('submit', async (e)=>{
-  e.preventDefault();
-  const btn = document.getElementById('dashSaveBtn');
-  btn.disabled = true; btn.textContent = 'Enregistrement…';
-  const updated = {
-    nom: document.getElementById('d-name').value.trim(),
-    whatsapp: document.getElementById('d-phone').value.trim(),
-    pays: document.getElementById('d-country').value.trim(),
-    ville: document.getElementById('d-city').value.trim(),
-    business: document.getElementById('d-business').value.trim(),
-    secteur: document.getElementById('d-sector').value
-  };
-  try{
-    const { error } = await sb.from('profiles').update(updated).eq('user_id', CURRENT_USER.id);
-    if(error) throw error;
-    hideErr('errDash');
-    fillDashboard({...CURRENT_PROFILE, ...updated});
-    showToast('Profil mis à jour ✓');
-  }catch(err){
-    showErr('errDash', err.message || "Erreur lors de l'enregistrement.");
-  }finally{
-    btn.disabled = false; btn.textContent = 'Enregistrer';
-  }
+function openBuyCredits(){
+  const subject = encodeURIComponent('Achat de crédits Kontak');
+  const bodyFor = (n)=> encodeURIComponent(`Bonjour,\n\nJe souhaite acheter le pack de ${n} crédits pour mon compte (${(CURRENT_USER && CURRENT_USER.email) || ''}).\n\nMerci de me confirmer les modalités de paiement.`);
+  document.getElementById('pack1').href = `mailto:abdoula13cherif@gmail.com?subject=${subject}&body=${bodyFor(50)}`;
+  document.getElementById('pack2').href = `mailto:abdoula13cherif@gmail.com?subject=${subject}&body=${bodyFor(150)}`;
+  document.getElementById('pack3').href = `mailto:abdoula13cherif@gmail.com?subject=${subject}&body=${bodyFor(400)}`;
+  document.getElementById('buyOverlay').classList.add('open');
+}
+function closeBuyCredits(){ document.getElementById('buyOverlay').classList.remove('open'); }
+document.getElementById('buyOverlay').addEventListener('click', (e)=>{
+  if(e.target.id==='buyOverlay') closeBuyCredits();
 });
-
-async function deleteMyProfile(){
-  if(!confirm('Supprimer définitivement ta fiche de l\'annuaire ?')) return;
-  try{
-    const { error } = await sb.from('profiles').delete().eq('user_id', CURRENT_USER.id);
-    if(error) throw error;
-    showToast('Fiche supprimée');
-    await sb.auth.signOut();
-    window.location.href = 'index.html';
-  }catch(err){
-    showErr('errDash', err.message || "Erreur lors de la suppression.");
-  }
-}
 
 document.getElementById('c-sector').innerHTML = SECTORS.map(s=>`<option>${s}</option>`).join('');
 
