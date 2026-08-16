@@ -191,6 +191,9 @@ body{padding-bottom:74px;}
 .cc-chip{width:26px;height:26px;background:rgba(255,255,255,0.18);border-radius:6px;padding:5px;}
 .cc-balance{margin-top:26px;font-family:'Fraunces',serif;font-size:38px;display:flex;align-items:baseline;gap:8px;}
 .cc-balance small{font-family:'Space Mono',monospace;font-size:13px;opacity:0.8;font-weight:400;}
+.cc-solde-row{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.2);}
+.cc-solde-lbl{font-size:11.5px;text-transform:uppercase;letter-spacing:0.5px;opacity:0.8;font-family:'Space Mono',monospace;}
+.cc-solde-val{font-family:'Fraunces',serif;font-size:19px;color:#E8A33D;}
 .cc-bottom{display:flex;justify-content:space-between;margin-top:22px;font-family:'Space Mono',monospace;font-size:11.5px;opacity:0.9;text-transform:uppercase;letter-spacing:0.5px;}
 
 .balance-panel{position:relative;}
@@ -321,6 +324,10 @@ body{padding-bottom:74px;}
             <span class="ic-svg cc-chip" id="ccChip"></span>
           </div>
           <div class="cc-balance"><span id="ccBalance">—</span><small>crédits</small></div>
+          <div class="cc-solde-row">
+            <span class="cc-solde-lbl">Solde disponible</span>
+            <span class="cc-solde-val" id="ccSolde">—</span>
+          </div>
           <div class="cc-bottom">
             <span class="cc-holder" id="ccHolder">—</span>
             <span class="cc-since" id="ccSince">—</span>
@@ -336,6 +343,18 @@ body{padding-bottom:74px;}
           </div>
           <div class="form-actions">
             <button class="btn-primary" onclick="openBuyCredits()">Acheter des crédits</button>
+          </div>
+        </div>
+
+        <div class="panel balance-panel" style="margin-top:16px;">
+          <h3 style="margin-bottom:4px;">Solde disponible</h3>
+          <div class="sub">Ce solde peut être retiré sur ton moyen de paiement.</div>
+          <div class="balance-line">
+            <span class="balance-num" id="soldeNum">—</span>
+            <span class="balance-lbl">FCFA disponibles</span>
+          </div>
+          <div class="form-actions">
+            <button class="btn-primary" onclick="openWithdraw()">Retirer mon solde</button>
           </div>
         </div>
       </div>
@@ -363,6 +382,39 @@ body{padding-bottom:74px;}
       </a>
     </div>
     <div class="hint" style="margin-top:14px;">Cliquer sur un pack ouvre un email pré-rempli vers l'administrateur pour finaliser l'achat.</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="withdrawOverlay">
+  <div class="modal">
+    <button class="close-x" onclick="closeWithdraw()">✕</button>
+    <h2>Retirer mon solde</h2>
+    <div class="sub">Ta demande est transmise à l'administrateur pour traitement.</div>
+    <form id="withdrawForm">
+      <div class="field">
+        <label>Montant à retirer (FCFA)</label>
+        <input type="number" id="w-amount" min="1" required>
+        <div class="hint" id="w-max-hint"></div>
+      </div>
+      <div class="field">
+        <label>Moyen de retrait</label>
+        <select id="w-method" required>
+          <option value="Orange Money">Orange Money</option>
+          <option value="Wave">Wave</option>
+          <option value="Virement bancaire">Virement bancaire</option>
+          <option value="Autre">Autre</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Numéro / coordonnées</label>
+        <input type="text" id="w-details" required placeholder="Ex: numéro Orange Money ou IBAN">
+      </div>
+      <div class="err-msg" id="errWithdraw"></div>
+      <div class="form-actions">
+        <button type="button" class="btn-ghost" onclick="closeWithdraw()">Annuler</button>
+        <button type="submit" class="btn-primary" id="withdrawBtn">Envoyer la demande</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -533,6 +585,9 @@ function fillDashboard(p){
   document.getElementById('ccBalance').textContent = credits;
   document.getElementById('ccHolder').textContent = (p.nom || '—').toUpperCase();
   document.getElementById('balanceNum').textContent = credits;
+  const solde = p.solde ?? 0;
+  document.getElementById('ccSolde').textContent = solde.toLocaleString('fr-FR') + ' FCFA';
+  document.getElementById('soldeNum').textContent = solde.toLocaleString('fr-FR');
   if(p.created_at){
     const d = new Date(p.created_at);
     document.getElementById('statSince').textContent = d.toLocaleDateString('fr-FR', {month:'short', year:'numeric'});
@@ -551,6 +606,54 @@ function openBuyCredits(){
 function closeBuyCredits(){ document.getElementById('buyOverlay').classList.remove('open'); }
 document.getElementById('buyOverlay').addEventListener('click', (e)=>{
   if(e.target.id==='buyOverlay') closeBuyCredits();
+});
+
+function openWithdraw(){
+  const solde = (CURRENT_PROFILE && CURRENT_PROFILE.solde) || 0;
+  document.getElementById('w-max-hint').textContent = `Solde disponible : ${solde.toLocaleString('fr-FR')} FCFA`;
+  document.getElementById('w-amount').max = solde;
+  hideErr('errWithdraw');
+  document.getElementById('withdrawOverlay').classList.add('open');
+}
+function closeWithdraw(){ document.getElementById('withdrawOverlay').classList.remove('open'); }
+document.getElementById('withdrawOverlay').addEventListener('click', (e)=>{
+  if(e.target.id==='withdrawOverlay') closeWithdraw();
+});
+
+document.getElementById('withdrawForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const amount = parseInt(document.getElementById('w-amount').value, 10);
+  const method = document.getElementById('w-method').value;
+  const details = document.getElementById('w-details').value.trim();
+  const solde = (CURRENT_PROFILE && CURRENT_PROFILE.solde) || 0;
+
+  if(!amount || amount <= 0){ showErr('errWithdraw','Indique un montant valide.'); return; }
+  if(amount > solde){ showErr('errWithdraw','Le montant dépasse ton solde disponible.'); return; }
+  if(!details){ showErr('errWithdraw','Indique tes coordonnées de retrait.'); return; }
+  hideErr('errWithdraw');
+
+  const btn = document.getElementById('withdrawBtn');
+  btn.disabled = true; btn.textContent = 'Envoi…';
+  try{
+    const { error } = await sb.from('withdrawal_requests').insert({
+      user_id: CURRENT_USER.id,
+      amount: amount,
+      method: method,
+      details: details,
+      status: 'en attente'
+    });
+    if(error) throw error;
+    closeWithdraw();
+    document.getElementById('withdrawForm').reset();
+    showToast('Demande de retrait envoyée ✓');
+    const subject = encodeURIComponent('Demande de retrait Kontak');
+    const body = encodeURIComponent(`Bonjour,\n\nJe souhaite retirer ${amount} FCFA via ${method}.\nCoordonnées : ${details}\nCompte : ${(CURRENT_USER && CURRENT_USER.email) || ''}\n\nMerci de traiter ma demande.`);
+    window.open(`mailto:abdoula13cherif@gmail.com?subject=${subject}&body=${body}`, '_blank');
+  }catch(err){
+    showErr('errWithdraw', err.message || "Erreur lors de l'envoi de la demande.");
+  }finally{
+    btn.disabled = false; btn.textContent = 'Envoyer la demande';
+  }
 });
 
 document.getElementById('c-sector').innerHTML = SECTORS.map(s=>`<option>${s}</option>`).join('');
