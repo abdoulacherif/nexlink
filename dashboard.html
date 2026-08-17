@@ -715,7 +715,8 @@ document.getElementById('completeForm').addEventListener('submit', async (e)=>{
     pays: document.getElementById('c-country').value.trim(),
     ville: document.getElementById('c-city').value.trim(),
     business: document.getElementById('c-business').value.trim(),
-    secteur: document.getElementById('c-sector').value
+    secteur: document.getElementById('c-sector').value,
+    referral_code: Math.random().toString(36).slice(2, 8).toUpperCase()
   };
   try{
     const { data, error } = await sb.from('profiles').insert(payload).select().single();
