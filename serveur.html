@@ -241,11 +241,13 @@ body{padding-bottom:74px;}
   </div>
 </header>
 
-<section class="hero" style="padding-bottom:20px;">
+<section class="hero" style="padding-bottom:12px;">
   <div class="eyebrow">Espace technique</div>
-  <h1 style="font-size:28px;">Serveurs & hébergement</h1>
-  <p style="color:var(--muted);font-size:14.5px;margin-top:10px;">Des offres serveur clé en main, gérées directement par Kontak.</p>
+  <h1 style="font-size:28px;">Numéros & outils</h1>
+  <p style="color:var(--muted);font-size:14.5px;margin-top:10px;">Numéros WhatsApp/SIM prêts à l'emploi et accès à des outils, gérés directement par Kontak.</p>
 </section>
+
+<div class="filters" id="serverFilters" style="padding:0 20px 10px;"></div>
 
 <div class="offer-grid" id="offerGrid"></div>
 
@@ -401,6 +403,9 @@ emailjs.init(EMAILJS_PUBLIC_KEY);
 
 let offers = [];
 let activeOffer = null;
+let activeCategory = 'Tous';
+const CATEGORIES = ['Tous', 'numero', 'outil'];
+const CAT_LABELS = { 'Tous':'Tous', 'numero':'Numéro WhatsApp', 'outil':'Outil / Logiciel' };
 
 async function loadOffers(){
   try{
@@ -408,19 +413,28 @@ async function loadOffers(){
     if(error) throw error;
     offers = data || [];
   }catch(e){ offers = []; }
+  renderFilters();
   renderOffers();
 }
 
+function renderFilters(){
+  const el = document.getElementById('serverFilters');
+  el.innerHTML = CATEGORIES.map(c=>`<button class="chip ${c===activeCategory?'active':''}" onclick="setCategory('${c}')">${CAT_LABELS[c]}</button>`).join('');
+}
+function setCategory(c){ activeCategory = c; renderOffers(); }
+
 function renderOffers(){
   const grid = document.getElementById('offerGrid');
-  if(offers.length===0){
+  const list = activeCategory==='Tous' ? offers : offers.filter(o=>o.category===activeCategory);
+  if(list.length===0){
     grid.innerHTML = `<div class="empty-offers"><h3>Aucune offre disponible</h3><p>Reviens bientôt.</p></div>`;
     return;
   }
-  grid.innerHTML = offers.map(o=>{
+  grid.innerHTML = list.map(o=>{
     const specs = Array.isArray(o.specs) ? o.specs : [];
     return `
     <div class="offer-card">
+      <span class="card-cat" style="margin-bottom:8px;">${CAT_LABELS[o.category] || 'Numéro WhatsApp'}</span>
       <div class="offer-name">${escapeHtml(o.name)}</div>
       <div class="offer-price">${(o.price||0).toLocaleString('fr-FR')} FCFA <small>/ ${o.period === 'unique' ? 'unique' : 'mois'}</small></div>
       <ul class="offer-specs">
