@@ -247,7 +247,7 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
     <table class="admin-table">
       <thead>
         <tr>
-          <th>Nom</th><th>Prix</th><th>Période</th><th>Spécifications</th><th>Actif</th><th>Actions</th>
+          <th>Catégorie</th><th>Nom</th><th>Prix</th><th>Période</th><th>Spécifications</th><th>Actif</th><th>Actions</th>
         </tr>
       </thead>
       <tbody id="serverRows"></tbody>
@@ -271,27 +271,105 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
       <tbody id="serverOrderRows"></tbody>
     </table>
   </div>
+
+  <div class="admin-toolbar" style="margin-top:10px;">
+    <div>
+      <div class="section-title" style="font-size:19px;">Services Business</div>
+      <div class="stats-bar" id="bizStats" style="padding:0;">Bots, sites, design… proposés aux membres</div>
+    </div>
+    <button class="btn-fill" onclick="openBizEditor(null)">+ Nouveau service</button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Nom</th><th>Prix</th><th>Type</th><th>Détails</th><th>Actif</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="bizRows"></tbody>
+    </table>
+  </div>
+
+  <div class="admin-toolbar" style="margin-top:10px;">
+    <div>
+      <div class="section-title" style="font-size:19px;">Demandes Business</div>
+      <div class="stats-bar" id="bizOrderStats" style="padding:0;">Commandes de services à traiter</div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Date</th><th>Service</th><th>Nom</th><th>Contact</th><th>Statut</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="bizOrderRows"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-overlay" id="bizEditOverlay">
+  <div class="modal">
+    <button class="close-x" onclick="closeBizEditor()">✕</button>
+    <h2 id="bizEditTitle">Nouveau service</h2>
+    <div class="sub">Visible sur la page « Business ».</div>
+    <form id="bizEditForm">
+      <input type="hidden" id="bz-id">
+      <div class="field"><label>Nom du service</label><input type="text" id="bz-name" required placeholder="Ex: Bot WhatsApp automatisé"></div>
+      <div class="field"><label>Prix (FCFA)</label><input type="number" id="bz-price" min="0" required></div>
+      <div class="field">
+        <label>Période</label>
+        <select id="bz-period">
+          <option value="unique">Paiement unique</option>
+          <option value="mois">Par mois</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Détails (une ligne par point)</label>
+        <textarea id="bz-specs" style="min-height:110px;" placeholder="Ex: Réponse automatique 24/7&#10;Prise de commande&#10;Mise en place en 48h"></textarea>
+      </div>
+      <div class="field"><label>Position (ordre d'affichage)</label><input type="number" id="bz-position" value="1" min="0"></div>
+      <div class="field">
+        <label>Actif</label>
+        <select id="bz-active"><option value="true">Oui</option><option value="false">Non</option></select>
+      </div>
+      <div class="err-msg" id="errBizEdit"></div>
+      <div class="form-actions">
+        <button type="button" class="btn-ghost" onclick="closeBizEditor()">Annuler</button>
+        <button type="submit" class="btn-primary" id="bizEditSaveBtn">Enregistrer</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <div class="modal-overlay" id="serverEditOverlay">
   <div class="modal">
     <button class="close-x" onclick="closeServerEditor()">✕</button>
     <h2 id="serverEditTitle">Nouvelle offre</h2>
-    <div class="sub">Visible sur la page « Serveur ».</div>
+    <div class="sub">Visible sur la page « Serveur » (numéros & outils).</div>
     <form id="serverEditForm">
       <input type="hidden" id="sv-id">
-      <div class="field"><label>Nom de l'offre</label><input type="text" id="sv-name" required placeholder="Ex: VPS Starter"></div>
+      <div class="field">
+        <label>Catégorie</label>
+        <select id="sv-category">
+          <option value="numero">Numéro WhatsApp / SIM</option>
+          <option value="outil">Outil / Logiciel</option>
+        </select>
+      </div>
+      <div class="field"><label>Nom de l'offre</label><input type="text" id="sv-name" required placeholder="Ex: Numéro WhatsApp Business prêt à l'emploi"></div>
       <div class="field"><label>Prix (FCFA)</label><input type="number" id="sv-price" min="0" required></div>
       <div class="field">
         <label>Période</label>
         <select id="sv-period">
-          <option value="mois">Par mois</option>
           <option value="unique">Paiement unique</option>
+          <option value="mois">Par mois</option>
         </select>
       </div>
       <div class="field">
-        <label>Spécifications (une par ligne)</label>
-        <textarea id="sv-specs" style="min-height:110px;" placeholder="Ex: 2 vCPU&#10;4 Go RAM&#10;50 Go SSD&#10;Bande passante illimitée"></textarea>
+        <label>Détails (une ligne par point)</label>
+        <textarea id="sv-specs" style="min-height:110px;" placeholder="Ex: Numéro déjà vérifié&#10;SIM incluse&#10;Livraison sous 24h"></textarea>
       </div>
       <div class="field"><label>Position (ordre d'affichage)</label><input type="number" id="sv-position" value="1" min="0"></div>
       <div class="field">
@@ -944,13 +1022,15 @@ function renderServerOffers(){
   document.getElementById('serverStats').textContent = `${serverOffers.length} offre(s)`;
   const tbody = document.getElementById('serverRows');
   if(serverOffers.length===0){
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:rgba(14,42,36,0.5);">Aucune offre pour l'instant.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:rgba(14,42,36,0.5);">Aucune offre pour l'instant.</td></tr>`;
     return;
   }
   tbody.innerHTML = serverOffers.map(o=>{
     const specs = Array.isArray(o.specs) ? o.specs : [];
+    const catLabel = o.category === 'outil' ? 'Outil/Logiciel' : 'Numéro WhatsApp';
     return `
     <tr>
+      <td><span class="card-cat" style="margin:0;">${catLabel}</span></td>
       <td>${escapeHtml(o.name)}</td>
       <td class="mono">${(o.price||0).toLocaleString('fr-FR')} FCFA</td>
       <td>${escapeHtml(o.period)}</td>
@@ -972,9 +1052,10 @@ function openServerEditor(o){
   if(o){
     document.getElementById('serverEditTitle').textContent = "Modifier l'offre";
     document.getElementById('sv-id').value = o.id;
+    document.getElementById('sv-category').value = o.category || 'numero';
     document.getElementById('sv-name').value = o.name || '';
     document.getElementById('sv-price').value = o.price || 0;
-    document.getElementById('sv-period').value = o.period || 'mois';
+    document.getElementById('sv-period').value = o.period || 'unique';
     document.getElementById('sv-specs').value = (Array.isArray(o.specs) ? o.specs : []).join('\n');
     document.getElementById('sv-position').value = o.position ?? 0;
     document.getElementById('sv-active').value = o.active ? 'true' : 'false';
@@ -994,6 +1075,7 @@ document.getElementById('serverEditForm').addEventListener('submit', async (e)=>
   const id = document.getElementById('sv-id').value;
   const specsList = document.getElementById('sv-specs').value.split('\n').map(s=>s.trim()).filter(Boolean);
   const payload = {
+    category: document.getElementById('sv-category').value,
     name: document.getElementById('sv-name').value.trim(),
     price: parseInt(document.getElementById('sv-price').value, 10) || 0,
     period: document.getElementById('sv-period').value,
@@ -1089,6 +1171,166 @@ async function deleteServerOrder(id){
   }
 }
 
+// ---- Services Business ----
+let bizServices = [];
+
+async function loadBizServices(){
+  try{
+    const { data, error } = await sb.from('business_services').select('*').order('position', { ascending:true });
+    if(error) throw error;
+    bizServices = data || [];
+  }catch(e){ bizServices = []; console.error(e); }
+  renderBizServices();
+}
+
+function renderBizServices(){
+  document.getElementById('bizStats').textContent = `${bizServices.length} service(s)`;
+  const tbody = document.getElementById('bizRows');
+  if(bizServices.length===0){
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:rgba(14,42,36,0.5);">Aucun service pour l'instant.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = bizServices.map(s=>{
+    const specs = Array.isArray(s.specs) ? s.specs : [];
+    return `
+    <tr>
+      <td>${escapeHtml(s.name)}</td>
+      <td class="mono">${(s.price||0).toLocaleString('fr-FR')} FCFA</td>
+      <td>${escapeHtml(s.period)}</td>
+      <td style="max-width:220px;font-size:12px;color:var(--muted);">${specs.map(escapeHtml).join(' · ') || '—'}</td>
+      <td>${s.active ? 'Oui' : 'Non'}</td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" onclick='openBizEditor(${JSON.stringify(s).replace(/'/g,"&apos;")})'>Modifier</button>
+          <button class="icon-btn" onclick="deleteBizService('${s.id}')">Supprimer</button>
+        </div>
+      </td>
+    </tr>
+  `;}).join('');
+}
+
+function openBizEditor(s){
+  document.getElementById('bizEditForm').reset();
+  hideErr('errBizEdit');
+  if(s){
+    document.getElementById('bizEditTitle').textContent = "Modifier le service";
+    document.getElementById('bz-id').value = s.id;
+    document.getElementById('bz-name').value = s.name || '';
+    document.getElementById('bz-price').value = s.price || 0;
+    document.getElementById('bz-period').value = s.period || 'unique';
+    document.getElementById('bz-specs').value = (Array.isArray(s.specs) ? s.specs : []).join('\n');
+    document.getElementById('bz-position').value = s.position ?? 0;
+    document.getElementById('bz-active').value = s.active ? 'true' : 'false';
+  }else{
+    document.getElementById('bizEditTitle').textContent = 'Nouveau service';
+    document.getElementById('bz-id').value = '';
+    document.getElementById('bz-position').value = bizServices.length + 1;
+  }
+  document.getElementById('bizEditOverlay').classList.add('open');
+}
+function closeBizEditor(){ document.getElementById('bizEditOverlay').classList.remove('open'); }
+
+document.getElementById('bizEditForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const btn = document.getElementById('bizEditSaveBtn');
+  btn.disabled = true; btn.textContent = 'Enregistrement…';
+  const id = document.getElementById('bz-id').value;
+  const specsList = document.getElementById('bz-specs').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const payload = {
+    name: document.getElementById('bz-name').value.trim(),
+    price: parseInt(document.getElementById('bz-price').value, 10) || 0,
+    period: document.getElementById('bz-period').value,
+    specs: specsList,
+    position: parseInt(document.getElementById('bz-position').value, 10) || 0,
+    active: document.getElementById('bz-active').value === 'true'
+  };
+  try{
+    let error;
+    if(id){
+      ({ error } = await sb.from('business_services').update(payload).eq('id', id));
+    }else{
+      ({ error } = await sb.from('business_services').insert(payload));
+    }
+    if(error) throw error;
+    closeBizEditor();
+    showToast('Service enregistré ✓');
+    loadBizServices();
+  }catch(err){
+    showErr('errBizEdit', err.message || "Erreur lors de l'enregistrement.");
+  }finally{
+    btn.disabled = false; btn.textContent = 'Enregistrer';
+  }
+});
+
+async function deleteBizService(id){
+  if(!confirm('Supprimer ce service ?')) return;
+  try{
+    const { error } = await sb.from('business_services').delete().eq('id', id);
+    if(error) throw error;
+    showToast('Service supprimé');
+    loadBizServices();
+  }catch(err){
+    showToast(err.message || "Erreur lors de la suppression.");
+  }
+}
+
+document.getElementById('bizEditOverlay').addEventListener('click', (e)=>{
+  if(e.target.id==='bizEditOverlay') closeBizEditor();
+});
+
+async function loadBizOrders(){
+  const tbody = document.getElementById('bizOrderRows');
+  try{
+    const { data, error } = await sb.from('business_orders').select('*').order('created_at', { ascending:false });
+    if(error) throw error;
+    const list = data || [];
+    document.getElementById('bizOrderStats').textContent = `${list.length} demande(s) au total`;
+    if(list.length===0){
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:rgba(14,42,36,0.5);">Aucune demande pour l'instant.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = list.map(o=>`
+      <tr>
+        <td class="mono">${new Date(o.created_at).toLocaleDateString('fr-FR')}</td>
+        <td>${escapeHtml(o.service_name)}</td>
+        <td>${escapeHtml(o.name)}</td>
+        <td>${escapeHtml(o.email)}</td>
+        <td>${o.status === 'traité' ? '<span class="badge-admin">Traité</span>' : escapeHtml(o.status)}</td>
+        <td>
+          <div class="row-actions">
+            ${o.status !== 'traité' ? `<button class="icon-btn" onclick="markBizOrderDone('${o.id}')">Marquer traité</button>` : ''}
+            <button class="icon-btn" onclick="deleteBizOrder('${o.id}')">Supprimer</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }catch(e){
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:rgba(14,42,36,0.5);">Impossible de charger les demandes.</td></tr>`;
+  }
+}
+
+async function markBizOrderDone(id){
+  try{
+    const { error } = await sb.from('business_orders').update({ status: 'traité' }).eq('id', id);
+    if(error) throw error;
+    showToast('Marqué comme traité ✓');
+    loadBizOrders();
+  }catch(err){
+    showToast(err.message || "Erreur.");
+  }
+}
+async function deleteBizOrder(id){
+  if(!confirm('Supprimer cette demande ?')) return;
+  try{
+    const { error } = await sb.from('business_orders').delete().eq('id', id);
+    if(error) throw error;
+    showToast('Demande supprimée');
+    loadBizOrders();
+  }catch(err){
+    showToast(err.message || "Erreur lors de la suppression.");
+  }
+}
+
 (async ()=>{
   const { user, isAdmin } = await initNav();
   if(!user || !isAdmin){
@@ -1102,6 +1344,8 @@ async function deleteServerOrder(id){
   loadPlans();
   loadServerOffers();
   loadServerOrders();
+  loadBizServices();
+  loadBizOrders();
 })();
 </script>
 </body>
