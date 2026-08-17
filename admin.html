@@ -141,10 +141,10 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
 <body>
 
 <header>
-  <a class="logo" href="index.html">Kon<span>tak</span></a>
+  <a class="logo" href="index">Kon<span>tak</span></a>
   <div class="header-actions">
-    <a class="btn-line" href="dashboard.html">Mon espace</a>
-    <a class="btn-line" href="annuaire.html">Annuaire</a>
+    <a class="btn-line" href="dashboard">Mon espace</a>
+    <a class="btn-line" href="annuaire">Annuaire</a>
     <a class="btn-fill" href="#" data-action="logout">Déconnexion</a>
   </div>
 </header>
@@ -153,7 +153,7 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
   <h2>Accès refusé</h2>
   <p>Cette page est réservée à l'administrateur.</p>
   <br>
-  <a class="btn-fill" href="index.html">Retour à l'annuaire</a>
+  <a class="btn-fill" href="index">Retour à l'annuaire</a>
 </div>
 
 <div id="adminContent" style="display:none;">
@@ -215,6 +215,60 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
       <tbody id="withdrawRows"></tbody>
     </table>
   </div>
+
+  <div class="admin-toolbar" style="margin-top:10px;">
+    <div>
+      <div class="section-title" style="font-size:19px;">Forfaits d'abonnement</div>
+      <div class="stats-bar" id="plansStats" style="padding:0;">Gère les forfaits et leurs fonctionnalités</div>
+    </div>
+    <button class="btn-fill" onclick="openPlanEditor(null)">+ Nouveau forfait</button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Nom</th><th>Prix</th><th>Période</th><th>Essai</th><th>Fonctionnalités</th><th>Actif</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="planRows"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-overlay" id="planEditOverlay">
+  <div class="modal">
+    <button class="close-x" onclick="closePlanEditor()">✕</button>
+    <h2 id="planEditTitle">Nouveau forfait</h2>
+    <div class="sub">Visible par les utilisateurs sur la page d'abonnement.</div>
+    <form id="planEditForm">
+      <input type="hidden" id="pl-id">
+      <div class="field"><label>Nom du forfait</label><input type="text" id="pl-name" required placeholder="Ex: Forfait Hebdo"></div>
+      <div class="field"><label>Prix (FCFA)</label><input type="number" id="pl-price" min="0" required></div>
+      <div class="field">
+        <label>Période</label>
+        <select id="pl-period">
+          <option value="semaine">Semaine</option>
+          <option value="mois">Mois</option>
+        </select>
+      </div>
+      <div class="field"><label>Essai gratuit (jours)</label><input type="number" id="pl-trial" min="0" value="0"></div>
+      <div class="field">
+        <label>Fonctionnalités (une par ligne)</label>
+        <textarea id="pl-features" style="min-height:120px;" placeholder="Ex: 100 emails par jour&#10;Téléchargements illimités&#10;Support prioritaire"></textarea>
+      </div>
+      <div class="field"><label>Position (ordre d'affichage)</label><input type="number" id="pl-position" value="1" min="0"></div>
+      <div class="field">
+        <label>Actif</label>
+        <select id="pl-active"><option value="true">Oui</option><option value="false">Non</option></select>
+      </div>
+      <div class="err-msg" id="errPlanEdit"></div>
+      <div class="form-actions">
+        <button type="button" class="btn-ghost" onclick="closePlanEditor()">Annuler</button>
+        <button type="submit" class="btn-primary" id="planEditSaveBtn">Enregistrer</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <div class="modal-overlay" id="editOverlay">
@@ -254,7 +308,7 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
     <form id="navEditForm">
       <input type="hidden" id="n-id">
       <div class="field"><label>Label</label><input type="text" id="n-label" required placeholder="Ex: Business"></div>
-      <div class="field"><label>Lien (URL de la page)</label><input type="text" id="n-url" required placeholder="Ex: business.html"></div>
+      <div class="field"><label>Lien (URL de la page)</label><input type="text" id="n-url" required placeholder="Ex: business"></div>
       <div class="field">
         <label>Icône</label>
         <select id="n-icon">
@@ -352,7 +406,7 @@ async function initNav(){
 
 async function logout(){
   await sb.auth.signOut();
-  window.location.href = 'index.html';
+  window.location.href = 'index';
 }
 
 document.addEventListener('click', (e)=>{
@@ -405,11 +459,26 @@ async function loadNavItems(){
 document.getElementById('e-sector').innerHTML = SECTORS.map(s=>`<option>${s}</option>`).join('');
 let allProfiles = [];
 
+async function fetchAllRows(table, selectCols, orderCol, ascending, extraFilter){
+  let allRows = [];
+  let from = 0;
+  const pageSize = 1000;
+  while(true){
+    let query = sb.from(table).select(selectCols).range(from, from + pageSize - 1);
+    if(orderCol) query = query.order(orderCol, { ascending });
+    if(extraFilter) query = extraFilter(query);
+    const { data, error } = await query;
+    if(error) throw error;
+    allRows = allRows.concat(data || []);
+    if(!data || data.length < pageSize) break;
+    from += pageSize;
+  }
+  return allRows;
+}
+
 async function loadAll(){
   try{
-    const { data, error } = await sb.from('profiles').select('*').order('created_at', { ascending:false });
-    if(error) throw error;
-    allProfiles = data || [];
+    allProfiles = await fetchAllRows('profiles', '*', 'created_at', false);
   }catch(e){ allProfiles = []; console.error(e); }
   renderTable();
 }
@@ -677,6 +746,117 @@ async function deleteWithdrawal(id){
   }
 }
 
+// ---- Forfaits d'abonnement ----
+let subPlans = [];
+
+async function loadPlans(){
+  try{
+    const { data, error } = await sb.from('subscription_plans').select('*').order('position', { ascending:true });
+    if(error) throw error;
+    subPlans = data || [];
+  }catch(e){ subPlans = []; console.error(e); }
+  renderPlans();
+}
+
+function renderPlans(){
+  document.getElementById('plansStats').textContent = `${subPlans.length} forfait(s)`;
+  const tbody = document.getElementById('planRows');
+  if(subPlans.length===0){
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:rgba(14,42,36,0.5);">Aucun forfait pour l'instant.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = subPlans.map(p=>{
+    const features = Array.isArray(p.features) ? p.features : [];
+    return `
+    <tr>
+      <td>${escapeHtml(p.name)}</td>
+      <td class="mono">${(p.price||0).toLocaleString('fr-FR')} FCFA</td>
+      <td>${escapeHtml(p.period)}</td>
+      <td>${p.trial_days ? p.trial_days + ' j' : '—'}</td>
+      <td style="max-width:220px;font-size:12px;color:var(--muted);">${features.map(escapeHtml).join(' · ') || '—'}</td>
+      <td>${p.active ? 'Oui' : 'Non'}</td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" onclick='openPlanEditor(${JSON.stringify(p).replace(/'/g,"&apos;")})'>Modifier</button>
+          <button class="icon-btn" onclick="deletePlan('${p.id}')">Supprimer</button>
+        </div>
+      </td>
+    </tr>
+  `;}).join('');
+}
+
+function openPlanEditor(p){
+  document.getElementById('planEditForm').reset();
+  hideErr('errPlanEdit');
+  if(p){
+    document.getElementById('planEditTitle').textContent = 'Modifier le forfait';
+    document.getElementById('pl-id').value = p.id;
+    document.getElementById('pl-name').value = p.name || '';
+    document.getElementById('pl-price').value = p.price || 0;
+    document.getElementById('pl-period').value = p.period || 'mois';
+    document.getElementById('pl-trial').value = p.trial_days || 0;
+    document.getElementById('pl-features').value = (Array.isArray(p.features) ? p.features : []).join('\n');
+    document.getElementById('pl-position').value = p.position ?? 0;
+    document.getElementById('pl-active').value = p.active ? 'true' : 'false';
+  }else{
+    document.getElementById('planEditTitle').textContent = 'Nouveau forfait';
+    document.getElementById('pl-id').value = '';
+    document.getElementById('pl-position').value = subPlans.length + 1;
+  }
+  document.getElementById('planEditOverlay').classList.add('open');
+}
+function closePlanEditor(){ document.getElementById('planEditOverlay').classList.remove('open'); }
+
+document.getElementById('planEditForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const btn = document.getElementById('planEditSaveBtn');
+  btn.disabled = true; btn.textContent = 'Enregistrement…';
+  const id = document.getElementById('pl-id').value;
+  const featuresList = document.getElementById('pl-features').value
+    .split('\n').map(s=>s.trim()).filter(Boolean);
+  const payload = {
+    name: document.getElementById('pl-name').value.trim(),
+    price: parseInt(document.getElementById('pl-price').value, 10) || 0,
+    period: document.getElementById('pl-period').value,
+    trial_days: parseInt(document.getElementById('pl-trial').value, 10) || 0,
+    features: featuresList,
+    position: parseInt(document.getElementById('pl-position').value, 10) || 0,
+    active: document.getElementById('pl-active').value === 'true'
+  };
+  try{
+    let error;
+    if(id){
+      ({ error } = await sb.from('subscription_plans').update(payload).eq('id', id));
+    }else{
+      ({ error } = await sb.from('subscription_plans').insert(payload));
+    }
+    if(error) throw error;
+    closePlanEditor();
+    showToast('Forfait enregistré ✓');
+    loadPlans();
+  }catch(err){
+    showErr('errPlanEdit', err.message || "Erreur lors de l'enregistrement.");
+  }finally{
+    btn.disabled = false; btn.textContent = 'Enregistrer';
+  }
+});
+
+async function deletePlan(id){
+  if(!confirm('Supprimer ce forfait ?')) return;
+  try{
+    const { error } = await sb.from('subscription_plans').delete().eq('id', id);
+    if(error) throw error;
+    showToast('Forfait supprimé');
+    loadPlans();
+  }catch(err){
+    showToast(err.message || "Erreur lors de la suppression.");
+  }
+}
+
+document.getElementById('planEditOverlay').addEventListener('click', (e)=>{
+  if(e.target.id==='planEditOverlay') closePlanEditor();
+});
+
 (async ()=>{
   const { user, isAdmin } = await initNav();
   if(!user || !isAdmin){
@@ -687,6 +867,7 @@ async function deleteWithdrawal(id){
   loadAll();
   loadNavAdmin();
   loadWithdrawals();
+  loadPlans();
 })();
 </script>
 </body>
