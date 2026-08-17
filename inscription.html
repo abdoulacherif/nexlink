@@ -142,9 +142,9 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
 <body>
 
 <header>
-  <a class="logo" href="index.html">Kon<span>tak</span></a>
+  <a class="logo" href="index">Kon<span>tak</span></a>
   <div class="header-actions">
-    <a class="btn-line" href="annuaire.html">← Annuaire</a>
+    <a class="btn-line" href="annuaire">← Annuaire</a>
   </div>
 </header>
 
@@ -169,7 +169,7 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
         <div class="field"><label>Email</label><input type="email" id="s-email" required placeholder="Ex: aicha@email.com"></div>
         <div class="err-msg" id="err1"></div>
         <div class="form-actions">
-          <a class="btn-ghost" href="index.html" style="text-align:center;text-decoration:none;">Annuler</a>
+          <a class="btn-ghost" href="index" style="text-align:center;text-decoration:none;">Annuler</a>
           <button type="button" class="btn-primary" onclick="goToStep(2)">Suivant</button>
         </div>
       </div>
@@ -198,7 +198,7 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
         </div>
       </div>
     </form>
-    <div class="switch-link">Déjà inscrit ? <a href="connexion.html">Se connecter</a></div>
+    <div class="switch-link">Déjà inscrit ? <a href="connexion">Se connecter</a></div>
   </div>
 </div>
 
@@ -271,7 +271,7 @@ async function initNav(){
 
 async function logout(){
   await sb.auth.signOut();
-  window.location.href = 'index.html';
+  window.location.href = 'index';
 }
 
 document.addEventListener('click', (e)=>{
@@ -334,6 +334,7 @@ async function sendWelcomeEmail(name, email){
   try{
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_WELCOME, { to_name: name, to_email: email });
     console.log('EmailJS: bienvenue OK');
+    showToast('✓ Email de bienvenue envoyé');
   }catch(e){
     console.error('EmailJS welcome error', e);
     showToast('✗ Erreur bienvenue: ' + (e.text || e.message || JSON.stringify(e)));
@@ -343,6 +344,7 @@ async function sendAdminNotifEmail(name, email, phone){
   try{
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ADMIN, { member_name: name, member_email: email, member_phone: phone });
     console.log('EmailJS: notif admin OK');
+    showToast('✓ Notification admin envoyée');
   }catch(e){
     console.error('EmailJS admin notif error', e);
     showToast('✗ Erreur notif admin: ' + (e.text || e.message || JSON.stringify(e)));
@@ -389,6 +391,12 @@ document.getElementById('signupForm').addEventListener('submit', async (e)=>{
   const business = document.getElementById('s-business').value.trim();
   const sector = document.getElementById('s-sector').value;
 
+  function genReferralCode(){
+    return Math.random().toString(36).slice(2, 8).toUpperCase();
+  }
+  const params = new URLSearchParams(window.location.search);
+  const referredBy = params.get('ref') || null;
+
   try{
     const { data, error } = await sb.auth.signUp({ email, password: pass });
     if(error) throw error;
@@ -396,17 +404,18 @@ document.getElementById('signupForm').addEventListener('submit', async (e)=>{
     if(userId && data.session){
       const { error: insertErr } = await sb.from('profiles').insert({
         user_id: userId, nom: name, whatsapp: phone, email: email,
-        pays: country, ville: city, business: business, secteur: sector
+        pays: country, ville: city, business: business, secteur: sector,
+        referral_code: genReferralCode(), referred_by: referredBy
       });
       if(insertErr) throw insertErr;
       await Promise.allSettled([
         sendWelcomeEmail(name, email),
         sendAdminNotifEmail(name, email, phone)
       ]);
-      window.location.href = 'dashboard.html';
+      setTimeout(()=> window.location.href = 'dashboard', 1800);
     }else{
       showToast('Compte créé ✓ Vérifie ton email pour confirmer, puis connecte-toi pour compléter ta fiche.');
-      setTimeout(()=> window.location.href = 'connexion.html', 2500);
+      setTimeout(()=> window.location.href = 'connexion', 2500);
     }
   }catch(err){
     showErr('err3', err.message || "Une erreur est survenue.");
