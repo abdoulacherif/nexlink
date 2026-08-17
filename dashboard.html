@@ -221,7 +221,7 @@ body{padding-bottom:74px;}
 
 <div class="dash-topbar">
   <button class="burger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
-  <a class="logo" href="index.html" style="font-size:19px;">Kon<span>tak</span></a>
+  <a class="logo" href="index" style="font-size:19px;">Kon<span>tak</span></a>
   <div style="width:38px;"></div>
 </div>
 
@@ -231,7 +231,7 @@ body{padding-bottom:74px;}
 
 <div class="dash-shell">
   <aside class="sidebar" id="sidebar">
-    <a class="logo" href="index.html">Kon<span>tak</span></a>
+    <a class="logo" href="index">Kon<span>tak</span></a>
 
     <div class="side-section">
       <div class="side-label">Mon compte</div>
@@ -240,7 +240,7 @@ body{padding-bottom:74px;}
 
     <div class="side-section">
       <div class="side-label">Naviguer</div>
-      <a class="side-link" href="annuaire.html"><span class="ic-svg" id="icAnnuaire"></span> Annuaire</a>
+      <a class="side-link" href="annuaire"><span class="ic-svg" id="icAnnuaire"></span> Annuaire</a>
     </div>
 
     <div class="side-section">
@@ -249,13 +249,13 @@ body{padding-bottom:74px;}
         <span class="ic-svg chevron" id="icChevron" style="margin-left:auto;"></span>
       </button>
       <div class="more-menu-panel" id="moreMenuPanel">
-        <a class="side-link sub-link" href="support.html"><span class="ic-svg" id="icSupport"></span> Support</a>
-        <a class="side-link sub-link" href="faq.html"><span class="ic-svg" id="icFaq"></span> FAQ</a>
-        <a class="side-link sub-link" href="parrainage.html"><span class="ic-svg" id="icReferral"></span> Parrainage</a>
-        <a class="side-link sub-link" href="reseau.html"><span class="ic-svg" id="icNetwork"></span> Réseau</a>
-        <a class="side-link sub-link" href="gain.html"><span class="ic-svg" id="icGain"></span> Gains</a>
-        <a class="side-link sub-link" href="conditions.html"><span class="ic-svg" id="icConditions"></span> Conditions</a>
-        <a class="side-link sub-link" href="politique.html"><span class="ic-svg" id="icPolitique"></span> Politique</a>
+        <a class="side-link sub-link" href="support"><span class="ic-svg" id="icSupport"></span> Support</a>
+        <a class="side-link sub-link" href="faq"><span class="ic-svg" id="icFaq"></span> FAQ</a>
+        <a class="side-link sub-link" href="parrainage"><span class="ic-svg" id="icReferral"></span> Parrainage</a>
+        <a class="side-link sub-link" href="reseau"><span class="ic-svg" id="icNetwork"></span> Réseau</a>
+        <a class="side-link sub-link" href="gain"><span class="ic-svg" id="icGain"></span> Gains</a>
+        <a class="side-link sub-link" href="conditions"><span class="ic-svg" id="icConditions"></span> Conditions</a>
+        <a class="side-link sub-link" href="politique"><span class="ic-svg" id="icPolitique"></span> Politique</a>
       </div>
     </div>
 
@@ -270,7 +270,7 @@ body{padding-bottom:74px;}
       <h2>Connexion requise</h2>
       <p>Tu dois être connecté pour accéder à ton tableau de bord.</p>
       <br>
-      <a class="btn-fill" href="connexion.html">Se connecter</a>
+      <a class="btn-fill" href="connexion">Se connecter</a>
     </div>
 
     <div id="completeContent" style="display:none;">
@@ -371,18 +371,30 @@ body{padding-bottom:74px;}
     <div class="credit-packs">
       <a class="credit-pack" id="pack1" href="#">
         <div class="pack-amount">50 crédits</div>
-        <div class="pack-price">Pack Starter</div>
+        <div class="pack-price">200 FCFA</div>
       </a>
       <a class="credit-pack" id="pack2" href="#">
         <div class="pack-amount">150 crédits</div>
-        <div class="pack-price">Pack Pro</div>
+        <div class="pack-price">350 FCFA</div>
       </a>
       <a class="credit-pack" id="pack3" href="#">
         <div class="pack-amount">400 crédits</div>
-        <div class="pack-price">Pack Business</div>
+        <div class="pack-price">500 FCFA</div>
+      </a>
+      <a class="credit-pack" id="pack4" href="#">
+        <div class="pack-amount">1500 crédits</div>
+        <div class="pack-price">1 000 FCFA</div>
+      </a>
+      <a class="credit-pack" id="pack5" href="#">
+        <div class="pack-amount">2500 crédits</div>
+        <div class="pack-price">2 000 FCFA</div>
+      </a>
+      <a class="credit-pack" id="pack6" href="#">
+        <div class="pack-amount">5000 crédits</div>
+        <div class="pack-price">3 500 FCFA</div>
       </a>
     </div>
-    <div class="hint" style="margin-top:14px;">Cliquer sur un pack ouvre un email pré-rempli vers l'administrateur pour finaliser l'achat.</div>
+    <div class="hint" style="margin-top:14px;">2 crédits sont débités à chaque contact WhatsApp ou téléchargement de fiche. Cliquer sur un pack ouvre un email pré-rempli vers l'administrateur pour finaliser l'achat.</div>
   </div>
 </div>
 
@@ -488,7 +500,7 @@ async function initNav(){
 
 async function logout(){
   await sb.auth.signOut();
-  window.location.href = 'index.html';
+  window.location.href = 'index';
 }
 
 document.addEventListener('click', (e)=>{
@@ -598,10 +610,14 @@ function fillDashboard(p){
 
 function openBuyCredits(){
   const subject = encodeURIComponent('Achat de crédits Kontak');
-  const bodyFor = (n)=> encodeURIComponent(`Bonjour,\n\nJe souhaite acheter le pack de ${n} crédits pour mon compte (${(CURRENT_USER && CURRENT_USER.email) || ''}).\n\nMerci de me confirmer les modalités de paiement.`);
-  document.getElementById('pack1').href = `mailto:abdoula13cherif@gmail.com?subject=${subject}&body=${bodyFor(50)}`;
-  document.getElementById('pack2').href = `mailto:abdoula13cherif@gmail.com?subject=${subject}&body=${bodyFor(150)}`;
-  document.getElementById('pack3').href = `mailto:abdoula13cherif@gmail.com?subject=${subject}&body=${bodyFor(400)}`;
+  const bodyFor = (n, price)=> encodeURIComponent(`Bonjour,\n\nJe souhaite acheter le pack de ${n} crédits (${price} FCFA) pour mon compte (${(CURRENT_USER && CURRENT_USER.email) || ''}).\n\nMerci de me confirmer les modalités de paiement.`);
+  const packs = [
+    ['pack1', 50, 200], ['pack2', 150, 350], ['pack3', 400, 500],
+    ['pack4', 1500, 1000], ['pack5', 2500, 2000], ['pack6', 5000, 3500]
+  ];
+  packs.forEach(([id, credits, price])=>{
+    document.getElementById(id).href = `mailto:abdoula13cherif@gmail.com?subject=${subject}&body=${bodyFor(credits, price)}`;
+  });
   document.getElementById('buyOverlay').classList.add('open');
 }
 function closeBuyCredits(){ document.getElementById('buyOverlay').classList.remove('open'); }
@@ -666,15 +682,25 @@ const EMAILJS_TEMPLATE_WELCOME = "template_aks186b";
 const EMAILJS_TEMPLATE_ADMIN = "template_dzquprb";
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
-function sendWelcomeEmail(name, email){
-  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_WELCOME, { to_name: name, to_email: email })
-    .then(()=> console.log('EmailJS: email de bienvenue envoyé'))
-    .catch(e => { console.error('EmailJS welcome error', e); showToast('Email bienvenue: ' + (e.text || e.message || JSON.stringify(e))); });
+async function sendWelcomeEmail(name, email){
+  try{
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_WELCOME, { to_name: name, to_email: email });
+    console.log('EmailJS: bienvenue OK');
+    showToast('✓ Email de bienvenue envoyé');
+  }catch(e){
+    console.error('EmailJS welcome error', e);
+    showToast('✗ Erreur bienvenue: ' + (e.text || e.message || JSON.stringify(e)));
+  }
 }
-function sendAdminNotifEmail(name, email, phone){
-  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ADMIN, { member_name: name, member_email: email, member_phone: phone })
-    .then(()=> console.log('EmailJS: notif admin envoyée'))
-    .catch(e => { console.error('EmailJS admin notif error', e); showToast('Email admin: ' + (e.text || e.message || JSON.stringify(e))); });
+async function sendAdminNotifEmail(name, email, phone){
+  try{
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ADMIN, { member_name: name, member_email: email, member_phone: phone });
+    console.log('EmailJS: notif admin OK');
+    showToast('✓ Notification admin envoyée');
+  }catch(e){
+    console.error('EmailJS admin notif error', e);
+    showToast('✗ Erreur notif admin: ' + (e.text || e.message || JSON.stringify(e)));
+  }
 }
 
 document.getElementById('completeForm').addEventListener('submit', async (e)=>{
