@@ -207,7 +207,7 @@ body{padding-bottom:74px;}
 
 <div class="dash-topbar">
   <button class="burger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
-  <a class="logo" href="index.html" style="font-size:19px;">Kon<span>tak</span></a>
+  <a class="logo" href="index" style="font-size:19px;">Kon<span>tak</span></a>
   <div style="width:38px;"></div>
 </div>
 
@@ -217,17 +217,17 @@ body{padding-bottom:74px;}
 
 <div class="dash-shell">
   <aside class="sidebar" id="sidebar">
-    <a class="logo" href="index.html">Kon<span>tak</span></a>
+    <a class="logo" href="index">Kon<span>tak</span></a>
 
     <div class="side-section">
       <div class="side-label">Mon compte</div>
-      <a class="side-link" href="dashboard.html"><span class="ic-svg" id="icOverview"></span> Vue d'ensemble</a>
-      <a class="side-link" href="profile.html"><span class="ic-svg" id="icProfile"></span> Mon profil</a>
+      <a class="side-link" href="dashboard"><span class="ic-svg" id="icOverview"></span> Vue d'ensemble</a>
+      <a class="side-link" href="profile"><span class="ic-svg" id="icProfile"></span> Mon profil</a>
     </div>
 
     <div class="side-section">
       <div class="side-label">Naviguer</div>
-      <a class="side-link" href="annuaire.html"><span class="ic-svg" id="icAnnuaire"></span> Annuaire</a>
+      <a class="side-link" href="annuaire"><span class="ic-svg" id="icAnnuaire"></span> Annuaire</a>
     </div>
 
     <div class="side-section">
@@ -236,13 +236,13 @@ body{padding-bottom:74px;}
         <span class="ic-svg chevron" id="icChevron" style="margin-left:auto;"></span>
       </button>
       <div class="more-menu-panel" id="moreMenuPanel">
-        <a class="side-link sub-link" href="support.html"><span class="ic-svg" id="icSupport"></span> Support</a>
-        <a class="side-link sub-link" href="faq.html"><span class="ic-svg" id="icFaq"></span> FAQ</a>
-        <a class="side-link sub-link" href="parrainage.html"><span class="ic-svg" id="icReferral"></span> Parrainage</a>
-        <a class="side-link sub-link" href="reseau.html"><span class="ic-svg" id="icNetwork"></span> Réseau</a>
-        <a class="side-link sub-link" href="gain.html"><span class="ic-svg" id="icGain"></span> Gains</a>
-        <a class="side-link sub-link" href="conditions.html"><span class="ic-svg" id="icConditions"></span> Conditions</a>
-        <a class="side-link sub-link" href="politique.html"><span class="ic-svg" id="icPolitique"></span> Politique</a>
+        <a class="side-link sub-link" href="support"><span class="ic-svg" id="icSupport"></span> Support</a>
+        <a class="side-link sub-link" href="faq"><span class="ic-svg" id="icFaq"></span> FAQ</a>
+        <a class="side-link sub-link" href="parrainage"><span class="ic-svg" id="icReferral"></span> Parrainage</a>
+        <a class="side-link sub-link" href="reseau"><span class="ic-svg" id="icNetwork"></span> Réseau</a>
+        <a class="side-link sub-link" href="gain"><span class="ic-svg" id="icGain"></span> Gains</a>
+        <a class="side-link sub-link" href="conditions"><span class="ic-svg" id="icConditions"></span> Conditions</a>
+        <a class="side-link sub-link" href="politique"><span class="ic-svg" id="icPolitique"></span> Politique</a>
       </div>
     </div>
 
@@ -257,7 +257,7 @@ body{padding-bottom:74px;}
       <h2>Connexion requise</h2>
       <p>Tu dois être connecté pour accéder à ton tableau de bord.</p>
       <br>
-      <a class="btn-fill" href="connexion.html">Se connecter</a>
+      <a class="btn-fill" href="connexion">Se connecter</a>
     </div>
 
     <div id="completeContent" style="display:none;">
@@ -418,7 +418,7 @@ async function initNav(){
 
 async function logout(){
   await sb.auth.signOut();
-  window.location.href = 'index.html';
+  window.location.href = 'index';
 }
 
 document.addEventListener('click', (e)=>{
@@ -513,11 +513,28 @@ function switchTab(id){
 
 let allDirectory = [];
 
+async function fetchAllRows(table, selectCols, orderCol, ascending, extraFilter){
+  let allRows = [];
+  let from = 0;
+  const pageSize = 1000;
+  while(true){
+    let query = sb.from(table).select(selectCols).range(from, from + pageSize - 1);
+    if(orderCol) query = query.order(orderCol, { ascending });
+    if(extraFilter) query = extraFilter(query);
+    const { data, error } = await query;
+    if(error) throw error;
+    allRows = allRows.concat(data || []);
+    if(!data || data.length < pageSize) break;
+    from += pageSize;
+  }
+  return allRows;
+}
+
 async function loadDirectory(){
   try{
-    const { data, error } = await sb.from('profiles').select('nom,email,secteur,ville,business').not('email','is',null);
-    if(error) throw error;
-    allDirectory = (data || []).filter(p=>p.email);
+    const rows = await fetchAllRows('profiles', 'nom,email,secteur,ville,business', null, null,
+      (q)=> q.not('email','is',null));
+    allDirectory = rows.filter(p=>p.email);
   }catch(e){ allDirectory = []; }
   document.getElementById('m-sector-filter').innerHTML = '<option value="">Tous les secteurs</option>' + SECTORS.map(s=>`<option>${s}</option>`).join('');
   renderRecipients();
