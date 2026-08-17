@@ -168,6 +168,13 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
     <button class="btn-fill" onclick="openEditor(null)">+ Nouvelle fiche</button>
   </div>
 
+  <div class="search-wrap" style="padding:0 20px 14px;">
+    <div class="search-box">
+      <span class="mono">⌕</span>
+      <input id="adminSearch" placeholder="Chercher un nom, un email, une ville…" oninput="debouncedLoadAll()">
+    </div>
+  </div>
+
   <div class="table-wrap">
     <table class="admin-table">
       <thead>
@@ -607,39 +614,49 @@ async function loadNavItems(){
 <script>
 document.getElementById('e-sector').innerHTML = SECTORS.map(s=>`<option>${s}</option>`).join('');
 let allProfiles = [];
+let adminTotalCount = 0;
+let adminOffset = 0;
+const ADMIN_PAGE_SIZE = 50;
+let adminLoadToken = 0;
 
-async function fetchAllRows(table, selectCols, orderCol, ascending, extraFilter){
-  let allRows = [];
-  let from = 0;
-  const pageSize = 1000;
-  while(true){
-    let query = sb.from(table).select(selectCols).range(from, from + pageSize - 1);
-    if(orderCol) query = query.order(orderCol, { ascending });
-    if(extraFilter) query = extraFilter(query);
-    const { data, error } = await query;
-    if(error) throw error;
-    allRows = allRows.concat(data || []);
-    if(!data || data.length < pageSize) break;
-    from += pageSize;
-  }
-  return allRows;
+function debounce(fn, delay){
+  let t;
+  return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), delay); };
 }
+const debouncedLoadAll = debounce(()=> loadAll(true), 350);
 
-async function loadAll(){
+async function loadAll(reset){
+  const myToken = ++adminLoadToken;
+  if(reset){
+    adminOffset = 0;
+    allProfiles = [];
+  }
+  const q = (document.getElementById('adminSearch') && document.getElementById('adminSearch').value.trim()) || '';
   try{
-    allProfiles = await fetchAllRows('profiles', '*', 'created_at', false);
-  }catch(e){ allProfiles = []; console.error(e); }
+    let query = sb.from('profiles').select('*', { count: 'exact' });
+    if(q){
+      const safe = q.replace(/[%,]/g, '');
+      query = query.or(`nom.ilike.%${safe}%,business.ilike.%${safe}%,whatsapp.ilike.%${safe}%,email.ilike.%${safe}%,ville.ilike.%${safe}%`);
+    }
+    query = query.order('created_at', { ascending:false }).range(adminOffset, adminOffset + ADMIN_PAGE_SIZE - 1);
+    const { data, error, count } = await query;
+    if(error) throw error;
+    if(myToken !== adminLoadToken) return;
+    allProfiles = reset ? (data || []) : allProfiles.concat(data || []);
+    adminTotalCount = count ?? allProfiles.length;
+    adminOffset = allProfiles.length;
+  }catch(e){ console.error(e); if(reset) allProfiles = []; }
   renderTable();
 }
 
 function renderTable(){
-  document.getElementById('adminStats').textContent = `${allProfiles.length} fiche${allProfiles.length!==1?'s':''} au total`;
+  document.getElementById('adminStats').textContent = `${adminTotalCount} fiche${adminTotalCount!==1?'s':''} au total · ${allProfiles.length} chargée${allProfiles.length!==1?'s':''}`;
   const tbody = document.getElementById('adminRows');
   if(allProfiles.length===0){
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:30px;color:rgba(14,42,36,0.5);">Aucune fiche pour l'instant.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:30px;color:rgba(14,42,36,0.5);">Aucune fiche trouvée.</td></tr>`;
     return;
   }
-  tbody.innerHTML = allProfiles.map(p=>`
+  const rowsHtml = allProfiles.map(p=>`
     <tr>
       <td>${escapeHtml(p.nom)}${p.is_admin ? '<span class="badge-admin">Admin</span>' : ''}</td>
       <td>${escapeHtml(p.business)}</td>
@@ -657,6 +674,10 @@ function renderTable(){
       </td>
     </tr>
   `).join('');
+  const hasMore = allProfiles.length < adminTotalCount;
+  tbody.innerHTML = rowsHtml + (hasMore
+    ? `<tr><td colspan="9" style="text-align:center;padding:16px;"><button class="btn-fill" onclick="loadAll(false)">Charger plus (${adminTotalCount - allProfiles.length} restantes)</button></td></tr>`
+    : '');
 }
 
 function openEditor(p){
@@ -712,7 +733,7 @@ document.getElementById('editForm').addEventListener('submit', async (e)=>{
     if(error) throw error;
     closeEditor();
     showToast('Fiche enregistrée ✓');
-    loadAll();
+    loadAll(true);
   }catch(err){
     showErr('errEdit', err.message || "Erreur lors de l'enregistrement.");
   }finally{
@@ -726,7 +747,7 @@ async function deleteProfile(id){
     const { error } = await sb.from('profiles').delete().eq('id', id);
     if(error) throw error;
     showToast('Fiche supprimée');
-    loadAll();
+    loadAll(true);
   }catch(err){
     showToast(err.message || "Erreur lors de la suppression.");
   }
@@ -1338,7 +1359,7 @@ async function deleteBizOrder(id){
     return;
   }
   document.getElementById('adminContent').style.display = '';
-  loadAll();
+  loadAll(true);
   loadNavAdmin();
   loadWithdrawals();
   loadPlans();
