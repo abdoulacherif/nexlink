@@ -448,6 +448,13 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
         <select id="e-isadmin"><option value="false">Non</option><option value="true">Oui</option></select>
       </div>
       <div class="err-msg" id="errEdit"></div>
+
+      <div id="commissionBox" style="display:none;background:var(--bg-soft);border-radius:12px;padding:14px;margin-top:6px;">
+        <label style="display:block;font-size:12px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;color:rgba(14,42,36,0.6);margin-bottom:8px;">Attribuer une commission au parrain</label>
+        <div class="sub" style="margin-bottom:10px;" id="commissionSub">Ce membre a été parrainé.</div>
+        <input type="number" id="commission-amount" placeholder="Montant de l'achat confirmé (FCFA)" style="width:100%;padding:11px 13px;border-radius:10px;border:1.5px solid rgba(14,42,36,0.15);font-family:'Sora',sans-serif;font-size:14.5px;margin-bottom:8px;">
+        <button type="button" class="btn-ghost" style="width:100%;" onclick="grantCommission()">Créditer 10% au parrain</button>
+      </div>
       <div class="form-actions">
         <button type="button" class="btn-ghost" onclick="closeEditor()">Annuler</button>
         <button type="submit" class="btn-primary" id="editSaveBtn">Enregistrer</button>
@@ -683,6 +690,7 @@ function renderTable(){
 function openEditor(p){
   document.getElementById('editForm').reset();
   hideErr('errEdit');
+  document.getElementById('commissionBox').style.display = 'none';
   if(p){
     document.getElementById('editTitle').textContent = 'Modifier la fiche';
     document.getElementById('e-id').value = p.id;
@@ -696,6 +704,12 @@ function openEditor(p){
     document.getElementById('e-credits').value = p.credits ?? 0;
     document.getElementById('e-solde').value = p.solde ?? 0;
     document.getElementById('e-isadmin').value = p.is_admin ? 'true' : 'false';
+    if(p.referred_by){
+      document.getElementById('commissionSub').textContent = `Parrainé par le code ${p.referred_by} — ${escapeHtml(p.nom)} a effectué un achat ?`;
+      document.getElementById('commissionBox').style.display = '';
+      document.getElementById('commissionBox').dataset.referredBy = p.referred_by;
+      document.getElementById('commissionBox').dataset.sourceName = p.nom || '';
+    }
   }else{
     document.getElementById('editTitle').textContent = 'Nouvelle fiche';
     document.getElementById('e-id').value = '';
@@ -705,6 +719,31 @@ function openEditor(p){
   document.getElementById('editOverlay').classList.add('open');
 }
 function closeEditor(){ document.getElementById('editOverlay').classList.remove('open'); }
+
+async function grantCommission(){
+  const box = document.getElementById('commissionBox');
+  const referredBy = box.dataset.referredBy;
+  const sourceName = box.dataset.sourceName;
+  const amount = parseFloat(document.getElementById('commission-amount').value);
+  if(!amount || amount <= 0){ showToast('Indique un montant valide.'); return; }
+  const commission = Math.round(amount * 0.10);
+  try{
+    const { data: referrer, error: findErr } = await sb.from('profiles').select('user_id,solde').eq('referral_code', referredBy).maybeSingle();
+    if(findErr) throw findErr;
+    if(!referrer){ showToast('Parrain introuvable pour ce code.'); return; }
+    const { error: updErr } = await sb.from('profiles').update({ solde: (referrer.solde||0) + commission }).eq('user_id', referrer.user_id);
+    if(updErr) throw updErr;
+    await sb.from('referral_earnings').insert({
+      referrer_id: referrer.user_id,
+      source_name: sourceName,
+      amount: commission
+    });
+    showToast(`✓ ${commission.toLocaleString('fr-FR')} FCFA crédités au parrain`);
+    document.getElementById('commission-amount').value = '';
+  }catch(err){
+    showToast(err.message || "Erreur lors de l'attribution.");
+  }
+}
 
 document.getElementById('editForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
