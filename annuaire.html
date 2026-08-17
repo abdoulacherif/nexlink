@@ -160,12 +160,12 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
 <body>
 
 <header>
-  <a class="logo" href="index.html">Kon<span>tak</span></a>
+  <a class="logo" href="index">Kon<span>tak</span></a>
   <div class="header-actions">
-    <a class="btn-line" href="connexion.html" data-auth="guest">Connexion</a>
-    <a class="btn-fill" href="inscription.html" data-auth="guest">S'inscrire</a>
-    <a class="btn-line" href="admin.html" data-auth="admin">Admin</a>
-    <a class="btn-line" href="dashboard.html" data-auth="user">Tableau de bord</a>
+    <a class="btn-line" href="connexion" data-auth="guest">Connexion</a>
+    <a class="btn-fill" href="inscription" data-auth="guest">S'inscrire</a>
+    <a class="btn-line" href="admin" data-auth="admin">Admin</a>
+    <a class="btn-line" href="dashboard" data-auth="user">Tableau de bord</a>
     <a class="btn-fill" href="#" data-auth="user" data-action="logout">Déconnexion</a>
   </div>
 </header>
@@ -243,7 +243,7 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
     <div class="field">
       <label>Nombre de contacts</label>
       <input type="number" id="bulk-count" min="2" max="25" value="10">
-      <div class="hint">Minimum 2, maximum 25 par téléchargement.</div>
+      <div class="hint">Minimum 2, maximum 25 par téléchargement — 2 crédits par contact.</div>
     </div>
     <div class="err-msg" id="errBulk"></div>
     <button class="dl-option" onclick="generateBulkDownload('csv')">
@@ -326,7 +326,7 @@ async function initNav(){
 
 async function logout(){
   await sb.auth.signOut();
-  window.location.href = 'index.html';
+  window.location.href = 'index';
 }
 
 document.addEventListener('click', (e)=>{
@@ -349,7 +349,17 @@ const ICONS = {
   idcard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="12" r="2"/><line x1="14" y1="10" x2="18" y2="10"/><line x1="14" y1="14" x2="18" y2="14"/></svg>',
   message: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.4 8.4 0 0 1-4-1L3 20l1-4.5A8.4 8.4 0 0 1 3 11.5 8.5 8.5 0 0 1 11.5 3 8.5 8.5 0 0 1 21 11.5z"/></svg>',
   home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7"/><path d="M9 22V12h6v10"/></svg>',
-  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  support: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="m5.2 5.2 3.3 3.3M18.8 5.2l-3.3 3.3M5.2 18.8l3.3-3.3M18.8 18.8l-3.3-3.3"/></svg>',
+  faq: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 2-2.4 3.7"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  referral: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><path d="M2 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17.5" cy="8.5" r="2.3"/><path d="M15.2 14.6c2.6.2 4.8 2.2 4.8 5.4"/></svg>',
+  network: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M8.2 7.3 10.5 16M15.8 7.3 13.5 16M8.3 6h7.4"/></svg>',
+  gain: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>',
+  document: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 11 4.6-2.3 8-6 8-11V5l-8-3Z"/></svg>',
+  wallet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v3"/><path d="M3 7v11a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-5a2 2 0 0 0 0 4h5.5"/></svg>',
+  menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>',
+  chevronDown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'
 };
 function icon(key, cls){
   return `<span class="ic-svg ${cls||''}">${ICONS[key] || ICONS.grid}</span>`;
@@ -375,11 +385,26 @@ function renderFilters(){
 }
 function setFilter(c){ activeFilter = c; render(); }
 
+async function fetchAllRows(table, selectCols, orderCol, ascending, extraFilter){
+  let allRows = [];
+  let from = 0;
+  const pageSize = 1000;
+  while(true){
+    let query = sb.from(table).select(selectCols).range(from, from + pageSize - 1);
+    if(orderCol) query = query.order(orderCol, { ascending });
+    if(extraFilter) query = extraFilter(query);
+    const { data, error } = await query;
+    if(error) throw error;
+    allRows = allRows.concat(data || []);
+    if(!data || data.length < pageSize) break;
+    from += pageSize;
+  }
+  return allRows;
+}
+
 async function loadProfiles(){
   try{
-    const { data, error } = await sb.from('profiles').select('*').order('created_at', { ascending:false });
-    if(error) throw error;
-    profiles = data || [];
+    profiles = await fetchAllRows('profiles', '*', 'created_at', false);
   }catch(e){ profiles = []; console.error(e); }
   render();
 }
@@ -421,12 +446,12 @@ function render(){
   `).join('');
 }
 
-async function contactViaWhatsapp(waUrl){
+async function spendCredits(amount, purpose){
   const user = await getSessionUser();
   if(!user){
-    showToast('Connecte-toi pour contacter ce membre');
-    setTimeout(()=> window.location.href = 'connexion.html', 1300);
-    return;
+    showToast(`Connecte-toi pour ${purpose}`);
+    setTimeout(()=> window.location.href = 'connexion', 1300);
+    return false;
   }
   let credits = 0;
   try{
@@ -435,20 +460,26 @@ async function contactViaWhatsapp(waUrl){
     credits = data.credits ?? 0;
   }catch(e){
     showToast('Impossible de vérifier tes crédits');
-    return;
+    return false;
   }
-  if(credits < 2){
-    showToast('Crédits insuffisants — recharge ton compte');
-    setTimeout(()=> window.location.href = 'dashboard.html', 1300);
-    return;
+  if(credits < amount){
+    showToast(`Crédits insuffisants (${amount} nécessaires) — recharge ton compte`);
+    setTimeout(()=> window.location.href = 'dashboard', 1300);
+    return false;
   }
   try{
-    const { error } = await sb.rpc('decrement_credits', { amount: 2 });
+    const { error } = await sb.rpc('decrement_credits', { amount });
     if(error) throw error;
   }catch(e){
     showToast('Erreur : crédits insuffisants');
-    return;
+    return false;
   }
+  return true;
+}
+
+async function contactViaWhatsapp(waUrl){
+  const ok = await spendCredits(2, 'contacter ce membre');
+  if(!ok) return;
   window.open(waUrl, '_blank', 'noopener');
 }
 
@@ -500,14 +531,18 @@ function openDownloadMenu(c){
 }
 function closeDownloadMenu(){ document.getElementById('downloadOverlay').classList.remove('open'); }
 
-function downloadContactCSV(c){
+async function downloadContactCSV(c){
   if(!c) return;
+  const ok = await spendCredits(2, 'télécharger ce contact');
+  if(!ok) return;
   const csv = 'Nom,Business,WhatsApp,Ville,Pays,Secteur,Source\n' + contactToCSVRow(c);
   triggerFileDownload(`kontak-${(c.nom||'contact').replace(/\s+/g,'-').toLowerCase()}.csv`, csv, 'text/csv');
   closeDownloadMenu();
 }
-function downloadContactVCF(c){
+async function downloadContactVCF(c){
   if(!c) return;
+  const ok = await spendCredits(2, 'télécharger ce contact');
+  if(!ok) return;
   triggerFileDownload(`kontak-${(c.nom||'contact').replace(/\s+/g,'-').toLowerCase()}.vcf`, contactToVCard(c), 'text/vcard');
   closeDownloadMenu();
 }
@@ -536,12 +571,6 @@ function openBulkDownload(){
 function closeBulkDownload(){ document.getElementById('bulkOverlay').classList.remove('open'); }
 
 async function generateBulkDownload(format){
-  const user = await getSessionUser();
-  if(!user){
-    showToast('Connecte-toi pour télécharger des contacts en masse');
-    setTimeout(()=> window.location.href = 'connexion.html', 1300);
-    return;
-  }
   const sector = document.getElementById('bulk-sector').value;
   const count = parseInt(document.getElementById('bulk-count').value, 10);
   if(!count || count < 2 || count > 25){
@@ -555,6 +584,9 @@ async function generateBulkDownload(format){
     return;
   }
   const selection = pool.slice(0, count);
+  const cost = selection.length * 2;
+  const ok = await spendCredits(cost, 'télécharger ces contacts');
+  if(!ok) return;
   if(format==='csv'){
     const rows = ['Nom,Business,WhatsApp,Ville,Pays,Secteur,Source', ...selection.map(contactToCSVRow)];
     triggerFileDownload(`kontak-contacts-${selection.length}.csv`, rows.join('\n'), 'text/csv');
