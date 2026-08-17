@@ -179,7 +179,7 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
 <div class="search-wrap">
   <div class="search-box">
     <span class="mono">⌕</span>
-    <input id="searchInput" placeholder="Chercher un nom, une ville, un business…" oninput="render()">
+    <input id="searchInput" placeholder="Chercher un nom, une ville, un business…" oninput="debouncedRender()">
   </div>
 </div>
 
@@ -377,54 +377,71 @@ async function loadNavItems(){
 
 let profiles = [];
 let activeFilter = 'Tous';
+let totalCount = 0;
+let currentOffset = 0;
+const PAGE_SIZE = 30;
+let loadToken = 0; // pour ignorer les réponses obsolètes si une nouvelle recherche démarre entre-temps
 const CATS = ['Tous', ...SECTORS];
 
 function renderFilters(){
   const el = document.getElementById('filters');
   el.innerHTML = CATS.map(c=>`<button class="chip ${c===activeFilter?'active':''}" onclick="setFilter('${c}')">${c}</button>`).join('');
 }
-function setFilter(c){ activeFilter = c; render(); }
+function setFilter(c){ activeFilter = c; render(true); }
 
-async function fetchAllRows(table, selectCols, orderCol, ascending, extraFilter){
-  let allRows = [];
-  let from = 0;
-  const pageSize = 1000;
-  while(true){
-    let query = sb.from(table).select(selectCols).range(from, from + pageSize - 1);
-    if(orderCol) query = query.order(orderCol, { ascending });
-    if(extraFilter) query = extraFilter(query);
-    const { data, error } = await query;
-    if(error) throw error;
-    allRows = allRows.concat(data || []);
-    if(!data || data.length < pageSize) break;
-    from += pageSize;
-  }
-  return allRows;
+function debounce(fn, delay){
+  let t;
+  return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), delay); };
 }
+const debouncedRender = debounce(()=> render(true), 350);
 
-async function loadProfiles(){
-  try{
-    profiles = await fetchAllRows('profiles', '*', 'created_at', false);
-  }catch(e){ profiles = []; console.error(e); }
-  render();
-}
-
-function render(){
+async function render(reset){
   renderFilters();
-  const q = document.getElementById('searchInput').value.toLowerCase().trim();
-  let list = profiles.filter(c=>{
-    const matchCat = activeFilter==='Tous' || c.secteur===activeFilter;
-    const hay = [c.nom,c.ville,c.pays,c.business,c.secteur].join(' ').toLowerCase();
-    return matchCat && (!q || hay.includes(q));
-  });
-  document.getElementById('statsBar').textContent = `${profiles.length} membre${profiles.length!==1?'s':''} au total · ${list.length} affiché${list.length!==1?'s':''}`;
+  const myToken = ++loadToken;
+  if(reset){
+    currentOffset = 0;
+    profiles = [];
+    document.getElementById('grid').innerHTML = `<div class="empty"><h3>Chargement…</h3></div>`;
+  }
+
+  const q = document.getElementById('searchInput').value.trim();
+
+  try{
+    let query = sb.from('profiles').select('*', { count: 'exact' });
+    if(activeFilter !== 'Tous'){
+      query = query.eq('secteur', activeFilter);
+    }
+    if(q){
+      const safe = q.replace(/[%,]/g, '');
+      query = query.or(`nom.ilike.%${safe}%,ville.ilike.%${safe}%,pays.ilike.%${safe}%,business.ilike.%${safe}%,secteur.ilike.%${safe}%`);
+    }
+    query = query.order('created_at', { ascending:false }).range(currentOffset, currentOffset + PAGE_SIZE - 1);
+
+    const { data, error, count } = await query;
+    if(error) throw error;
+    if(myToken !== loadToken) return; // une recherche plus récente a démarré, on ignore ce résultat
+
+    if(reset){ profiles = data || []; } else { profiles = profiles.concat(data || []); }
+    totalCount = count ?? profiles.length;
+    currentOffset = profiles.length;
+    renderGrid();
+  }catch(e){
+    console.error(e);
+    if(myToken === loadToken){
+      document.getElementById('grid').innerHTML = `<div class="empty"><h3>Erreur de chargement</h3><p>Réessaie dans un instant.</p></div>`;
+    }
+  }
+}
+
+function renderGrid(){
+  document.getElementById('statsBar').textContent = `${totalCount} membre${totalCount!==1?'s':''} au total · ${profiles.length} affiché${profiles.length!==1?'s':''}`;
 
   const grid = document.getElementById('grid');
-  if(list.length===0){
-    grid.innerHTML = `<div class="empty"><h3>Aucun membre pour l'instant</h3><p>Sois le premier à créer ton compte.</p></div>`;
+  if(profiles.length===0){
+    grid.innerHTML = `<div class="empty"><h3>Aucun membre trouvé</h3><p>Essaie une autre recherche.</p></div>`;
     return;
   }
-  grid.innerHTML = list.map(c=>`
+  const cardsHtml = profiles.map(c=>`
     <div class="card">
       <div class="card-top">
         <div class="avatar-ring"><div class="avatar">${initials(c.business || c.nom)}</div></div>
@@ -444,6 +461,11 @@ function render(){
       </div>
     </div>
   `).join('');
+
+  const hasMore = profiles.length < totalCount;
+  grid.innerHTML = cardsHtml + (hasMore
+    ? `<button class="btn-fill" id="loadMoreBtn" style="grid-column:1/-1;justify-self:center;margin:10px 0 20px;" onclick="render(false)">Charger plus (${totalCount - profiles.length} restants)</button>`
+    : '');
 }
 
 async function spendCredits(amount, purpose){
@@ -578,12 +600,23 @@ async function generateBulkDownload(format){
     return;
   }
   hideErr('errBulk');
-  const pool = sector ? profiles.filter(c=>c.secteur===sector) : profiles;
-  if(pool.length < 2){
+
+  let selection = [];
+  try{
+    let query = sb.from('profiles').select('*').order('created_at', { ascending:false }).limit(count);
+    if(sector) query = query.eq('secteur', sector);
+    const { data, error } = await query;
+    if(error) throw error;
+    selection = data || [];
+  }catch(e){
+    showErr('errBulk', "Erreur lors de la récupération des contacts.");
+    return;
+  }
+
+  if(selection.length < 2){
     showErr('errBulk','Pas assez de contacts disponibles pour ce secteur.');
     return;
   }
-  const selection = pool.slice(0, count);
   const cost = selection.length * 2;
   const ok = await spendCredits(cost, 'télécharger ces contacts');
   if(!ok) return;
@@ -603,7 +636,7 @@ async function generateBulkDownload(format){
 });
 
 initNav();
-loadProfiles();
+render(true);
 </script>
 </body>
 </html>
