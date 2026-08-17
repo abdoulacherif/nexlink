@@ -254,6 +254,13 @@ body{padding-bottom:74px;}
     <button class="close-x" onclick="closeOrder()">✕</button>
     <h2>Commander cette offre</h2>
     <div class="sub" id="orderOfferName">—</div>
+    <div id="soldePayBox" style="display:none;background:var(--bg-soft);border-radius:12px;padding:14px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:13.5px;">
+        <span>Ton solde disponible : <strong id="soldeAmount">0</strong> FCFA</span>
+      </div>
+      <button type="button" class="btn-primary" id="paySoldeBtn" style="width:100%;margin-top:10px;" onclick="payWithSolde()">Payer avec mon solde</button>
+      <div class="hint" style="text-align:center;margin-top:6px;">Ou remplis le formulaire ci-dessous pour une autre méthode</div>
+    </div>
     <form id="orderForm">
       <div class="field"><label>Nom</label><input type="text" id="o-name" required></div>
       <div class="field"><label>Email</label><input type="email" id="o-email" required></div>
@@ -436,9 +443,43 @@ function openOrder(o){
     document.getElementById('o-name').value = CURRENT_PROFILE.nom || '';
     document.getElementById('o-phone').value = CURRENT_PROFILE.whatsapp || '';
   }
+  const soldeBox = document.getElementById('soldePayBox');
+  const solde = CURRENT_PROFILE ? (CURRENT_PROFILE.solde ?? 0) : 0;
+  if(CURRENT_USER && solde >= (o.price||0) && (o.price||0) > 0){
+    document.getElementById('soldeAmount').textContent = solde.toLocaleString('fr-FR');
+    soldeBox.style.display = '';
+  }else{
+    soldeBox.style.display = 'none';
+  }
   document.getElementById('orderOverlay').classList.add('open');
 }
 function closeOrder(){ document.getElementById('orderOverlay').classList.remove('open'); }
+
+async function payWithSolde(){
+  const btn = document.getElementById('paySoldeBtn');
+  btn.disabled = true; btn.textContent = 'Paiement…';
+  try{
+    const { error } = await sb.rpc('pay_with_solde', { amount: activeOffer.price });
+    if(error) throw error;
+    await sb.from('server_orders').insert({
+      user_id: CURRENT_USER.id,
+      offer_id: activeOffer.id,
+      offer_name: activeOffer.name,
+      name: CURRENT_PROFILE.nom || '',
+      email: CURRENT_USER.email || '',
+      phone: CURRENT_PROFILE.whatsapp || null,
+      message: 'Payé avec le solde disponible',
+      status: 'payé'
+    });
+    CURRENT_PROFILE.solde = (CURRENT_PROFILE.solde||0) - activeOffer.price;
+    closeOrder();
+    showToast('✓ Payé avec ton solde — commande envoyée');
+  }catch(err){
+    showToast('Erreur : ' + (err.message || 'solde insuffisant'));
+  }finally{
+    btn.disabled = false; btn.textContent = 'Payer avec mon solde';
+  }
+}
 
 document.getElementById('orderForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
