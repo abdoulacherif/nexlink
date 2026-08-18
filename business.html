@@ -228,20 +228,60 @@ body{padding-bottom:74px;}
 .offer-specs li:first-child{border-top:none;}
 .offer-specs .ic-svg{width:14px;height:14px;color:var(--green-dark);flex-shrink:0;}
 .empty-offers{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted);}
+
+/* ---- Shell nav (sidebar/burger/bottom nav) ---- */
+
 </style>
 </head>
 <body>
 
-<header>
-  <a class="logo" href="index">Kon<span>tak</span></a>
-  <div class="header-actions">
-    <a class="btn-line" href="dashboard">Tableau de bord</a>
-    <a class="btn-line" href="annuaire">Annuaire</a>
-    <a class="btn-fill" href="#" data-action="logout">Déconnexion</a>
-  </div>
-</header>
+<div class="dash-topbar">
+  <button class="burger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+  <a class="logo" href="index" style="font-size:19px;">Kon<span>tak</span></a>
+  <div style="width:38px;"></div>
+</div>
 
-<section class="hero" style="padding-bottom:20px;">
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<nav class="fixed-navbar" id="fixedNavbar"></nav>
+
+<div class="dash-shell">
+  <aside class="sidebar" id="sidebar">
+    <a class="logo" href="index">Kon<span>tak</span></a>
+
+    <div class="side-section">
+      <div class="side-label">Mon compte</div>
+      <a class="side-link" href="dashboard"><span class="ic-svg" id="icOverview"></span> Vue d'ensemble</a>
+    </div>
+
+    <div class="side-section">
+      <div class="side-label">Naviguer</div>
+      <a class="side-link" href="annuaire"><span class="ic-svg" id="icAnnuaire"></span> Annuaire</a>
+    </div>
+
+    <div class="side-section">
+      <button class="side-link more-toggle" id="moreMenuToggle" onclick="toggleMoreMenu()">
+        <span class="ic-svg" id="icMore"></span> Plus
+        <span class="ic-svg chevron" id="icChevron" style="margin-left:auto;"></span>
+      </button>
+      <div class="more-menu-panel" id="moreMenuPanel">
+        <a class="side-link sub-link" href="support"><span class="ic-svg" id="icSupport"></span> Support</a>
+        <a class="side-link sub-link" href="faq"><span class="ic-svg" id="icFaq"></span> FAQ</a>
+        <a class="side-link sub-link" href="parrainage"><span class="ic-svg" id="icReferral"></span> Parrainage</a>
+        <a class="side-link sub-link" href="reseau"><span class="ic-svg" id="icNetwork"></span> Réseau</a>
+        <a class="side-link sub-link" href="gain"><span class="ic-svg" id="icGain"></span> Gains</a>
+        <a class="side-link sub-link" href="conditions"><span class="ic-svg" id="icConditions"></span> Conditions</a>
+        <a class="side-link sub-link" href="politique"><span class="ic-svg" id="icPolitique"></span> Politique</a>
+      </div>
+    </div>
+
+    <div class="side-section">
+      <div class="side-label">Session</div>
+      <a class="side-link" href="#" data-action="logout"><span class="ic-svg" id="icLogout"></span> Déconnexion</a>
+    </div>
+  </aside>
+
+  <main class="dash-main"><section class="hero" style="padding-bottom:20px;">
   <div class="eyebrow">Développe ton business</div>
   <h1 style="font-size:28px;">Services pour ton activité</h1>
   <p style="color:var(--muted);font-size:14.5px;margin-top:10px;">Bots WhatsApp, sites vitrines, design… des services concrets pour faire grandir ton business, proposés par Kontak.</p>
@@ -273,6 +313,9 @@ body{padding-bottom:74px;}
       </div>
     </form>
   </div>
+</div>
+
+  </main>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -391,6 +434,44 @@ async function loadNavItems(){
     return data || [];
   }catch(e){ console.error(e); return []; }
 }
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+document.getElementById('icOverview').innerHTML = ICONS.home;
+document.getElementById('icAnnuaire').innerHTML = ICONS.grid;
+document.getElementById('icSupport').innerHTML = ICONS.support;
+document.getElementById('icFaq').innerHTML = ICONS.faq;
+document.getElementById('icReferral').innerHTML = ICONS.referral;
+document.getElementById('icNetwork').innerHTML = ICONS.network;
+document.getElementById('icGain').innerHTML = ICONS.gain;
+document.getElementById('icConditions').innerHTML = ICONS.document;
+document.getElementById('icPolitique').innerHTML = ICONS.shield;
+document.getElementById('icMore').innerHTML = ICONS.menu;
+document.getElementById('icChevron').innerHTML = ICONS.chevronDown;
+
+function toggleMoreMenu(){
+  document.getElementById('moreMenuPanel').classList.toggle('open');
+  document.getElementById('moreMenuToggle').classList.toggle('open');
+}
+document.getElementById('icLogout').innerHTML = ICONS.logout;
+
+async function renderFixedNavbar(){
+  const items = await loadNavItems();
+  const bar = document.getElementById('fixedNavbar');
+  if(items.length===0){ bar.style.display='none'; return; }
+  bar.innerHTML = items.map(it=>`
+    <a class="fnav-btn" href="${escapeHtml(it.url)}">${icon(it.icon)}<span>${escapeHtml(it.label)}</span></a>
+  `).join('');
+}
+renderFixedNavbar();
+
 
 
 
