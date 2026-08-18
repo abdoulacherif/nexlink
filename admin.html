@@ -135,21 +135,130 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
 .fnav-btn:hover{border-color:var(--green);}
 .fnav-btn .ic-svg{width:17px;height:17px;color:var(--green-dark);}
 
+
+/* ---- Shell nav (sidebar/burger/bottom nav) ---- */
+.fixed-navbar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center;gap:2px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(14,42,27,0.06);}
+.fnav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px 10px;border-radius:12px;background:transparent;color:var(--ink);text-decoration:none;font-size:11px;font-weight:600;white-space:nowrap;flex:1;text-align:center;}
+.fnav-btn:hover{background:var(--bg-soft);}
+.fnav-btn .ic-svg{width:20px;height:20px;color:var(--green-dark);}
+body{padding-bottom:74px;}
+/* ---- Dashboard shell ---- */
+.dash-topbar{display:none;padding:14px 18px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:30;}
+.burger{width:38px;height:38px;border-radius:10px;border:1.5px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-direction:column;gap:4px;}
+.burger span{display:block;width:16px;height:2px;background:var(--ink);border-radius:2px;}
+.dash-shell{display:flex;min-height:100vh;}
+.sidebar{width:250px;flex-shrink:0;background:var(--bg-soft);border-right:1px solid var(--line);padding:24px 16px;position:sticky;top:0;height:100vh;overflow-y:auto;padding-bottom:90px;}
+.sidebar .logo{display:block;margin-bottom:30px;}
+.side-section{margin-bottom:22px;}
+.side-label{font-family:'Space Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:0 12px;margin-bottom:8px;}
+.side-link{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;cursor:pointer;margin-bottom:2px;}
+.side-link:hover{background:#fff;}
+.side-link.active{background:var(--green);color:#fff;}
+.side-link .ic{font-size:16px;width:20px;text-align:center;}
+.more-toggle{width:100%;border:none;background:none;cursor:pointer;}
+.more-toggle .chevron{width:14px;height:14px;transition:transform .2s;}
+.more-toggle .chevron svg{width:100%;height:100%;}
+.more-toggle.open .chevron{transform:rotate(180deg);}
+.more-menu-panel{display:none;padding-left:6px;margin-top:2px;border-left:2px solid var(--line);}
+.more-menu-panel.open{display:block;}
+.sub-link{font-size:13px;padding:9px 12px;}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(14,42,27,0.5);z-index:35;}
+.sidebar-overlay.open{display:block;}
+.dash-main{flex:1;min-width:0;}
+.dash-header{padding:36px 28px 8px;}
+.dash-header .eyebrow{font-family:'Space Mono',monospace;font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:8px;}
+.dash-header h1{font-size:28px;}
+.profile-summary{margin:20px 28px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;box-shadow:0 2px 12px rgba(14,42,27,0.04);}
+.profile-summary .avatar-ring{width:64px;height:64px;}
+.profile-summary .avatar{font-size:22px;}
+.profile-summary .name{font-family:'Fraunces',serif;font-size:20px;}
+.profile-summary .meta{font-size:13px;color:var(--muted);margin-top:4px;}
+.status-pill{margin-left:auto;background:var(--bg-soft);color:var(--green-dark);font-size:12px;font-weight:700;padding:6px 14px;border-radius:100px;display:flex;align-items:center;gap:6px;}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 28px 20px;}
+.stat-box{background:var(--bg-soft);border-radius:14px;padding:16px;}
+.stat-box .num{font-family:'Fraunces',serif;font-size:20px;}
+.stat-box .lbl{font-size:11.5px;color:var(--muted);margin-top:2px;}
+.dash-body{padding:0 28px 60px;max-width:640px;}
+.credit-card-visual{background:linear-gradient(135deg,#0E2A1B 0%,#128C4A 55%,#25D366 100%);color:#fff;border-radius:20px;padding:24px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 10px 30px rgba(18,140,74,0.25);}
+.credit-card-visual::after{content:"";position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,0.08);}
+.cc-top{display:flex;justify-content:space-between;align-items:center;}
+.cc-brand{font-family:'Fraunces',serif;font-style:italic;font-size:18px;}
+.cc-brand em{color:#E8A33D;font-style:normal;}
+.cc-chip{width:26px;height:26px;background:rgba(255,255,255,0.18);border-radius:6px;padding:5px;}
+.cc-balance{margin-top:26px;font-family:'Fraunces',serif;font-size:38px;display:flex;align-items:baseline;gap:8px;}
+.cc-balance small{font-family:'Space Mono',monospace;font-size:13px;opacity:0.8;font-weight:400;}
+.cc-solde-row{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.2);}
+.cc-solde-lbl{font-size:11.5px;text-transform:uppercase;letter-spacing:0.5px;opacity:0.8;font-family:'Space Mono',monospace;}
+.cc-solde-val{font-family:'Fraunces',serif;font-size:19px;color:#E8A33D;}
+.cc-bottom{display:flex;justify-content:space-between;margin-top:22px;font-family:'Space Mono',monospace;font-size:11.5px;opacity:0.9;text-transform:uppercase;letter-spacing:0.5px;}
+.balance-panel{position:relative;}
+.balance-line{display:flex;align-items:baseline;gap:8px;margin:16px 0 4px;}
+.balance-num{font-family:'Fraunces',serif;font-size:30px;color:var(--green-dark);}
+.balance-lbl{font-size:13px;color:var(--muted);}
+.credit-packs{display:grid;grid-template-columns:1fr;gap:10px;margin-top:16px;}
+.credit-pack{display:block;background:var(--bg-soft);border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;text-decoration:none;color:var(--ink);}
+.credit-pack:hover{border-color:var(--green);}
+.pack-amount{font-family:'Fraunces',serif;font-size:18px;}
+.pack-price{font-size:12.5px;color:var(--muted);margin-top:2px;}
+@media(max-width:880px){
+  .dash-topbar{display:flex;}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:40;transform:translateX(-100%);transition:transform .25s ease;box-shadow:0 0 0 rgba(0,0,0,0);}
+  .sidebar.open{transform:translateX(0);box-shadow:8px 0 24px rgba(0,0,0,0.15);}
+  .dash-header,.profile-summary,.stat-row,.dash-body{padding-left:20px;padding-right:20px;}
+  .stat-row{grid-template-columns:1fr 1fr;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<header>
-  <a class="logo" href="index">Kon<span>tak</span></a>
-  <div class="header-actions">
-    <a class="btn-line" href="dashboard">Mon espace</a>
-    <a class="btn-line" href="annuaire">Annuaire</a>
-    <a class="btn-fill" href="#" data-action="logout">Déconnexion</a>
-  </div>
-</header>
+<div class="dash-topbar">
+  <button class="burger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+  <a class="logo" href="index" style="font-size:19px;">Kon<span>tak</span></a>
+  <div style="width:38px;"></div>
+</div>
 
-<div id="gateMsg" class="gate" style="display:none;">
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<nav class="fixed-navbar" id="fixedNavbar"></nav>
+
+<div class="dash-shell">
+  <aside class="sidebar" id="sidebar">
+    <a class="logo" href="index">Kon<span>tak</span></a>
+
+    <div class="side-section">
+      <div class="side-label">Mon compte</div>
+      <a class="side-link" href="dashboard"><span class="ic-svg" id="icOverview"></span> Vue d'ensemble</a>
+    </div>
+
+    <div class="side-section">
+      <div class="side-label">Naviguer</div>
+      <a class="side-link" href="annuaire"><span class="ic-svg" id="icAnnuaire"></span> Annuaire</a>
+    </div>
+
+    <div class="side-section">
+      <button class="side-link more-toggle" id="moreMenuToggle" onclick="toggleMoreMenu()">
+        <span class="ic-svg" id="icMore"></span> Plus
+        <span class="ic-svg chevron" id="icChevron" style="margin-left:auto;"></span>
+      </button>
+      <div class="more-menu-panel" id="moreMenuPanel">
+        <a class="side-link sub-link" href="support"><span class="ic-svg" id="icSupport"></span> Support</a>
+        <a class="side-link sub-link" href="faq"><span class="ic-svg" id="icFaq"></span> FAQ</a>
+        <a class="side-link sub-link" href="parrainage"><span class="ic-svg" id="icReferral"></span> Parrainage</a>
+        <a class="side-link sub-link" href="reseau"><span class="ic-svg" id="icNetwork"></span> Réseau</a>
+        <a class="side-link sub-link" href="gain"><span class="ic-svg" id="icGain"></span> Gains</a>
+        <a class="side-link sub-link" href="conditions"><span class="ic-svg" id="icConditions"></span> Conditions</a>
+        <a class="side-link sub-link" href="politique"><span class="ic-svg" id="icPolitique"></span> Politique</a>
+      </div>
+    </div>
+
+    <div class="side-section">
+      <div class="side-label">Session</div>
+      <a class="side-link" href="#" data-action="logout"><span class="ic-svg" id="icLogout"></span> Déconnexion</a>
+    </div>
+  </aside>
+
+  <main class="dash-main"><div id="gateMsg" class="gate" style="display:none;">
   <h2>Accès refusé</h2>
   <p>Cette page est réservée à l'administrateur.</p>
   <br>
@@ -500,6 +609,9 @@ table.admin-table tr:hover td{background:var(--bg-soft);}
   </div>
 </div>
 
+  </main>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -616,6 +728,44 @@ async function loadNavItems(){
     return data || [];
   }catch(e){ console.error(e); return []; }
 }
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+document.getElementById('icOverview').innerHTML = ICONS.home;
+document.getElementById('icAnnuaire').innerHTML = ICONS.grid;
+document.getElementById('icSupport').innerHTML = ICONS.support;
+document.getElementById('icFaq').innerHTML = ICONS.faq;
+document.getElementById('icReferral').innerHTML = ICONS.referral;
+document.getElementById('icNetwork').innerHTML = ICONS.network;
+document.getElementById('icGain').innerHTML = ICONS.gain;
+document.getElementById('icConditions').innerHTML = ICONS.document;
+document.getElementById('icPolitique').innerHTML = ICONS.shield;
+document.getElementById('icMore').innerHTML = ICONS.menu;
+document.getElementById('icChevron').innerHTML = ICONS.chevronDown;
+
+function toggleMoreMenu(){
+  document.getElementById('moreMenuPanel').classList.toggle('open');
+  document.getElementById('moreMenuToggle').classList.toggle('open');
+}
+document.getElementById('icLogout').innerHTML = ICONS.logout;
+
+async function renderFixedNavbar(){
+  const items = await loadNavItems();
+  const bar = document.getElementById('fixedNavbar');
+  if(items.length===0){ bar.style.display='none'; return; }
+  bar.innerHTML = items.map(it=>`
+    <a class="fnav-btn" href="${escapeHtml(it.url)}">${icon(it.icon)}<span>${escapeHtml(it.label)}</span></a>
+  `).join('');
+}
+renderFixedNavbar();
+
 
 </script>
 <script>
