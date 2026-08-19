@@ -242,6 +242,7 @@ body{padding-bottom:74px;}
         <span class="ic-svg chevron" id="icChevron" style="margin-left:auto;"></span>
       </button>
       <div class="more-menu-panel" id="moreMenuPanel">
+        <a class="side-link sub-link" href="abonnement"><span class="ic-svg" id="icWallet"></span> Crédits & Abonnement</a>
         <a class="side-link sub-link" href="support"><span class="ic-svg" id="icSupport"></span> Support</a>
         <a class="side-link sub-link" href="faq"><span class="ic-svg" id="icFaq"></span> FAQ</a>
         <a class="side-link sub-link" href="parrainage"><span class="ic-svg" id="icReferral"></span> Parrainage</a>
@@ -329,6 +330,24 @@ body{padding-bottom:74px;}
         </tr>
       </thead>
       <tbody id="withdrawRows"></tbody>
+    </table>
+  </div>
+
+  <div class="admin-toolbar" style="margin-top:10px;">
+    <div>
+      <div class="section-title" style="font-size:19px;">Demandes d'abonnement</div>
+      <div class="stats-bar" id="subReqStats" style="padding:0;">Abonnements à confirmer</div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Date</th><th>Forfait</th><th>Prix</th><th>Statut</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="subReqRows"></tbody>
     </table>
   </div>
 
@@ -550,7 +569,7 @@ body{padding-bottom:74px;}
       <div class="field"><label>Ville</label><input type="text" id="e-city" required></div>
       <div class="field"><label>Nom du business</label><input type="text" id="e-business" required></div>
       <div class="field"><label>Secteur d'activité</label><select id="e-sector" required></select></div>
-      <div class="field"><label>Crédits</label><input type="number" id="e-credits" min="0" value="50"></div>
+      <div class="field"><label>Crédits</label><input type="number" id="e-credits" min="0" value="150"></div>
       <div class="field"><label>Solde disponible (FCFA)</label><input type="number" id="e-solde" min="0" value="0"></div>
       <div class="field">
         <label>Administrateur</label>
@@ -740,6 +759,7 @@ function closeSidebar(){
 
 document.getElementById('icOverview').innerHTML = ICONS.home;
 document.getElementById('icAnnuaire').innerHTML = ICONS.grid;
+document.getElementById('icWallet').innerHTML = ICONS.wallet;
 document.getElementById('icSupport').innerHTML = ICONS.support;
 document.getElementById('icFaq').innerHTML = ICONS.faq;
 document.getElementById('icReferral').innerHTML = ICONS.referral;
@@ -863,7 +883,7 @@ function openEditor(p){
   }else{
     document.getElementById('editTitle').textContent = 'Nouvelle fiche';
     document.getElementById('e-id').value = '';
-    document.getElementById('e-credits').value = 50;
+    document.getElementById('e-credits').value = 150;
     document.getElementById('e-solde').value = 0;
   }
   document.getElementById('editOverlay').classList.add('open');
@@ -1541,6 +1561,58 @@ async function deleteBizOrder(id){
   }
 }
 
+// ---- Demandes d'abonnement ----
+async function loadSubRequests(){
+  const tbody = document.getElementById('subReqRows');
+  try{
+    const { data, error } = await sb.from('subscription_requests').select('*').order('created_at', { ascending:false });
+    if(error) throw error;
+    const list = data || [];
+    document.getElementById('subReqStats').textContent = `${list.length} demande(s) au total`;
+    if(list.length===0){
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:rgba(14,42,36,0.5);">Aucune demande pour l'instant.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = list.map(r=>`
+      <tr>
+        <td class="mono">${new Date(r.created_at).toLocaleDateString('fr-FR')}</td>
+        <td>${escapeHtml(r.plan_name)}</td>
+        <td class="mono">${(r.price||0).toLocaleString('fr-FR')} FCFA</td>
+        <td>${r.status === 'payé' ? '<span class="badge-admin">Payé</span>' : escapeHtml(r.status)}</td>
+        <td>
+          <div class="row-actions">
+            ${r.status !== 'payé' ? `<button class="icon-btn" onclick="markSubReqDone('${r.id}')">Marquer payé</button>` : ''}
+            <button class="icon-btn" onclick="deleteSubReq('${r.id}')">Supprimer</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }catch(e){
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:rgba(14,42,36,0.5);">Impossible de charger les demandes.</td></tr>`;
+  }
+}
+async function markSubReqDone(id){
+  try{
+    const { error } = await sb.from('subscription_requests').update({ status: 'payé' }).eq('id', id);
+    if(error) throw error;
+    showToast('Marqué comme payé ✓');
+    loadSubRequests();
+  }catch(err){
+    showToast(err.message || "Erreur.");
+  }
+}
+async function deleteSubReq(id){
+  if(!confirm('Supprimer cette demande ?')) return;
+  try{
+    const { error } = await sb.from('subscription_requests').delete().eq('id', id);
+    if(error) throw error;
+    showToast('Demande supprimée');
+    loadSubRequests();
+  }catch(err){
+    showToast(err.message || "Erreur lors de la suppression.");
+  }
+}
+
 (async ()=>{
   const { user, isAdmin } = await initNav();
   if(!user || !isAdmin){
@@ -1556,6 +1628,7 @@ async function deleteBizOrder(id){
   loadServerOrders();
   loadBizServices();
   loadBizOrders();
+  loadSubRequests();
 })();
 </script>
 </body>
