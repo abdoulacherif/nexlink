@@ -211,6 +211,13 @@ body{padding-bottom:74px;}
   .dash-header,.profile-summary,.stat-row,.dash-body{padding-left:20px;padding-right:20px;}
   .stat-row{grid-template-columns:1fr 1fr;}
 }
+.how-wrap{padding:8px 20px 30px;max-width:600px;margin:0 auto;}
+.how-step{display:flex;gap:16px;margin-bottom:20px;}
+.how-num{width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:600;flex-shrink:0;}
+.how-step h3{font-size:15px;margin-bottom:4px;}
+.how-step p{font-size:13.5px;color:var(--muted);line-height:1.5;margin:0;}
+.ref-cta{background:var(--bg-soft);border-radius:18px;padding:24px;max-width:600px;margin:0 20px 60px;text-align:center;}
+@media(min-width:640px){.ref-cta{margin-left:auto;margin-right:auto;}}
 </style>
 </head>
 <body>
@@ -245,6 +252,7 @@ body{padding-bottom:74px;}
         <span class="ic-svg chevron" id="icChevron" style="margin-left:auto;"></span>
       </button>
       <div class="more-menu-panel open" id="moreMenuPanel">
+        <a class="side-link sub-link" href="abonnement"><span class="ic-svg" id="icWallet"></span> Crédits & Abonnement</a>
         <a class="side-link sub-link" href="support"><span class="ic-svg" id="icSupport"></span> Support</a>
         <a class="side-link sub-link" href="faq"><span class="ic-svg" id="icFaq"></span> FAQ</a>
         <a class="side-link sub-link active" href="parrainage"><span class="ic-svg" id="icReferral"></span> Parrainage</a>
@@ -261,15 +269,36 @@ body{padding-bottom:74px;}
     </div>
   </aside>
 
-  <main class="dash-main"><div class="soon-box">
-  <div class="soon-icon" id="soonIcon"></div>
-  <div class="eyebrow" style="margin-bottom:10px;">Invite & gagne</div>
-  <h1 style="font-size:26px;margin-bottom:12px;">Parrainage</h1>
-  <p style="color:var(--muted);font-size:14.5px;">Cette page est en cours de construction. Tu pourras bientôt inviter des membres et suivre tes récompenses de parrainage.</p>
-  <br>
-  <a class="btn-fill" href="dashboard">Retour au tableau de bord</a>
-</div>
+  <main class="dash-main">
+    <div class="dash-header" style="padding-bottom:0;">
+      <div class="eyebrow">Invite & gagne</div>
+      <h1 style="font-size:28px;">Programme de parrainage</h1>
+    </div>
 
+    <div class="how-wrap">
+      <div class="how-step">
+        <div class="how-num">1</div>
+        <div><h3>Partage ton lien</h3><p>Depuis la page Réseau, copie ton lien unique et envoie-le à tes contacts.</p></div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">2</div>
+        <div><h3>Ton filleul s'inscrit</h3><p>Il crée son compte Kontak via ton lien — il apparaît automatiquement dans ta liste de filleuls.</p></div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">3</div>
+        <div><h3>Il fait un achat</h3><p>Crédits, abonnement... dès que son paiement est confirmé, une commission est calculée.</p></div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">4</div>
+        <div><h3>Tu es crédité</h3><p>10% du montant est ajouté à ton solde disponible, retirable à tout moment.</p></div>
+      </div>
+    </div>
+
+    <div class="ref-cta">
+      <h3 style="margin-bottom:4px;">Prêt à commencer ?</h3>
+      <p style="color:var(--muted);font-size:13.5px;margin-bottom:16px;">Récupère ton lien personnel et suis tes filleuls depuis la page Réseau.</p>
+      <a class="btn-primary" href="reseau" style="display:inline-block;text-decoration:none;text-align:center;">Voir mon lien de parrainage</a>
+    </div>
   </main>
 </div>
 
@@ -401,6 +430,7 @@ function closeSidebar(){
 
 document.getElementById('icOverview').innerHTML = ICONS.home;
 document.getElementById('icAnnuaire').innerHTML = ICONS.grid;
+document.getElementById('icWallet').innerHTML = ICONS.wallet;
 document.getElementById('icSupport').innerHTML = ICONS.support;
 document.getElementById('icFaq').innerHTML = ICONS.faq;
 document.getElementById('icReferral').innerHTML = ICONS.referral;
@@ -428,7 +458,6 @@ async function renderFixedNavbar(){
 renderFixedNavbar();
 
 
-document.getElementById('soonIcon').innerHTML = ICONS.referral;
 initNav();
 </script>
 </body>
