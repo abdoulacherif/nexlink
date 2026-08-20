@@ -211,6 +211,14 @@ body{padding-bottom:74px;}
   .dash-header,.profile-summary,.stat-row,.dash-body{padding-left:20px;padding-right:20px;}
   .stat-row{grid-template-columns:1fr 1fr;}
 }
+.faq-wrap{padding:8px 20px 60px;max-width:680px;margin:0 auto;}
+.faq-item{background:#fff;border:1.5px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden;}
+.faq-q{width:100%;text-align:left;background:none;border:none;padding:16px 18px;font-family:'Sora',sans-serif;font-weight:700;font-size:14.5px;color:var(--ink);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.faq-q .ic-svg{width:16px;height:16px;color:var(--green-dark);flex-shrink:0;transition:transform .2s;}
+.faq-item.open .faq-q .ic-svg{transform:rotate(180deg);}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .25s ease;}
+.faq-item.open .faq-a{max-height:400px;}
+.faq-a p{padding:0 18px 16px;font-size:13.5px;color:var(--muted);line-height:1.6;margin:0;}
 </style>
 </head>
 <body>
@@ -245,6 +253,7 @@ body{padding-bottom:74px;}
         <span class="ic-svg chevron" id="icChevron" style="margin-left:auto;"></span>
       </button>
       <div class="more-menu-panel open" id="moreMenuPanel">
+        <a class="side-link sub-link" href="abonnement"><span class="ic-svg" id="icWallet"></span> Crédits & Abonnement</a>
         <a class="side-link sub-link" href="support"><span class="ic-svg" id="icSupport"></span> Support</a>
         <a class="side-link sub-link active" href="faq"><span class="ic-svg" id="icFaq"></span> FAQ</a>
         <a class="side-link sub-link" href="parrainage"><span class="ic-svg" id="icReferral"></span> Parrainage</a>
@@ -261,15 +270,12 @@ body{padding-bottom:74px;}
     </div>
   </aside>
 
-  <main class="dash-main"><div class="soon-box">
-  <div class="soon-icon" id="soonIcon"></div>
-  <div class="eyebrow" style="margin-bottom:10px;">Questions fréquentes</div>
-  <h1 style="font-size:26px;margin-bottom:12px;">FAQ</h1>
-  <p style="color:var(--muted);font-size:14.5px;">Cette page est en cours de construction. Les réponses aux questions les plus courantes seront bientôt disponibles ici.</p>
-  <br>
-  <a class="btn-fill" href="dashboard">Retour au tableau de bord</a>
-</div>
-
+  <main class="dash-main">
+    <div class="dash-header" style="padding-bottom:0;">
+      <div class="eyebrow">Questions fréquentes</div>
+      <h1 style="font-size:28px;">FAQ</h1>
+    </div>
+    <div class="faq-wrap" id="faqWrap"></div>
   </main>
 </div>
 
@@ -401,6 +407,7 @@ function closeSidebar(){
 
 document.getElementById('icOverview').innerHTML = ICONS.home;
 document.getElementById('icAnnuaire').innerHTML = ICONS.grid;
+document.getElementById('icWallet').innerHTML = ICONS.wallet;
 document.getElementById('icSupport').innerHTML = ICONS.support;
 document.getElementById('icFaq').innerHTML = ICONS.faq;
 document.getElementById('icReferral').innerHTML = ICONS.referral;
@@ -428,8 +435,34 @@ async function renderFixedNavbar(){
 renderFixedNavbar();
 
 
-document.getElementById('soonIcon').innerHTML = ICONS.faq;
 initNav();
+
+const FAQ_ITEMS = [
+  { q: "C'est quoi Kontak ?", a: "Un annuaire où tu trouves des contacts business et où on te trouve aussi. Chaque membre a une fiche avec son WhatsApp, sa ville et son secteur d'activité." },
+  { q: "Comment fonctionnent les crédits ?", a: "Chaque nouveau compte reçoit 150 crédits offerts. Contacter un membre sur WhatsApp ou télécharger une fiche coûte 2 crédits. Quand tu n'en as plus, tu peux en racheter depuis la page Crédits & Abonnement." },
+  { q: "Est-ce que je peux contacter sans compte ?", a: "Non, il faut être connecté pour contacter un membre ou télécharger un contact — ça protège les membres d'un usage abusif de leurs coordonnées." },
+  { q: "C'est quoi le parrainage ?", a: "Tu as un lien unique à partager (page Réseau). Quand un ami s'inscrit avec, il devient ton filleul. Si son achat est confirmé, tu touches une commission créditée sur ton solde." },
+  { q: "Comment je récupère mon solde ?", a: "Depuis le tableau de bord, clique sur \"Retirer mon solde\" et indique ton moyen de paiement (Orange Money, Wave, virement...). La demande est traitée manuellement." },
+  { q: "À quoi sert l'abonnement ?", a: "Il donne accès à des avantages sans toucher à tes crédits (ex: envois d'emails en masse, mise en avant). Les forfaits sont visibles sur la page Crédits & Abonnement." },
+  { q: "Comment ajouter ma fiche à l'annuaire ?", a: "Elle est créée automatiquement à l'inscription. Tu peux la modifier à tout moment depuis la page Profil." },
+  { q: "J'ai un problème, comment vous contacter ?", a: "Utilise la page Support — formulaire de contact ou WhatsApp direct." },
+];
+
+function renderFaq(){
+  document.getElementById('faqWrap').innerHTML = FAQ_ITEMS.map((item, i)=>`
+    <div class="faq-item" id="faqItem${i}">
+      <button class="faq-q" onclick="toggleFaq(${i})">
+        <span>${item.q}</span>
+        <span class="ic-svg">${ICONS.chevronDown}</span>
+      </button>
+      <div class="faq-a"><p>${item.a}</p></div>
+    </div>
+  `).join('');
+}
+function toggleFaq(i){
+  document.getElementById(`faqItem${i}`).classList.toggle('open');
+}
+renderFaq();
 </script>
 </body>
 </html>
