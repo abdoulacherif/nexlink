@@ -211,6 +211,11 @@ body{padding-bottom:74px;}
   .dash-header,.profile-summary,.stat-row,.dash-body{padding-left:20px;padding-right:20px;}
   .stat-row{grid-template-columns:1fr 1fr;}
 }
+.legal-wrap{padding:8px 20px 60px;max-width:680px;margin:0 auto;}
+.legal-updated{font-family:'Space Mono',monospace;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:24px;}
+.legal-wrap h3{font-size:15px;margin:24px 0 8px;}
+.legal-wrap h3:first-of-type{margin-top:0;}
+.legal-wrap p{font-size:13.5px;color:var(--muted);line-height:1.7;margin:0;}
 </style>
 </head>
 <body>
@@ -245,6 +250,7 @@ body{padding-bottom:74px;}
         <span class="ic-svg chevron" id="icChevron" style="margin-left:auto;"></span>
       </button>
       <div class="more-menu-panel open" id="moreMenuPanel">
+        <a class="side-link sub-link" href="abonnement"><span class="ic-svg" id="icWallet"></span> Crédits & Abonnement</a>
         <a class="side-link sub-link" href="support"><span class="ic-svg" id="icSupport"></span> Support</a>
         <a class="side-link sub-link" href="faq"><span class="ic-svg" id="icFaq"></span> FAQ</a>
         <a class="side-link sub-link" href="parrainage"><span class="ic-svg" id="icReferral"></span> Parrainage</a>
@@ -261,15 +267,44 @@ body{padding-bottom:74px;}
     </div>
   </aside>
 
-  <main class="dash-main"><div class="soon-box">
-  <div class="soon-icon" id="soonIcon"></div>
-  <div class="eyebrow" style="margin-bottom:10px;">Conditions d'utilisation</div>
-  <h1 style="font-size:26px;margin-bottom:12px;">Conditions</h1>
-  <p style="color:var(--muted);font-size:14.5px;">Cette page est en cours de construction. Les conditions générales d'utilisation seront bientôt publiées ici.</p>
-  <br>
-  <a class="btn-fill" href="dashboard">Retour au tableau de bord</a>
-</div>
+  <main class="dash-main">
+    <div class="dash-header" style="padding-bottom:0;">
+      <div class="eyebrow">Conditions d'utilisation</div>
+      <h1 style="font-size:28px;">Conditions</h1>
+    </div>
+    <div class="legal-wrap">
+      <p class="legal-updated">Dernière mise à jour : août 2026</p>
 
+      <h3>1. Objet</h3>
+      <p>Kontak est un annuaire en ligne mettant en relation des membres via leurs coordonnées WhatsApp, organisés par secteur d'activité et localisation. En créant un compte, tu acceptes les présentes conditions.</p>
+
+      <h3>2. Compte et fiche</h3>
+      <p>Chaque inscription crée une fiche visible dans l'annuaire public (nom, business, ville, secteur, numéro WhatsApp). Tu es responsable de l'exactitude des informations fournies et peux les modifier à tout moment depuis ta page Profil.</p>
+
+      <h3>3. Crédits</h3>
+      <p>Chaque nouveau compte reçoit un nombre de crédits offerts à l'inscription. Contacter un membre ou télécharger une fiche consomme des crédits. Les crédits n'ont pas de valeur monétaire de remboursement et ne sont pas transférables entre comptes.</p>
+
+      <h3>4. Abonnements</h3>
+      <p>Les forfaits d'abonnement donnent accès à des avantages définis sur la page Crédits & Abonnement. Le paiement se confirme manuellement avec l'administrateur tant qu'aucun système de paiement automatisé n'est en place.</p>
+
+      <h3>5. Parrainage</h3>
+      <p>Le programme de parrainage permet de recevoir une commission sur les achats confirmés de tes filleuls, créditée sur ton solde. Toute tentative d'auto-parrainage ou de fraude sur le système de commission entraîne la suspension du compte concerné.</p>
+
+      <h3>6. Usage de l'annuaire</h3>
+      <p>Les coordonnées des membres sont réservées à un usage de mise en relation professionnelle. Tout usage à des fins de spam, de harcèlement ou de sollicitation massive non désirée est interdit et peut entraîner la suppression du compte.</p>
+
+      <h3>7. Contenu et modération</h3>
+      <p>L'administrateur se réserve le droit de modifier, suspendre ou supprimer toute fiche ne respectant pas ces conditions, sans préavis.</p>
+
+      <h3>8. Responsabilité</h3>
+      <p>Kontak met en relation des membres mais n'intervient pas dans les échanges commerciaux entre eux. Chaque membre reste responsable de ses transactions et communications avec les autres utilisateurs.</p>
+
+      <h3>9. Modification des conditions</h3>
+      <p>Ces conditions peuvent évoluer. La version en vigueur est celle publiée sur cette page.</p>
+
+      <h3>10. Contact</h3>
+      <p>Pour toute question, utilise la page Support.</p>
+    </div>
   </main>
 </div>
 
@@ -401,6 +436,7 @@ function closeSidebar(){
 
 document.getElementById('icOverview').innerHTML = ICONS.home;
 document.getElementById('icAnnuaire').innerHTML = ICONS.grid;
+document.getElementById('icWallet').innerHTML = ICONS.wallet;
 document.getElementById('icSupport').innerHTML = ICONS.support;
 document.getElementById('icFaq').innerHTML = ICONS.faq;
 document.getElementById('icReferral').innerHTML = ICONS.referral;
@@ -428,7 +464,6 @@ async function renderFixedNavbar(){
 renderFixedNavbar();
 
 
-document.getElementById('soonIcon').innerHTML = ICONS.document;
 initNav();
 </script>
 </body>
