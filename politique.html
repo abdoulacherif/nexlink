@@ -211,6 +211,11 @@ body{padding-bottom:74px;}
   .dash-header,.profile-summary,.stat-row,.dash-body{padding-left:20px;padding-right:20px;}
   .stat-row{grid-template-columns:1fr 1fr;}
 }
+.legal-wrap{padding:8px 20px 60px;max-width:680px;margin:0 auto;}
+.legal-updated{font-family:'Space Mono',monospace;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:24px;}
+.legal-wrap h3{font-size:15px;margin:24px 0 8px;}
+.legal-wrap h3:first-of-type{margin-top:0;}
+.legal-wrap p{font-size:13.5px;color:var(--muted);line-height:1.7;margin:0;}
 </style>
 </head>
 <body>
@@ -245,6 +250,7 @@ body{padding-bottom:74px;}
         <span class="ic-svg chevron" id="icChevron" style="margin-left:auto;"></span>
       </button>
       <div class="more-menu-panel open" id="moreMenuPanel">
+        <a class="side-link sub-link" href="abonnement"><span class="ic-svg" id="icWallet"></span> Crédits & Abonnement</a>
         <a class="side-link sub-link" href="support"><span class="ic-svg" id="icSupport"></span> Support</a>
         <a class="side-link sub-link" href="faq"><span class="ic-svg" id="icFaq"></span> FAQ</a>
         <a class="side-link sub-link" href="parrainage"><span class="ic-svg" id="icReferral"></span> Parrainage</a>
@@ -261,15 +267,41 @@ body{padding-bottom:74px;}
     </div>
   </aside>
 
-  <main class="dash-main"><div class="soon-box">
-  <div class="soon-icon" id="soonIcon"></div>
-  <div class="eyebrow" style="margin-bottom:10px;">Confidentialité</div>
-  <h1 style="font-size:26px;margin-bottom:12px;">Politique</h1>
-  <p style="color:var(--muted);font-size:14.5px;">Cette page est en cours de construction. La politique de confidentialité sera bientôt publiée ici.</p>
-  <br>
-  <a class="btn-fill" href="dashboard">Retour au tableau de bord</a>
-</div>
+  <main class="dash-main">
+    <div class="dash-header" style="padding-bottom:0;">
+      <div class="eyebrow">Confidentialité</div>
+      <h1 style="font-size:28px;">Politique de confidentialité</h1>
+    </div>
+    <div class="legal-wrap">
+      <p class="legal-updated">Dernière mise à jour : août 2026</p>
 
+      <h3>1. Données collectées</h3>
+      <p>Lors de l'inscription, nous collectons ton nom, ton numéro WhatsApp, ton email, ta ville, ton pays, ton secteur d'activité et le nom de ton business. Ces informations forment ta fiche visible dans l'annuaire public.</p>
+
+      <h3>2. Utilisation des données</h3>
+      <p>Tes coordonnées sont affichées publiquement dans l'annuaire pour permettre aux autres membres de te contacter. Ton email sert uniquement aux communications liées à ton compte (confirmation, notifications, support) et n'est pas affiché publiquement.</p>
+
+      <h3>3. Partage avec des tiers</h3>
+      <p>Tes données ne sont vendues à aucun tiers. Elles sont hébergées via Supabase (base de données) et les emails transitent par des services tiers (EmailJS, et notre fournisseur SMTP) uniquement pour l'envoi de communications liées au service.</p>
+
+      <h3>4. Téléchargement de contacts</h3>
+      <p>Les autres membres peuvent télécharger ta fiche (CSV ou vCard) contre des crédits. Ce mécanisme est réservé aux membres connectés et sert la mise en relation professionnelle prévue par le service.</p>
+
+      <h3>5. Conservation des données</h3>
+      <p>Tes données sont conservées tant que ton compte existe. Tu peux demander la suppression de ta fiche à tout moment via la page Support.</p>
+
+      <h3>6. Sécurité</h3>
+      <p>L'accès aux données sensibles (crédits, solde, statut administrateur) est protégé côté base de données contre toute modification non autorisée, y compris par le titulaire du compte lui-même.</p>
+
+      <h3>7. Tes droits</h3>
+      <p>Tu peux consulter, corriger ou supprimer tes informations à tout moment depuis ta page Profil, ou en contactant le Support pour une demande spécifique.</p>
+
+      <h3>8. Cookies et stockage local</h3>
+      <p>Le site utilise le stockage nécessaire au maintien de ta session de connexion. Aucun tracker publicitaire tiers n'est utilisé.</p>
+
+      <h3>9. Contact</h3>
+      <p>Pour toute question sur tes données personnelles, utilise la page Support.</p>
+    </div>
   </main>
 </div>
 
@@ -401,6 +433,7 @@ function closeSidebar(){
 
 document.getElementById('icOverview').innerHTML = ICONS.home;
 document.getElementById('icAnnuaire').innerHTML = ICONS.grid;
+document.getElementById('icWallet').innerHTML = ICONS.wallet;
 document.getElementById('icSupport').innerHTML = ICONS.support;
 document.getElementById('icFaq').innerHTML = ICONS.faq;
 document.getElementById('icReferral').innerHTML = ICONS.referral;
@@ -428,7 +461,6 @@ async function renderFixedNavbar(){
 renderFixedNavbar();
 
 
-document.getElementById('soonIcon').innerHTML = ICONS.shield;
 initNav();
 </script>
 </body>
