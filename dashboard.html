@@ -249,6 +249,7 @@ body{padding-bottom:74px;}
         <span class="ic-svg chevron" id="icChevron" style="margin-left:auto;"></span>
       </button>
       <div class="more-menu-panel" id="moreMenuPanel">
+        <a class="side-link sub-link" href="abonnement"><span class="ic-svg" id="icWallet"></span> Crédits & Abonnement</a>
         <a class="side-link sub-link" href="support"><span class="ic-svg" id="icSupport"></span> Support</a>
         <a class="side-link sub-link" href="faq"><span class="ic-svg" id="icFaq"></span> FAQ</a>
         <a class="side-link sub-link" href="parrainage"><span class="ic-svg" id="icReferral"></span> Parrainage</a>
@@ -343,7 +344,7 @@ body{padding-bottom:74px;}
             <span class="balance-lbl">crédits restants</span>
           </div>
           <div class="form-actions">
-            <button class="btn-primary" onclick="openBuyCredits()">Acheter des crédits</button>
+            <a class="btn-primary" href="abonnement" style="text-align:center;text-decoration:none;">Acheter des crédits</a>
           </div>
         </div>
 
@@ -560,6 +561,7 @@ function closeSidebar(){
 
 document.getElementById('icOverview').innerHTML = ICONS.home;
 document.getElementById('icAnnuaire').innerHTML = ICONS.grid;
+document.getElementById('icWallet').innerHTML = ICONS.wallet;
 document.getElementById('icSupport').innerHTML = ICONS.support;
 document.getElementById('icFaq').innerHTML = ICONS.faq;
 document.getElementById('icReferral').innerHTML = ICONS.referral;
