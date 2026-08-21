@@ -498,10 +498,18 @@ function renderPacks(){
   `).join('');
 }
 
-function buyPack(credits, price){
-  const subject = encodeURIComponent('Achat de crédits Kontak');
-  const body = encodeURIComponent(`Bonjour,\n\nJe souhaite acheter le pack de ${credits} crédits (${price} FCFA) pour mon compte (${(CURRENT_USER && CURRENT_USER.email) || ''}).\n\nMerci de me confirmer les modalités de paiement.`);
-  window.location.href = `mailto:abdoula13cherif@gmail.com?subject=${subject}&body=${body}`;
+async function buyPack(credits, price){
+  const user = await getSessionUser();
+  if(!user){
+    showToast('Connecte-toi pour acheter des crédits');
+    setTimeout(()=> window.location.href = 'connexion', 1300);
+    return;
+  }
+  await payWithLeekPay({
+    amount: price,
+    description: `${credits} crédits Kontak`,
+    metadata: { user_id: user.id, kind: 'credits', credits }
+  });
 }
 
 // ---- Forfaits d'abonnement ----
@@ -552,16 +560,38 @@ async function subscribeToPlan(plan){
       CURRENT_PROFILE.solde = (CURRENT_PROFILE.solde||0) - plan.price;
       showToast(`✓ Abonné à ${plan.name} avec ton solde`);
       return;
-    }catch(e){ /* si le paiement solde échoue, on bascule sur la demande manuelle */ }
+    }catch(e){ /* si le paiement solde échoue, on bascule sur le paiement LeekPay */ }
   }
+  await payWithLeekPay({
+    amount: plan.price,
+    description: `Abonnement Kontak — ${plan.name}`,
+    metadata: { user_id: user.id, kind: 'subscription', plan_id: plan.id, plan_name: plan.name }
+  });
+}
+
+// ---- Paiement LeekPay (automatique) ----
+async function payWithLeekPay({ amount, description, metadata }){
   try{
-    await sb.from('subscription_requests').insert({
-      user_id: user.id, plan_id: plan.id, plan_name: plan.name, price: plan.price, status: 'nouveau'
+    showToast('Redirection vers le paiement…');
+    const resp = await fetch('/api/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount,
+        description,
+        customer_email: (CURRENT_USER && CURRENT_USER.email) || undefined,
+        customer_name: (CURRENT_PROFILE && CURRENT_PROFILE.nom) || undefined,
+        metadata
+      })
     });
-  }catch(e){}
-  const subject = encodeURIComponent('Abonnement Kontak — ' + plan.name);
-  const body = encodeURIComponent(`Bonjour,\n\nJe souhaite m'abonner au forfait "${plan.name}" (${plan.price} FCFA / ${plan.period}) pour mon compte (${(CURRENT_USER && CURRENT_USER.email) || ''}).\n\nMerci de me confirmer les modalités de paiement.`);
-  window.location.href = `mailto:abdoula13cherif@gmail.com?subject=${subject}&body=${body}`;
+    const data = await resp.json();
+    if(!resp.ok || !data.payment_url){
+      throw new Error(data.error || 'Erreur lors de la création du paiement');
+    }
+    window.location.href = data.payment_url;
+  }catch(err){
+    showToast('Erreur : ' + (err.message || 'impossible de lancer le paiement'));
+  }
 }
 
 initNav();
