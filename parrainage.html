@@ -218,6 +218,16 @@ body{padding-bottom:74px;}
 .how-step p{font-size:13.5px;color:var(--muted);line-height:1.5;margin:0;}
 .ref-cta{background:var(--bg-soft);border-radius:18px;padding:24px;max-width:600px;margin:0 20px 60px;text-align:center;}
 @media(min-width:640px){.ref-cta{margin-left:auto;margin-right:auto;}}
+.page-tabs{display:flex;gap:4px;padding:4px 20px 0;border-bottom:1px solid var(--line);margin-bottom:22px;overflow-x:auto;}
+.page-tab-btn{background:none;border:none;padding:12px 16px;font-family:'Sora',sans-serif;font-weight:700;font-size:13.5px;color:var(--muted);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;}
+.page-tab-btn.active{color:var(--green-dark);border-bottom-color:var(--green);}
+.page-tab-content{display:none;}
+.page-tab-content.active{display:block;}
+.campaign-item{border-bottom:1px solid var(--line);padding:14px 0;}
+.campaign-item:last-child{border-bottom:none;}
+.campaign-subject{font-weight:700;font-size:14px;}
+.campaign-meta{font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;margin-top:2px;}
+.recipient-empty{padding:20px;text-align:center;color:var(--muted);font-size:13px;}
 </style>
 </head>
 <body>
@@ -256,8 +266,6 @@ body{padding-bottom:74px;}
         <a class="side-link sub-link" href="support"><span class="ic-svg" id="icSupport"></span> Support</a>
         <a class="side-link sub-link" href="faq"><span class="ic-svg" id="icFaq"></span> FAQ</a>
         <a class="side-link sub-link active" href="parrainage"><span class="ic-svg" id="icReferral"></span> Parrainage</a>
-        <a class="side-link sub-link" href="reseau"><span class="ic-svg" id="icNetwork"></span> Réseau</a>
-        <a class="side-link sub-link" href="gain"><span class="ic-svg" id="icGain"></span> Gains</a>
         <a class="side-link sub-link" href="conditions"><span class="ic-svg" id="icConditions"></span> Conditions</a>
         <a class="side-link sub-link" href="politique"><span class="ic-svg" id="icPolitique"></span> Politique</a>
       </div>
@@ -272,32 +280,80 @@ body{padding-bottom:74px;}
   <main class="dash-main">
     <div class="dash-header" style="padding-bottom:0;">
       <div class="eyebrow">Invite & gagne</div>
-      <h1 style="font-size:28px;">Programme de parrainage</h1>
+      <h1 style="font-size:28px;">Parrainage</h1>
     </div>
 
-    <div class="how-wrap">
-      <div class="how-step">
-        <div class="how-num">1</div>
-        <div><h3>Partage ton lien</h3><p>Depuis la page Réseau, copie ton lien unique et envoie-le à tes contacts.</p></div>
+    <div class="page-tabs">
+      <button class="page-tab-btn active" data-tab="tab-howto" onclick="switchParrTab('tab-howto')">Comment ça marche</button>
+      <button class="page-tab-btn" data-tab="tab-link" onclick="switchParrTab('tab-link')">Mon lien</button>
+      <button class="page-tab-btn" data-tab="tab-gains" onclick="switchParrTab('tab-gains')">Mes gains</button>
+    </div>
+
+    <div class="page-tab-content active" id="tab-howto">
+      <div class="how-wrap">
+        <div class="how-step">
+          <div class="how-num">1</div>
+          <div><h3>Partage ton lien</h3><p>Depuis l'onglet "Mon lien", copie ton lien unique et envoie-le à tes contacts.</p></div>
+        </div>
+        <div class="how-step">
+          <div class="how-num">2</div>
+          <div><h3>Ton filleul s'inscrit</h3><p>Il crée son compte Kontak via ton lien — il apparaît automatiquement dans ta liste de filleuls.</p></div>
+        </div>
+        <div class="how-step">
+          <div class="how-num">3</div>
+          <div><h3>Il fait un achat</h3><p>Crédits, abonnement... dès que son paiement est confirmé, une commission est calculée.</p></div>
+        </div>
+        <div class="how-step">
+          <div class="how-num">4</div>
+          <div><h3>Tu es crédité</h3><p>10% du montant est ajouté à ton solde disponible, retirable à tout moment.</p></div>
+        </div>
       </div>
-      <div class="how-step">
-        <div class="how-num">2</div>
-        <div><h3>Ton filleul s'inscrit</h3><p>Il crée son compte Kontak via ton lien — il apparaît automatiquement dans ta liste de filleuls.</p></div>
-      </div>
-      <div class="how-step">
-        <div class="how-num">3</div>
-        <div><h3>Il fait un achat</h3><p>Crédits, abonnement... dès que son paiement est confirmé, une commission est calculée.</p></div>
-      </div>
-      <div class="how-step">
-        <div class="how-num">4</div>
-        <div><h3>Tu es crédité</h3><p>10% du montant est ajouté à ton solde disponible, retirable à tout moment.</p></div>
+      <div class="ref-cta">
+        <h3 style="margin-bottom:4px;">Prêt à commencer ?</h3>
+        <p style="color:var(--muted);font-size:13.5px;margin-bottom:16px;">Récupère ton lien personnel dans l'onglet "Mon lien".</p>
+        <button class="btn-primary" onclick="switchParrTab('tab-link')">Voir mon lien de parrainage</button>
       </div>
     </div>
 
-    <div class="ref-cta">
-      <h3 style="margin-bottom:4px;">Prêt à commencer ?</h3>
-      <p style="color:var(--muted);font-size:13.5px;margin-bottom:16px;">Récupère ton lien personnel et suis tes filleuls depuis la page Réseau.</p>
-      <a class="btn-primary" href="reseau" style="display:inline-block;text-decoration:none;text-align:center;">Voir mon lien de parrainage</a>
+    <div class="page-tab-content" id="tab-link">
+      <div class="dash-body">
+        <div class="panel" style="margin-bottom:20px;">
+          <h3 style="margin-bottom:4px;">Ton lien de parrainage</h3>
+          <div class="sub">Partage-le — quand quelqu'un s'inscrit avec, il devient ton filleul.</div>
+          <div class="field">
+            <input type="text" id="refLink" readonly style="font-family:'Space Mono',monospace;font-size:12.5px;">
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-ghost" onclick="copyRefLink()">Copier le lien</button>
+            <button type="button" class="btn-primary" onclick="shareRefLink()">Partager</button>
+          </div>
+        </div>
+
+        <div class="stat-row" style="margin:0 0 20px;">
+          <div class="stat-box"><div class="num" id="statReferrals">—</div><div class="lbl">Filleuls</div></div>
+          <div class="stat-box"><div class="num" id="statCode">—</div><div class="lbl">Ton code</div></div>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin-bottom:4px;">Mes filleuls</h3>
+          <div class="sub">Les personnes inscrites grâce à toi.</div>
+          <div id="referralsList"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-tab-content" id="tab-gains">
+      <div class="stat-row" style="margin:0 20px 20px;">
+        <div class="stat-box"><div class="num" id="statTotalGains">—</div><div class="lbl">Total gagné (FCFA)</div></div>
+        <div class="stat-box"><div class="num" id="statSoldeGains">—</div><div class="lbl">Solde disponible</div></div>
+      </div>
+      <div class="dash-body">
+        <div class="panel">
+          <h3 style="margin-bottom:4px;">Historique des commissions</h3>
+          <div class="sub">Chaque fois qu'un de tes filleuls fait un achat confirmé, tu touches une commission.</div>
+          <div id="gainsList"></div>
+        </div>
+      </div>
     </div>
   </main>
 </div>
@@ -458,7 +514,100 @@ async function renderFixedNavbar(){
 renderFixedNavbar();
 
 
-initNav();
+function switchParrTab(id){
+  document.querySelectorAll('.page-tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===id));
+  document.querySelectorAll('.page-tab-content').forEach(c=> c.classList.toggle('active', c.id===id));
+}
+
+function fillReferralLink(p){
+  const link = `${window.location.origin}${window.location.pathname.replace('parrainage','inscription')}?ref=${p.referral_code || ''}`;
+  document.getElementById('refLink').value = link;
+  document.getElementById('statCode').textContent = p.referral_code || '—';
+  loadReferrals(p.referral_code);
+}
+
+function copyRefLink(){
+  const input = document.getElementById('refLink');
+  input.select();
+  navigator.clipboard.writeText(input.value).then(()=> showToast('Lien copié ✓')).catch(()=> showToast('Impossible de copier'));
+}
+
+function shareRefLink(){
+  const link = document.getElementById('refLink').value;
+  if(navigator.share){
+    navigator.share({ title: 'Rejoins Kontak', text: 'Rejoins le réseau Kontak avec mon lien :', url: link }).catch(()=>{});
+  }else{
+    copyRefLink();
+  }
+}
+
+async function loadReferrals(code){
+  const el = document.getElementById('referralsList');
+  if(!code){ el.innerHTML = '<div class="recipient-empty">Code indisponible.</div>'; return; }
+  try{
+    const { data, error, count } = await sb.from('profiles')
+      .select('nom,business,ville,created_at', { count:'exact' })
+      .eq('referred_by', code)
+      .order('created_at', { ascending:false });
+    if(error) throw error;
+    const list = data || [];
+    document.getElementById('statReferrals').textContent = count ?? list.length;
+    if(list.length===0){
+      el.innerHTML = '<div class="recipient-empty">Aucun filleul pour l\'instant — partage ton lien !</div>';
+      return;
+    }
+    el.innerHTML = list.map(r=>`
+      <div class="campaign-item">
+        <div class="campaign-subject">${escapeHtml(r.business || r.nom)}</div>
+        <div class="campaign-meta">${escapeHtml(r.ville||'')} · inscrit le ${new Date(r.created_at).toLocaleDateString('fr-FR')}</div>
+      </div>
+    `).join('');
+  }catch(e){
+    el.innerHTML = '<div class="recipient-empty">Erreur de chargement.</div>';
+  }
+}
+
+async function loadGains(userId){
+  const el = document.getElementById('gainsList');
+  try{
+    const { data, error } = await sb.from('referral_earnings')
+      .select('*')
+      .eq('referrer_id', userId)
+      .order('created_at', { ascending:false });
+    if(error) throw error;
+    const list = data || [];
+    const total = list.reduce((sum,g)=> sum + (g.amount||0), 0);
+    document.getElementById('statTotalGains').textContent = total.toLocaleString('fr-FR');
+    if(list.length===0){
+      el.innerHTML = '<div class="recipient-empty">Aucun gain pour l\'instant — invite des filleuls pour commencer à gagner.</div>';
+      return;
+    }
+    el.innerHTML = list.map(g=>`
+      <div class="campaign-item">
+        <div class="campaign-subject">+ ${(g.amount||0).toLocaleString('fr-FR')} FCFA</div>
+        <div class="campaign-meta">${escapeHtml(g.source_name||'Commission')} · ${new Date(g.created_at).toLocaleDateString('fr-FR')}</div>
+      </div>
+    `).join('');
+  }catch(e){
+    el.innerHTML = '<div class="recipient-empty">Erreur de chargement.</div>';
+  }
+}
+
+async function initParrainagePage(){
+  const { user, profile } = await initNav();
+  if(!user || !profile){
+    const msg = !user
+      ? '<div class="recipient-empty">Connecte-toi pour voir ton lien et tes gains.</div>'
+      : '<div class="recipient-empty">Complète ta fiche pour accéder à ton lien de parrainage.</div>';
+    document.getElementById('referralsList').innerHTML = msg;
+    document.getElementById('gainsList').innerHTML = msg;
+    return;
+  }
+  fillReferralLink(profile);
+  document.getElementById('statSoldeGains').textContent = (profile.solde ?? 0).toLocaleString('fr-FR');
+  loadGains(user.id);
+}
+initParrainagePage();
 </script>
 </body>
 </html>
