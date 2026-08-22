@@ -243,11 +243,11 @@ body{padding-bottom:74px;}
       </button>
       <div class="more-menu-panel" id="moreMenuPanel">
         <a class="side-link sub-link" href="abonnement"><span class="ic-svg" id="icWallet"></span> Crédits & Abonnement</a>
+        <a class="side-link sub-link" href="reseau"><span class="ic-svg" id="icNetwork"></span> Réseau</a>
+        <a class="side-link sub-link" href="gain"><span class="ic-svg" id="icGain"></span> Gains</a>
         <a class="side-link sub-link" href="support"><span class="ic-svg" id="icSupport"></span> Support</a>
         <a class="side-link sub-link" href="faq"><span class="ic-svg" id="icFaq"></span> FAQ</a>
         <a class="side-link sub-link" href="parrainage"><span class="ic-svg" id="icReferral"></span> Parrainage</a>
-        <a class="side-link sub-link" href="reseau"><span class="ic-svg" id="icNetwork"></span> Réseau</a>
-        <a class="side-link sub-link" href="gain"><span class="ic-svg" id="icGain"></span> Gains</a>
         <a class="side-link sub-link" href="conditions"><span class="ic-svg" id="icConditions"></span> Conditions</a>
         <a class="side-link sub-link" href="politique"><span class="ic-svg" id="icPolitique"></span> Politique</a>
       </div>
@@ -879,6 +879,9 @@ function openEditor(p){
       document.getElementById('commissionBox').style.display = '';
       document.getElementById('commissionBox').dataset.referredBy = p.referred_by;
       document.getElementById('commissionBox').dataset.sourceName = p.nom || '';
+      document.getElementById('commissionBox').dataset.sourceUserId = p.user_id || '';
+      document.getElementById('commissionBox').dataset.sourceEmail = (p.email || '').toLowerCase();
+      document.getElementById('commissionBox').dataset.sourceWhatsapp = p.whatsapp || '';
     }
   }else{
     document.getElementById('editTitle').textContent = 'Nouvelle fiche';
@@ -890,22 +893,51 @@ function openEditor(p){
 }
 function closeEditor(){ document.getElementById('editOverlay').classList.remove('open'); }
 
+const COMMISSION_CAP_PER_FILLEUL = 5000; // FCFA à vie, par filleul — ajustable ici
+
 async function grantCommission(){
   const box = document.getElementById('commissionBox');
   const referredBy = box.dataset.referredBy;
   const sourceName = box.dataset.sourceName;
+  const sourceUserId = box.dataset.sourceUserId || null;
+  const sourceEmail = box.dataset.sourceEmail;
+  const sourceWhatsapp = box.dataset.sourceWhatsapp;
   const amount = parseFloat(document.getElementById('commission-amount').value);
   if(!amount || amount <= 0){ showToast('Indique un montant valide.'); return; }
   const commission = Math.round(amount * 0.10);
+
   try{
-    const { data: referrer, error: findErr } = await sb.from('profiles').select('user_id,solde').eq('referral_code', referredBy).maybeSingle();
+    const { data: referrer, error: findErr } = await sb.from('profiles')
+      .select('user_id,solde,email,whatsapp').eq('referral_code', referredBy).maybeSingle();
     if(findErr) throw findErr;
     if(!referrer){ showToast('Parrain introuvable pour ce code.'); return; }
+
+    // Garde-fou 1 : anti auto-parrainage (même email ou même WhatsApp entre parrain et filleul)
+    const referrerEmail = (referrer.email || '').toLowerCase();
+    if((sourceEmail && sourceEmail === referrerEmail) || (sourceWhatsapp && sourceWhatsapp === referrer.whatsapp)){
+      showToast('⚠️ Auto-parrainage détecté — commission refusée.');
+      return;
+    }
+
+    // Garde-fou 2 : plafond de commission par filleul
+    if(sourceUserId){
+      const { data: earnings, error: earnErr } = await sb.from('referral_earnings')
+        .select('amount').eq('referrer_id', referrer.user_id).eq('source_user_id', sourceUserId);
+      if(earnErr) throw earnErr;
+      const already = (earnings || []).reduce((sum,e)=> sum + (e.amount||0), 0);
+      if(already + commission > COMMISSION_CAP_PER_FILLEUL){
+        const remaining = Math.max(0, COMMISSION_CAP_PER_FILLEUL - already);
+        showToast(`⚠️ Plafond atteint pour ce filleul (${already.toLocaleString('fr-FR')}/${COMMISSION_CAP_PER_FILLEUL.toLocaleString('fr-FR')} FCFA). Marge restante : ${remaining.toLocaleString('fr-FR')} FCFA.`);
+        return;
+      }
+    }
+
     const { error: updErr } = await sb.from('profiles').update({ solde: (referrer.solde||0) + commission }).eq('user_id', referrer.user_id);
     if(updErr) throw updErr;
     await sb.from('referral_earnings').insert({
       referrer_id: referrer.user_id,
       source_name: sourceName,
+      source_user_id: sourceUserId,
       amount: commission
     });
     showToast(`✓ ${commission.toLocaleString('fr-FR')} FCFA crédités au parrain`);
