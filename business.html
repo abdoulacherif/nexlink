@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
 :root{
   --bg:#FFFFFF;
@@ -216,9 +215,16 @@ body{padding-bottom:74px;}
   .stat-row{grid-template-columns:1fr 1fr;}
 }
 
-.offer-grid{display:grid;grid-template-columns:1fr;gap:16px;padding:8px 20px 60px;max-width:960px;margin:0 auto;}
-@media(min-width:640px){.offer-grid{grid-template-columns:1fr 1fr;}}
-@media(min-width:960px){.offer-grid{grid-template-columns:1fr 1fr 1fr;}}
+.group-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 20px 60px;max-width:960px;margin:0 auto;}
+@media(min-width:640px){.group-grid{grid-template-columns:repeat(3,1fr);}}
+@media(min-width:960px){.group-grid{grid-template-columns:repeat(4,1fr);}}
+.group-tile{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:14px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;}
+.group-tile .g-icon{width:34px;height:34px;border-radius:50%;background:var(--bg-soft);color:var(--green-dark);display:flex;align-items:center;justify-content:center;}
+.group-tile .g-icon svg{width:16px;height:16px;}
+.group-tile .g-name{font-size:12.5px;font-weight:700;line-height:1.3;min-height:32px;display:flex;align-items:center;justify-content:center;}
+.group-tile .g-theme{font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase;}
+.group-tile .g-join{width:100%;background:var(--green);color:#fff;border:none;padding:8px;border-radius:9px;font-weight:700;font-size:11.5px;cursor:pointer;font-family:'Sora',sans-serif;margin-top:2px;}
+.empty-groups{grid-column:1/-1;text-align:center;padding:50px 20px;color:var(--muted);}
 .offer-card{background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;}
 .offer-name{font-family:'Fraunces',serif;font-size:19px;}
 .offer-price{font-family:'Fraunces',serif;font-size:28px;color:var(--green-dark);margin-top:6px;}
@@ -265,11 +271,12 @@ body{padding-bottom:74px;}
         <span class="ic-svg chevron" id="icChevron" style="margin-left:auto;"></span>
       </button>
       <div class="more-menu-panel" id="moreMenuPanel">
+        <a class="side-link sub-link" href="abonnement"><span class="ic-svg" id="icWallet"></span> Crédits & Abonnement</a>
+        <a class="side-link sub-link" href="reseau"><span class="ic-svg" id="icNetwork"></span> Réseau</a>
+        <a class="side-link sub-link" href="gain"><span class="ic-svg" id="icGain"></span> Gains</a>
         <a class="side-link sub-link" href="support"><span class="ic-svg" id="icSupport"></span> Support</a>
         <a class="side-link sub-link" href="faq"><span class="ic-svg" id="icFaq"></span> FAQ</a>
         <a class="side-link sub-link" href="parrainage"><span class="ic-svg" id="icReferral"></span> Parrainage</a>
-        <a class="side-link sub-link" href="reseau"><span class="ic-svg" id="icNetwork"></span> Réseau</a>
-        <a class="side-link sub-link" href="gain"><span class="ic-svg" id="icGain"></span> Gains</a>
         <a class="side-link sub-link" href="conditions"><span class="ic-svg" id="icConditions"></span> Conditions</a>
         <a class="side-link sub-link" href="politique"><span class="ic-svg" id="icPolitique"></span> Politique</a>
       </div>
@@ -281,39 +288,21 @@ body{padding-bottom:74px;}
     </div>
   </aside>
 
-  <main class="dash-main"><section class="hero" style="padding-bottom:20px;">
-  <div class="eyebrow">Développe ton business</div>
-  <h1 style="font-size:28px;">Services pour ton activité</h1>
-  <p style="color:var(--muted);font-size:14.5px;margin-top:10px;">Bots WhatsApp, sites vitrines, design… des services concrets pour faire grandir ton business, proposés par Kontak.</p>
+  <main class="dash-main"><section class="hero" style="padding-bottom:12px;">
+  <div class="eyebrow">Groupes</div>
+  <h1 style="font-size:28px;">Groupes WhatsApp</h1>
+  <p style="color:var(--muted);font-size:14.5px;margin-top:10px;">Plus de 1000 groupes classés par thème. Rejoindre un groupe coûte 2 crédits.</p>
 </section>
 
-<div class="offer-grid" id="offerGrid"></div>
-
-<div class="modal-overlay" id="orderOverlay">
-  <div class="modal">
-    <button class="close-x" onclick="closeOrder()">✕</button>
-    <h2>Commander cette offre</h2>
-    <div class="sub" id="orderOfferName">—</div>
-    <div id="soldePayBox" style="display:none;background:var(--bg-soft);border-radius:12px;padding:14px;margin-bottom:16px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:13.5px;">
-        <span>Ton solde disponible : <strong id="soldeAmount">0</strong> FCFA</span>
-      </div>
-      <button type="button" class="btn-primary" id="paySoldeBtn" style="width:100%;margin-top:10px;" onclick="payWithSolde()">Payer avec mon solde</button>
-      <div class="hint" style="text-align:center;margin-top:6px;">Ou remplis le formulaire ci-dessous pour une autre méthode</div>
-    </div>
-    <form id="orderForm">
-      <div class="field"><label>Nom</label><input type="text" id="o-name" required></div>
-      <div class="field"><label>Email</label><input type="email" id="o-email" required></div>
-      <div class="field"><label>WhatsApp (optionnel)</label><input type="tel" id="o-phone"></div>
-      <div class="field"><label>Message (optionnel)</label><textarea id="o-message" placeholder="Précisions sur ton besoin…"></textarea></div>
-      <div class="err-msg" id="errOrder"></div>
-      <div class="form-actions">
-        <button type="button" class="btn-ghost" onclick="closeOrder()">Annuler</button>
-        <button type="submit" class="btn-primary" id="orderSaveBtn">Envoyer la demande</button>
-      </div>
-    </form>
+<div class="search-wrap">
+  <div class="search-box">
+    <span class="mono">⌕</span>
+    <input id="groupSearch" placeholder="Chercher un groupe…" oninput="debouncedGroupSearch()">
   </div>
 </div>
+<div class="filters" id="groupFilters" style="padding:0 20px 10px;"></div>
+<div class="stats-bar" id="groupStats"></div>
+<div class="group-grid" id="groupGrid"></div>
 
   </main>
 </div>
@@ -446,6 +435,7 @@ function closeSidebar(){
 
 document.getElementById('icOverview').innerHTML = ICONS.home;
 document.getElementById('icAnnuaire').innerHTML = ICONS.grid;
+document.getElementById('icWallet').innerHTML = ICONS.wallet;
 document.getElementById('icSupport').innerHTML = ICONS.support;
 document.getElementById('icFaq').innerHTML = ICONS.faq;
 document.getElementById('icReferral').innerHTML = ICONS.referral;
@@ -475,130 +465,121 @@ renderFixedNavbar();
 
 
 
-const EMAILJS_PUBLIC_KEY = "fNyhiux6zn4u2CtRj";
-const EMAILJS_SERVICE_ID = "service_ps61bla";
-const EMAILJS_TEMPLATE_ADMIN = "template_dzquprb";
-emailjs.init(EMAILJS_PUBLIC_KEY);
-
-let offers = [];
-let activeOffer = null;
-
-async function loadOffers(){
+async function spendCredits(amount, purpose){
+  const user = await getSessionUser();
+  if(!user){
+    showToast(`Connecte-toi pour ${purpose}`);
+    setTimeout(()=> window.location.href = 'connexion', 1300);
+    return false;
+  }
+  let credits = 0;
   try{
-    const { data, error } = await sb.from('business_services').select('*').eq('active', true).order('position', { ascending:true });
+    const { data, error } = await sb.from('profiles').select('credits').eq('user_id', user.id).single();
     if(error) throw error;
-    offers = data || [];
-  }catch(e){ offers = []; }
-  renderOffers();
+    credits = data.credits ?? 0;
+  }catch(e){
+    showToast('Impossible de vérifier tes crédits');
+    return false;
+  }
+  if(credits < amount){
+    showToast(`Crédits insuffisants (${amount} nécessaires) — recharge ton compte`);
+    setTimeout(()=> window.location.href = 'abonnement', 1300);
+    return false;
+  }
+  try{
+    const { error } = await sb.rpc('decrement_credits', { amount });
+    if(error) throw error;
+  }catch(e){
+    showToast('Erreur : crédits insuffisants');
+    return false;
+  }
+  return true;
 }
 
-function renderOffers(){
-  const grid = document.getElementById('offerGrid');
-  if(offers.length===0){
-    grid.innerHTML = `<div class="empty-offers"><h3>Aucun service disponible</h3><p>Reviens bientôt.</p></div>`;
+let groups = [];
+let groupTotalCount = 0;
+let groupOffset = 0;
+const GROUP_PAGE_SIZE = 40;
+let groupLoadToken = 0;
+let activeGroupTheme = 'Tous';
+let groupThemes = ['Tous'];
+
+function debounce(fn, delay){
+  let t;
+  return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), delay); };
+}
+const debouncedGroupSearch = debounce(()=> loadGroups(true), 350);
+
+async function loadGroupThemes(){
+  try{
+    const { data, error } = await sb.from('whatsapp_groups').select('theme').eq('active', true);
+    if(error) throw error;
+    const set = new Set((data||[]).map(g=>g.theme).filter(Boolean));
+    groupThemes = ['Tous', ...Array.from(set).sort()];
+  }catch(e){ groupThemes = ['Tous']; }
+  renderGroupFilters();
+}
+function renderGroupFilters(){
+  document.getElementById('groupFilters').innerHTML = groupThemes.map(t=>
+    `<button class="chip ${t===activeGroupTheme?'active':''}" onclick="setGroupTheme('${t}')">${t}</button>`
+  ).join('');
+}
+function setGroupTheme(t){ activeGroupTheme = t; loadGroups(true); }
+
+async function loadGroups(reset){
+  const myToken = ++groupLoadToken;
+  if(reset){ groupOffset = 0; groups = []; document.getElementById('groupGrid').innerHTML = `<div class="empty-groups">Chargement…</div>`; }
+  const q = document.getElementById('groupSearch').value.trim();
+  try{
+    let query = sb.from('whatsapp_groups').select('*', { count: 'exact' }).eq('active', true);
+    if(activeGroupTheme !== 'Tous') query = query.eq('theme', activeGroupTheme);
+    if(q){
+      const safe = q.replace(/[%,]/g, '');
+      query = query.or(`name.ilike.%${safe}%,theme.ilike.%${safe}%`);
+    }
+    query = query.order('position', { ascending:true }).range(groupOffset, groupOffset + GROUP_PAGE_SIZE - 1);
+    const { data, error, count } = await query;
+    if(error) throw error;
+    if(myToken !== groupLoadToken) return;
+    groups = reset ? (data||[]) : groups.concat(data||[]);
+    groupTotalCount = count ?? groups.length;
+    groupOffset = groups.length;
+    renderGroups();
+  }catch(e){
+    console.error(e);
+    if(myToken === groupLoadToken) document.getElementById('groupGrid').innerHTML = `<div class="empty-groups">Erreur de chargement.</div>`;
+  }
+}
+
+function renderGroups(){
+  document.getElementById('groupStats').textContent = `${groupTotalCount} groupe${groupTotalCount!==1?'s':''} · ${groups.length} affiché${groups.length!==1?'s':''}`;
+  const grid = document.getElementById('groupGrid');
+  if(groups.length===0){
+    grid.innerHTML = `<div class="empty-groups"><h3>Aucun groupe trouvé</h3></div>`;
     return;
   }
-  grid.innerHTML = offers.map(o=>{
-    const specs = Array.isArray(o.specs) ? o.specs : [];
-    return `
-    <div class="offer-card">
-      <div class="offer-name">${escapeHtml(o.name)}</div>
-      <div class="offer-price">${(o.price||0).toLocaleString('fr-FR')} FCFA <small>/ ${o.period === 'unique' ? 'unique' : 'mois'}</small></div>
-      <ul class="offer-specs">
-        ${specs.map(s=>`<li>${icon('idcard')}${escapeHtml(s)}</li>`).join('')}
-      </ul>
-      <button class="btn-primary" onclick='openOrder(${JSON.stringify(o).replace(/'/g,"&apos;")})'>Commander</button>
+  const tilesHtml = groups.map(g=>`
+    <div class="group-tile">
+      <div class="g-icon">${ICONS.message}</div>
+      <div class="g-name">${escapeHtml(g.name)}</div>
+      <div class="g-theme">${escapeHtml(g.theme||'')}</div>
+      <button class="g-join" data-link="${escapeHtml(g.invite_link)}" onclick="joinGroup(this.dataset.link)">Rejoindre · 2 crédits</button>
     </div>
-  `;}).join('');
+  `).join('');
+  const hasMore = groups.length < groupTotalCount;
+  grid.innerHTML = tilesHtml + (hasMore
+    ? `<button class="btn-fill" style="grid-column:1/-1;justify-self:center;margin:10px 0;" onclick="loadGroups(false)">Charger plus (${groupTotalCount - groups.length})</button>`
+    : '');
 }
 
-function openOrder(o){
-  activeOffer = o;
-  document.getElementById('orderOfferName').textContent = `${o.name} — ${(o.price||0).toLocaleString('fr-FR')} FCFA`;
-  document.getElementById('orderForm').reset();
-  hideErr('errOrder');
-  if(CURRENT_USER){
-    document.getElementById('o-email').value = CURRENT_USER.email || '';
-  }
-  if(CURRENT_PROFILE){
-    document.getElementById('o-name').value = CURRENT_PROFILE.nom || '';
-    document.getElementById('o-phone').value = CURRENT_PROFILE.whatsapp || '';
-  }
-  const soldeBox = document.getElementById('soldePayBox');
-  const solde = CURRENT_PROFILE ? (CURRENT_PROFILE.solde ?? 0) : 0;
-  if(CURRENT_USER && solde >= (o.price||0) && (o.price||0) > 0){
-    document.getElementById('soldeAmount').textContent = solde.toLocaleString('fr-FR');
-    soldeBox.style.display = '';
-  }else{
-    soldeBox.style.display = 'none';
-  }
-  document.getElementById('orderOverlay').classList.add('open');
-}
-function closeOrder(){ document.getElementById('orderOverlay').classList.remove('open'); }
-
-async function payWithSolde(){
-  const btn = document.getElementById('paySoldeBtn');
-  btn.disabled = true; btn.textContent = 'Paiement…';
-  try{
-    const { error } = await sb.rpc('pay_with_solde', { amount: activeOffer.price });
-    if(error) throw error;
-    await sb.from('business_orders').insert({
-      user_id: CURRENT_USER.id,
-      service_id: activeOffer.id,
-      service_name: activeOffer.name,
-      name: CURRENT_PROFILE.nom || '',
-      email: CURRENT_USER.email || '',
-      phone: CURRENT_PROFILE.whatsapp || null,
-      message: 'Payé avec le solde disponible',
-      status: 'payé'
-    });
-    CURRENT_PROFILE.solde = (CURRENT_PROFILE.solde||0) - activeOffer.price;
-    closeOrder();
-    showToast('✓ Payé avec ton solde — commande envoyée');
-  }catch(err){
-    showToast('Erreur : ' + (err.message || 'solde insuffisant'));
-  }finally{
-    btn.disabled = false; btn.textContent = 'Payer avec mon solde';
-  }
+async function joinGroup(link){
+  const ok = await spendCredits(2, 'rejoindre ce groupe');
+  if(!ok) return;
+  window.open(link, '_blank', 'noopener');
 }
 
-document.getElementById('orderForm').addEventListener('submit', async (e)=>{
-  e.preventDefault();
-  const btn = document.getElementById('orderSaveBtn');
-  btn.disabled = true; btn.textContent = 'Envoi…';
-  const name = document.getElementById('o-name').value.trim();
-  const email = document.getElementById('o-email').value.trim();
-  const phone = document.getElementById('o-phone').value.trim();
-  const message = document.getElementById('o-message').value.trim();
-
-  try{
-    await sb.from('business_orders').insert({
-      user_id: CURRENT_USER ? CURRENT_USER.id : null,
-      service_id: activeOffer.id,
-      service_name: activeOffer.name,
-      name, email, phone: phone || null, message: message || null
-    });
-  }catch(e){ /* historique secondaire */ }
-
-  try{
-    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ADMIN, {
-      member_name: name,
-      member_email: email,
-      member_phone: `Commande "${activeOffer.name}" (${(activeOffer.price||0).toLocaleString('fr-FR')} FCFA) — ${phone||''} — ${message||''}`
-    });
-  }catch(e){ console.error(e); }
-
-  closeOrder();
-  showToast('✓ Demande envoyée, on te recontacte bientôt');
-  btn.disabled = false; btn.textContent = 'Envoyer la demande';
-});
-
-document.getElementById('orderOverlay').addEventListener('click', (e)=>{
-  if(e.target.id==='orderOverlay') closeOrder();
-});
-
-initNav();
-loadOffers();
+loadGroupThemes();
+loadGroups(true);
 </script>
 </body>
 </html>
