@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Annuaire — Kontak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#FFFFFF;
+--bg-soft:#F3FBF5;
+--ink:#0E2A1B;
+--green:#25D366;
+--green-dark:#128C4A;
+--orange:#FF8A3D;
+--gold:#E8A33D;
+--line:rgba(14,42,27,0.10);
+--muted:rgba(14,42,27,0.55);
+--err:#D9534F;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Sora',sans-serif;-webkit-font-smoothing:antialiased;}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+.mono{font-family:'Space Mono',monospace;}
+a{color:inherit;}
+.no-credits-icon{width:60px;height:60px;border-radius:50%;background:var(--bg-soft);color:var(--green-dark);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
+.no-credits-icon svg{width:28px;height:28px;}
+.btn-fill{background:var(--green);color:#fff;border:none;padding:10px 18px;border-radius:100px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Sora',sans-serif;text-decoration:none;display:inline-block;}
+.hero{padding:56px 24px 32px;text-align:left;background:linear-gradient(180deg,var(--bg-soft) 0%, #fff 100%);}
+.hero .eyebrow{font-family:'Space Mono',monospace;font-size:12px;color:var(--orange);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;font-weight:700;}
+.hero h1{font-size:clamp(30px,7vw,50px);line-height:1.1;max-width:640px;color:var(--ink);}
+.hero p{color:var(--muted);max-width:480px;margin-top:16px;font-size:16px;line-height:1.55;}
+.search-wrap{padding:0 20px 8px;}
+.search-box{background:var(--bg-soft);border:1px solid var(--line);border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:8px;}
+.search-box input{background:transparent;border:none;outline:none;color:var(--ink);font-family:'Sora',sans-serif;font-size:15px;flex:1;}
+.search-box input::placeholder{color:var(--muted);}
+.filters{display:flex;gap:8px;overflow-x:auto;padding:14px 20px 22px;-webkit-overflow-scrolling:touch;}
+.filters::-webkit-scrollbar{display:none;}
+.chip{flex-shrink:0;padding:7px 14px;border-radius:100px;border:1.5px solid var(--line);font-size:13px;color:var(--muted);background:#fff;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;}
+.chip.active{background:var(--green);color:#fff;border-color:var(--green);font-weight:700;}
+.stats-bar{padding:0 20px 18px;font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);}
+.grid{padding:0 20px 60px;display:grid;grid-template-columns:1fr;gap:14px;max-width:960px;margin:0 auto;}
+@media(min-width:640px){.grid{grid-template-columns:1fr 1fr;}}
+@media(min-width:960px){.grid{grid-template-columns:1fr 1fr 1fr;}}
+.card{background:#fff;color:var(--ink);border-radius:18px;padding:18px;position:relative;overflow:hidden;border:1px solid var(--line);box-shadow:0 2px 10px rgba(14,42,27,0.04);}
+.card-top{display:flex;gap:12px;align-items:flex-start;}
+.avatar-ring{width:54px;height:54px;border-radius:50%;flex-shrink:0;padding:3px;background:conic-gradient(var(--green) 0deg, var(--gold) 120deg, var(--orange) 240deg, var(--green) 360deg);}
+.avatar{width:100%;height:100%;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:19px;border:2px solid #fff;}
+.card-name{font-family:'Fraunces',serif;font-size:18px;font-weight:600;line-height:1.2;}
+.card-city{font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;margin-top:2px;}
+.card-cat{display:inline-block;margin-top:8px;font-size:11px;background:var(--bg-soft);color:var(--green-dark);padding:4px 10px;border-radius:100px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;}
+.card-owner{font-size:12px;color:var(--muted);margin-top:4px;}
+.card-actions{display:flex;gap:8px;margin-top:16px;}
+.card-actions-secondary{display:flex;gap:8px;margin-top:8px;}
+.sec-btn{flex:1;background:var(--bg-soft);color:var(--ink);border:1.5px solid var(--line);padding:8px;border-radius:9px;font-weight:700;font-size:12.5px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-family:'Sora',sans-serif;}
+.sec-btn:hover{border-color:var(--green);}
+.sec-btn .ic-svg{width:15px;height:15px;color:var(--green-dark);}
+.bulk-bar{padding:0 20px 16px;display:flex;justify-content:flex-end;max-width:960px;margin:0 auto;}
+.bulk-btn{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#fff;border:none;padding:11px 18px;border-radius:100px;font-weight:700;font-size:13.5px;cursor:pointer;font-family:'Sora',sans-serif;}
+.bulk-btn .ic-svg{width:16px;height:16px;color:var(--gold);}
+.detail-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+.detail-row:last-child{border-bottom:none;}
+.detail-row .k{color:var(--muted);}
+.detail-row .v{font-weight:700;text-align:right;}
+.dl-option{display:flex;align-items:center;gap:12px;padding:14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;cursor:pointer;margin-bottom:10px;width:100%;text-align:left;font-family:'Sora',sans-serif;}
+.dl-option:hover{border-color:var(--green);}
+.dl-option .ic-svg{width:20px;height:20px;color:var(--green-dark);flex-shrink:0;}
+.dl-option .dl-title{font-weight:700;font-size:14px;}
+.dl-option .dl-sub{font-size:12px;color:var(--muted);margin-top:1px;}
+.wa-btn{flex:1;background:var(--green);color:#fff;text-decoration:none;text-align:center;padding:10px;border-radius:10px;font-weight:700;font-size:13.5px;display:flex;align-items:center;justify-content:center;gap:6px;border:none;cursor:pointer;font-family:'Sora',sans-serif;}
+.empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted);}
+.empty h3{color:var(--ink);margin-bottom:8px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px;}
+.field input,.field select{width:100%;padding:11px 13px;border-radius:10px;border:1.5px solid var(--line);font-family:'Sora',sans-serif;font-size:14.5px;background:#fff;color:var(--ink);}
+.form-actions{display:flex;gap:10px;margin-top:20px;}
+.btn-primary{flex:1;background:var(--green);color:#fff;border:none;padding:13px;border-radius:10px;font-weight:700;font-size:14.5px;cursor:pointer;font-family:'Sora',sans-serif;}
+.hint{font-size:11.5px;color:var(--muted);margin-top:4px;}
+.err-msg{font-size:12.5px;color:var(--err);margin-top:4px;display:none;}
+.err-msg.show{display:block;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 22px;border-radius:100px;font-size:13.5px;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none;max-width:90%;text-align:center;}
+.toast.show{opacity:1;}
+.modal-overlay{position:fixed;inset:0;background:rgba(14,42,27,0.55);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;z-index:100;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;color:var(--ink);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:26px 22px 30px;max-height:90vh;overflow-y:auto;position:relative;border:1px solid var(--line);}
+@media(min-width:640px){.modal-overlay{align-items:center;}.modal{border-radius:20px;}}
+.close-x{position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);}
+.ic-svg{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex-shrink:0;}
+.ic-svg svg{width:100%;height:100%;}
+.fixed-navbar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center;gap:2px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(14,42,27,0.06);}
+.fnav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px 10px;border-radius:12px;background:transparent;color:var(--ink);text-decoration:none;font-size:11px;font-weight:600;white-space:nowrap;flex:1;text-align:center;}
+.fnav-btn:hover{background:var(--bg-soft);}
+.fnav-btn .ic-svg{width:20px;height:20px;color:var(--green-dark);}
+body{padding-bottom:74px;}
+.dash-topbar{display:none;padding:14px 18px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:30;}
+.burger{width:38px;height:38px;border-radius:10px;border:1.5px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-direction:column;gap:4px;}
+.burger span{display:block;width:16px;height:2px;background:var(--ink);border-radius:2px;}
+.dash-shell{display:flex;min-height:100vh;}
+.sidebar{width:250px;flex-shrink:0;background:var(--bg-soft);border-right:1px solid var(--line);padding:24px 16px;position:sticky;top:0;height:100vh;overflow-y:auto;padding-bottom:90px;}
+.sidebar .logo{display:block;margin-bottom:30px;}
+.logo{font-family:'Fraunces',serif;font-style:italic;font-size:22px;letter-spacing:0.3px;text-decoration:none;color:var(--ink);}
+.logo span{color:var(--green-dark);}
+.side-section{margin-bottom:22px;}
+.side-label{font-family:'Space Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:0 12px;margin-bottom:8px;}
+.side-link{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;cursor:pointer;margin-bottom:2px;}
+.side-link:hover{background:#fff;}
+.side-link.active{background:var(--green);color:#fff;}
+.more-toggle{width:100%;border:none;background:none;cursor:pointer;}
+.more-toggle .chevron{width:14px;height:14px;transition:transform .2s;}
+.more-toggle .chevron svg{width:100%;height:100%;}
+.more-toggle.open .chevron{transform:rotate(180deg);}
+.more-menu-panel{display:none;padding-left:6px;margin-top:2px;border-left:2px solid var(--line);}
+.more-menu-panel.open{display:block;}
+.sub-link{font-size:13px;padding:9px 12px;}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(14,42,27,0.5);z-index:35;}
+.sidebar-overlay.open{display:block;}
+.dash-main{flex:1;min-width:0;}
+@media(max-width:880px){
+.dash-topbar{display:flex;}
+.sidebar{position:fixed;left:0;top:0;bottom:0;z-index:40;transform:translateX(-100%);transition:transform .25s ease;}
+.sidebar.open{transform:translateX(0);box-shadow:8px 0 24px rgba(0,0,0,0.15);}
+.hero{padding-left:20px;padding-right:20px;}
+}
+</style>
+</head>
+<body>
+<div class="dash-topbar">
+<button class="burger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+<a class="logo" href="index" style="font-size:19px;">Kon<span>tak</span></a>
+<div style="width:38px;"></div>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<nav class="fixed-navbar" id="fixedNavbar"></nav>
+<div class="dash-shell">
+<aside class="sidebar" id="sidebar">
+<a class="logo" href="index">Kon<span>tak</span></a>
+<div class="side-section">
+<div class="side-label">Mon compte</div>
+<a class="side-link" href="dashboard"><span class="ic-svg" id="icOverview"></span> Vue d'ensemble</a>
+</div>
+<div class="side-section">
+<div class="side-label">Naviguer</div>
+<a class="side-link active" href="annuaire"><span class="ic-svg" id="icAnnuaire"></span> Annuaire</a>
+<a class="side-link" href="mail"><span class="ic-svg" id="icMail2"></span> Campagnes mail</a>
+</div>
+<div class="side-section">
+<button class="side-link more-toggle" id="moreMenuToggle" onclick="toggleMoreMenu()">
+<span class="ic-svg" id="icMore"></span> Plus
+<span class="ic-svg chevron" id="icChevron" style="margin-left:auto;"></span>
+</button>
+<div class="more-menu-panel" id="moreMenuPanel">
+<a class="side-link sub-link" href="abonnement"><span class="ic-svg" id="icWallet"></span> Crédits & Abonnement</a>
+<a class="side-link sub-link" href="support"><span class="ic-svg" id="icSupport"></span> Support</a>
+<a class="side-link sub-link" href="faq"><span class="ic-svg" id="icFaq"></span> FAQ</a>
+<a class="side-link sub-link" href="parrainage"><span class="ic-svg" id="icReferral"></span> Parrainage</a>
+<a class="side-link sub-link" href="reseau"><span class="ic-svg" id="icNetwork"></span> Réseau</a>
+<a class="side-link sub-link" href="gain"><span class="ic-svg" id="icGain"></span> Gains</a>
+<a class="side-link sub-link" href="conditions"><span class="ic-svg" id="icConditions"></span> Conditions</a>
+<a class="side-link sub-link" href="politique"><span class="ic-svg" id="icPolitique"></span> Politique</a>
+</div>
+</div>
+<div class="side-section">
+<div class="side-label">Session</div>
+<a class="side-link" href="#" data-action="logout"><span class="ic-svg" id="icLogout"></span> Déconnexion</a>
+</div>
+</aside>
+<main class="dash-main">
+<section class="hero" style="padding-bottom:20px;">
+<div class="eyebrow">Annuaire</div>
+<h1>Tous les membres du réseau</h1>
+<p>Cherche par nom, ville ou secteur, et contacte directement sur WhatsApp.</p>
+</section>
+<div class="search-wrap">
+<div class="search-box">
+<span class="mono">⌕</span>
+<input id="searchInput" placeholder="Chercher un nom, une ville, un business…" oninput="debouncedRender()">
+</div>
+</div>
+<div class="filters" id="filters"></div>
+<div class="stats-bar" id="statsBar"></div>
+<div class="bulk-bar">
+<button class="bulk-btn" id="bulkBtnOpen" onclick="openBulkDownload()"><span class="ic-svg" id="icBulk"></span> Télécharger des contacts</button>
+</div>
+<div class="grid" id="grid"></div>
+<div class="modal-overlay" id="downloadOverlay">
+<div class="modal">
+<button class="close-x" onclick="closeDownloadMenu()">✕</button>
+<h2>Télécharger ce contact</h2>
+<div class="sub" id="dlContactName">—</div>
+<button class="dl-option" onclick="downloadContactCSV(activeContact)">
+<span class="ic-svg" id="icCsv"></span>
+<div><div class="dl-title">Fichier CSV</div><div class="dl-sub">Compatible tableur (Excel, Sheets…)</div></div>
+</button>
+<button class="dl-option" onclick="downloadContactVCF(activeContact)">
+<span class="ic-svg" id="icVcf"></span>
+<div><div class="dl-title">Enregistrer sur le téléphone</div><div class="dl-sub">Fichier .vcf — ajoute le contact directement</div></div>
+</button>
+</div>
+</div>
+<div class="modal-overlay" id="detailOverlay">
+<div class="modal">
+<button class="close-x" onclick="closeContactDetail()">✕</button>
+<span class="kontak-tag" id="detailTag"></span>
+<div style="display:flex;gap:14px;align-items:center;margin-bottom:16px;">
+<div class="avatar-ring" style="width:56px;height:56px;"><div class="avatar" id="detailAvatar" style="font-size:18px;">--</div></div>
+<div>
+<h2 id="detailName" style="font-size:19px;">—</h2>
+<div class="card-city" id="detailOwner">—</div>
+</div>
+</div>
+<div class="detail-row"><span class="k">Ville / Pays</span><span class="v" id="detailLoc">—</span></div>
+<div class="detail-row"><span class="k">Secteur</span><span class="v" id="detailSector">—</span></div>
+<div class="detail-row"><span class="k">WhatsApp</span><span class="v" id="detailPhone">—</span></div>
+<div class="form-actions">
+<button class="btn-primary" id="detailWaBtn">Discuter sur WhatsApp</button>
+</div>
+</div>
+</div>
+<div class="modal-overlay" id="bulkOverlay">
+<div class="modal">
+<button class="close-x" onclick="closeBulkDownload()">✕</button>
+<h2>Téléchargement groupé</h2>
+<div class="sub">Choisis un secteur et le nombre de contacts à exporter (2 à 25).</div>
+<div class="field">
+<label>Secteur d'activité</label>
+<select id="bulk-sector"><option value="">Tous les secteurs</option></select>
+</div>
+<div class="field">
+<label>Nombre de contacts</label>
+<input type="number" id="bulk-count" min="2" max="25" value="10">
+<div class="hint">Minimum 2, maximum 25 par téléchargement — 2 crédits par contact.</div>
+</div>
+<div class="err-msg" id="errBulk"></div>
+<button class="dl-option" onclick="generateBulkDownload('csv')">
+<span class="ic-svg" id="icBulkCsv"></span>
+<div><div class="dl-title">Fichier CSV</div><div class="dl-sub">Tous les contacts dans un seul fichier</div></div>
+</button>
+<button class="dl-option" onclick="generateBulkDownload('vcf')">
+<span class="ic-svg" id="icBulkVcf"></span>
+<div><div class="dl-title">Fichier contacts (.vcf)</div><div class="dl-sub">À importer directement dans le téléphone</div></div>
+</button>
+</div>
+</div>
+<div class="modal-overlay" id="noCreditsOverlay">
+<div class="modal" style="text-align:center;">
+<button class="close-x" onclick="closeNoCredits()">✕</button>
+<div class="no-credits-icon" id="noCreditsIcon"></div>
+<h2 style="font-size:20px;">Crédits insuffisants</h2>
+<p style="color:var(--muted);font-size:14px;margin-top:8px;" id="noCreditsText">Il te faut plus de crédits pour continuer.</p>
+<div class="form-actions" style="margin-top:22px;">
+<a class="btn-primary" href="abonnement" style="text-align:center;text-decoration:none;">Acheter des crédits</a>
+</div>
+</div>
+</div>
+</main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+// ---- Plus aucune clé Supabase ici : tout passe par /api/* ----
+
+const SECTORS = ['Commerce','Mode & beauté','Restauration','Services','Tech & digital','Immobilier','Éducation','Autre'];
+
+function initials(name){
+return (name||'').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+}
+function waLink(phone){
+const clean = (phone||'').replace(/[^\d+]/g,'').replace('+','');
+return `https://wa.me/${clean}`;
+}
+function escapeHtml(s){
+const d = document.createElement('div');
+d.textContent = s || '';
+return d.innerHTML;
+}
+function showToast(msg){
+let t = document.getElementById('toast');
+if(!t){
+t = document.createElement('div');
+t.id = 'toast';
+t.className = 'toast';
+document.body.appendChild(t);
+}
+t.textContent = msg;
+t.classList.add('show');
+setTimeout(()=>t.classList.remove('show'), 3200);
+}
+function showErr(id,msg){ const e=document.getElementById(id); if(!e) return; e.textContent=msg; e.classList.add('show'); }
+function hideErr(id){ const e=document.getElementById(id); if(e) e.classList.remove('show'); }
+
+let CURRENT_USER = null;
+let CURRENT_PROFILE = null;
+
+async function initNav(){
+try{
+const res = await fetch('/api/auth/session', { credentials: 'include' });
+const data = await res.json();
+CURRENT_USER = data.user || null;
+CURRENT_PROFILE = CURRENT_USER ? CURRENT_USER.profile : null;
+}catch(e){
+CURRENT_USER = null;
+CURRENT_PROFILE = null;
+}
+const isAdmin = !!(CURRENT_USER && CURRENT_USER.isAdmin);
+document.querySelectorAll('[data-auth="guest"]').forEach(el=> el.style.display = CURRENT_USER ? 'none' : '');
+document.querySelectorAll('[data-auth="user"]').forEach(el=> el.style.display = CURRENT_USER ? '' : 'none');
+document.querySelectorAll('[data-auth="admin"]').forEach(el=> el.style.display = isAdmin ? '' : 'none');
+return { user: CURRENT_USER, profile: CURRENT_PROFILE, isAdmin };
+}
+
+async function logout(){
+await fetch('/api/auth/session', { method: 'DELETE', credentials: 'include' });
+window.location.href = 'index';
+}
+
+document.addEventListener('click', (e)=>{
+if(e.target && e.target.matches('[data-action="logout"]')){
+e.preventDefault();
+logout();
+}
+});
+
+const ICONS = {
+grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7"/><path d="M9 22V12h6v10"/></svg>',
+idcard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="12" r="2"/><line x1="14" y1="10" x2="18" y2="10"/><line x1="14" y1="14" x2="18" y2="14"/></svg>',
+user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>',
+mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>',
+support: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="m5.2 5.2 3.3 3.3M18.8 5.2l-3.3 3.3M5.2 18.8l3.3-3.3M18.8 18.8l-3.3-3.3"/></svg>',
+faq: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 2-2.4 3.7"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+referral: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><path d="M2 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17.5" cy="8.5" r="2.3"/><path d="M15.2 14.6c2.6.2 4.8 2.2 4.8 5.4"/></svg>',
+network: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M8.2 7.3 10.5 16M15.8 7.3 13.5 16M8.3 6h7.4"/></svg>',
+gain: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>',
+document: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>',
+shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 11 4.6-2.3 8-6 8-11V5l-8-3Z"/></svg>',
+wallet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v3"/><path d="M3 7v11a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-5a2 2 0 0 0 0 4h5.5"/></svg>',
+menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>',
+chevronDown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'
+};
+function icon(key, cls){
+return `<span class="ic-svg ${cls||''}">${ICONS[key] || ICONS.grid}</span>`;
+}
+
+async function loadNavItems(){
+try{
+const res = await fetch('/api/nav-items');
+if(!res.ok) throw new Error('nav-items indisponible');
+const data = await res.json();
+return data.items || [];
+}catch(e){ console.error(e); return []; }
+}
+
+function toggleSidebar(){
+document.getElementById('sidebar').classList.toggle('open');
+document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeSidebar(){
+document.getElementById('sidebar').classList.remove('open');
+document.getElementById('sidebarOverlay').classList.remove('open');
+}
+document.getElementById('icOverview').innerHTML = ICONS.home;
+document.getElementById('icAnnuaire').innerHTML = ICONS.grid;
+document.getElementById('icMail2').innerHTML = ICONS.mail;
+document.getElementById('icWallet').innerHTML = ICONS.wallet;
+document.getElementById('icSupport').innerHTML = ICONS.support;
+document.getElementById('icFaq').innerHTML = ICONS.faq;
+document.getElementById('icReferral').innerHTML = ICONS.referral;
+document.getElementById('icNetwork').innerHTML = ICONS.network;
+document.getElementById('icGain').innerHTML = ICONS.gain;
+document.getElementById('icConditions').innerHTML = ICONS.document;
+document.getElementById('icPolitique').innerHTML = ICONS.shield;
+document.getElementById('icMore').innerHTML = ICONS.menu;
+document.getElementById('icChevron').innerHTML = ICONS.chevronDown;
+function toggleMoreMenu(){
+document.getElementById('moreMenuPanel').classList.toggle('open');
+document.getElementById('moreMenuToggle').classList.toggle('open');
+}
+document.getElementById('icLogout').innerHTML = ICONS.logout;
+
+async function renderFixedNavbar(){
+const items = await loadNavItems();
+const bar = document.getElementById('fixedNavbar');
+if(items.length===0){ bar.style.display='none'; return; }
+bar.innerHTML = items.map(it=>`
+<a class="fnav-btn" href="${escapeHtml(it.url)}">${icon(it.icon)}<span>${escapeHtml(it.label)}</span></a>
+`).join('');
+}
+renderFixedNavbar();
+
+let profiles = [];
+let activeFilter = 'Tous';
+let totalCount = 0;
+let currentOffset = 0;
+const PAGE_SIZE = 30;
+let loadToken = 0;
+
+const CATS = ['Tous', ...SECTORS];
+
+function renderFilters(){
+const el = document.getElementById('filters');
+el.innerHTML = CATS.map(c=>`<button class="chip ${c===activeFilter?'active':''}" onclick="setFilter('${c}')">${c}</button>`).join('');
+}
+function setFilter(c){ activeFilter = c; render(true); }
+function debounce(fn, delay){
+let t;
+return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), delay); };
+}
+const debouncedRender = debounce(()=> render(true), 350);
+
+async function render(reset){
+renderFilters();
+const myToken = ++loadToken;
+if(reset){
+currentOffset = 0;
+profiles = [];
+document.getElementById('grid').innerHTML = `<div class="empty"><h3>Chargement…</h3></div>`;
+}
+const q = document.getElementById('searchInput').value.trim();
+
+try{
+const params = new URLSearchParams();
+if(activeFilter !== 'Tous') params.set('sector', activeFilter);
+if(q) params.set('q', q);
+params.set('offset', currentOffset);
+params.set('limit', PAGE_SIZE);
+
+const res = await fetch(`/api/directory/list?${params.toString()}`);
+if(!res.ok) throw new Error('Erreur de chargement');
+const data = await res.json();
+
+if(myToken !== loadToken) return;
+
+if(reset){ profiles = data.profiles || []; } else { profiles = profiles.concat(data.profiles || []); }
+totalCount = data.total ?? profiles.length;
+currentOffset = profiles.length;
+renderGrid();
+
+}catch(e){
+console.error(e);
+if(myToken === loadToken){
+document.getElementById('grid').innerHTML = `<div class="empty"><h3>Erreur de chargement</h3><p>Réessaie dans un instant.</p></div>`;
+}
+}
+}
+
+function renderGrid(){
+document.getElementById('statsBar').textContent = `${totalCount} membre${totalCount!==1?'s':''} au total · ${profiles.length} affiché${profiles.length!==1?'s':''}`;
+const grid = document.getElementById('grid');
+if(profiles.length===0){
+grid.innerHTML = `<div class="empty"><h3>Aucun membre trouvé</h3><p>Essaie une autre recherche.</p></div>`;
+return;
+}
+const cardsHtml = profiles.map(c=>`
+<div class="card">
+<div class="card-top">
+<div class="avatar-ring"><div class="avatar">${initials(c.business || c.nom)}</div></div>
+<div>
+<div class="card-name">${escapeHtml(c.business || c.nom)}</div>
+<div class="card-city">${escapeHtml(c.ville)}${c.pays ? ', '+escapeHtml(c.pays) : ''}</div>
+<span class="card-cat">${escapeHtml(c.secteur)}</span>
+</div>
+</div>
+<div class="card-owner">Par ${escapeHtml(c.nom)}</div>
+<div class="card-actions">
+<button class="wa-btn" data-wa="${escapeHtml(waLink(c.whatsapp))}" onclick="contactViaWhatsapp(this.dataset.wa)">Discuter sur WhatsApp</button>
+</div>
+<div class="card-actions-secondary">
+<button class="sec-btn" onclick='openDownloadMenu(${JSON.stringify(c).replace(/'/g,"&apos;")})'>${ICON_DOWNLOAD} Télécharger</button>
+<button class="sec-btn" onclick='openContactDetail(${JSON.stringify(c).replace(/'/g,"&apos;")})'>${ICON_EYE} Voir la fiche</button>
+</div>
+</div>
+`).join('');
+const hasMore = profiles.length < totalCount;
+grid.innerHTML = cardsHtml + (hasMore
+? `<button class="btn-fill" id="loadMoreBtn" style="grid-column:1/-1;justify-self:center;margin:10px 0 20px;" onclick="render(false)">Charger plus (${totalCount - profiles.length} restants)</button>`
+: '');
+}
+// ---- Dépense de crédits — toujours vérifiée côté serveur ----
+async function spendCredits(amount, purpose){
+if(!CURRENT_USER){
+showToast(`Connecte-toi pour ${purpose}`);
+setTimeout(()=> window.location.href = 'connexion', 1300);
+return false;
+}
+try{
+const res = await fetch('/api/directory/list', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+credentials: 'include',
+body: JSON.stringify({ amount })
+});
+const data = await res.json();
+if(res.status === 402){
+openNoCredits(data.credits ?? 0, data.needed ?? amount);
+return false;
+}
+if(!res.ok) throw new Error(data.error || 'Erreur inconnue');
+if(CURRENT_PROFILE) CURRENT_PROFILE.credits = data.credits;
+return true;
+}catch(e){
+showToast('Erreur : impossible de vérifier tes crédits');
+return false;
+}
+}
+
+async function contactViaWhatsapp(waUrl){
+const ok = await spendCredits(2, 'contacter ce membre');
+if(!ok) return;
+window.open(waUrl, '_blank', 'noopener');
+}
+
+const ICON_DOWNLOAD = '<span class="ic-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg></span>';
+const ICON_EYE = '<span class="ic-svg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></span>';
+document.getElementById('icBulk').innerHTML = ICONS.grid;
+document.getElementById('icCsv').innerHTML = ICONS.idcard;
+document.getElementById('icVcf').innerHTML = ICONS.user;
+document.getElementById('icBulkCsv').innerHTML = ICONS.idcard;
+document.getElementById('icBulkVcf').innerHTML = ICONS.user;
+
+let activeContact = null;
+
+function triggerFileDownload(filename, content, mime){
+const blob = new Blob([content], { type: mime });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url; a.download = filename;
+document.body.appendChild(a); a.click(); a.remove();
+URL.revokeObjectURL(url);
+}
+function contactToCSVRow(c){
+const name = `Kontak • ${c.nom || ''}`;
+const cells = [name, c.business||'', c.whatsapp||'', c.ville||'', c.pays||'', c.secteur||'', 'Kontak'];
+return cells.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
+}
+function contactToVCard(c){
+const name = `Kontak • ${c.nom || ''}`;
+return [
+'BEGIN:VCARD','VERSION:3.0',
+`N:${c.nom||''};;;;`,
+`FN:${name}`,
+`ORG:Kontak`,
+`TITLE:${c.secteur||''}`,
+c.whatsapp ? `TEL;TYPE=CELL:${c.whatsapp}` : '',
+`ADR:;;${c.ville||''};;;${c.pays||''}`,
+`NOTE:${c.business||''} — via annuaire Kontak`,
+'END:VCARD'
+].filter(Boolean).join('\n');
+}
+
+function openDownloadMenu(c){
+activeContact = c;
+document.getElementById('dlContactName').textContent = c.business || c.nom || '';
+document.getElementById('downloadOverlay').classList.add('open');
+}
+function closeDownloadMenu(){ document.getElementById('downloadOverlay').classList.remove('open'); }
+
+async function downloadContactCSV(c){
+if(!c) return;
+const ok = await spendCredits(2, 'télécharger ce contact');
+if(!ok) return;
+const csv = 'Nom,Business,WhatsApp,Ville,Pays,Secteur,Source\n' + contactToCSVRow(c);
+triggerFileDownload(`kontak-${(c.nom||'contact').replace(/\s+/g,'-').toLowerCase()}.csv`, csv, 'text/csv');
+closeDownloadMenu();
+}
+async function downloadContactVCF(c){
+if(!c) return;
+const ok = await spendCredits(2, 'télécharger ce contact');
+if(!ok) return;
+triggerFileDownload(`kontak-${(c.nom||'contact').replace(/\s+/g,'-').toLowerCase()}.vcf`, contactToVCard(c), 'text/vcard');
+closeDownloadMenu();
+}
+
+function openContactDetail(c){
+document.getElementById('detailTag').textContent = 'Via Kontak';
+document.getElementById('detailAvatar').textContent = initials(c.business || c.nom);
+document.getElementById('detailName').textContent = c.business || c.nom || '—';
+document.getElementById('detailOwner').textContent = 'Par ' + (c.nom || '—');
+document.getElementById('detailLoc').textContent = [c.ville, c.pays].filter(Boolean).join(', ') || '—';
+document.getElementById('detailSector').textContent = c.secteur || '—';
+document.getElementById('detailPhone').textContent = c.whatsapp || '—';
+const btn = document.getElementById('detailWaBtn');
+btn.onclick = ()=> { closeContactDetail(); contactViaWhatsapp(waLink(c.whatsapp)); };
+document.getElementById('detailOverlay').classList.add('open');
+}
+function closeContactDetail(){ document.getElementById('detailOverlay').classList.remove('open'); }
+
+function openBulkDownload(){
+document.getElementById('bulk-sector').innerHTML = '<option value="">Tous les secteurs</option>' + SECTORS.map(s=>`<option>${s}</option>`).join('');
+hideErr('errBulk');
+document.getElementById('bulkOverlay').classList.add('open');
+}
+function closeBulkDownload(){ document.getElementById('bulkOverlay').classList.remove('open'); }
+
+async function generateBulkDownload(format){
+const sector = document.getElementById('bulk-sector').value;
+const count = parseInt(document.getElementById('bulk-count').value, 10);
+
+if(!count || count < 2 || count > 25){
+showErr('errBulk','Choisis un nombre de contacts entre 2 et 25.');
+return;
+}
+hideErr('errBulk');
+
+let selection = [];
+try{
+const params = new URLSearchParams();
+if(sector) params.set('sector', sector);
+params.set('offset', 0);
+params.set('limit', count);
+const res = await fetch(`/api/directory/list?${params.toString()}`);
+if(!res.ok) throw new Error();
+const data = await res.json();
+selection = data.profiles || [];
+}catch(e){
+showErr('errBulk', "Erreur lors de la récupération des contacts.");
+return;
+}
+
+if(selection.length < 2){
+showErr('errBulk','Pas assez de contacts disponibles pour ce secteur.');
+return;
+}
+
+const cost = selection.length * 2;
+const ok = await spendCredits(cost, 'télécharger ces contacts');
+if(!ok) return;
+
+if(format==='csv'){
+const rows = ['Nom,Business,WhatsApp,Ville,Pays,Secteur,Source', ...selection.map(contactToCSVRow)];
+triggerFileDownload(`kontak-contacts-${selection.length}.csv`, rows.join('\n'), 'text/csv');
+}else{
+const vcards = selection.map(contactToVCard).join('\n');
+triggerFileDownload(`kontak-contacts-${selection.length}.vcf`, vcards, 'text/vcard');
+}
+
+closeBulkDownload();
+showToast(`${selection.length} contact(s) téléchargé(s) ✓`);
+}
+
+[document.getElementById('downloadOverlay'), document.getElementById('detailOverlay'), document.getElementById('bulkOverlay')].forEach(ov=>{
+ov.addEventListener('click', (e)=>{ if(e.target===ov) ov.classList.remove('open'); });
+});
+
+function openNoCredits(current, needed){
+document.getElementById('noCreditsIcon').innerHTML = ICONS.wallet;
+document.getElementById('noCreditsText').textContent = `Il te faut ${needed} crédits pour continuer, il t'en reste ${current}. Recharge ton compte pour poursuivre.`;
+document.getElementById('noCreditsOverlay').classList.add('open');
+}
+function closeNoCredits(){ document.getElementById('noCreditsOverlay').classList.remove('open'); }
+document.getElementById('noCreditsOverlay').addEventListener('click', (e)=>{
+if(e.target.id==='noCreditsOverlay') closeNoCredits();
+});
+
+initNav();
+render(true);
+</script>
+</body>
+</html>
