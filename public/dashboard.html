@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+b<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -420,7 +420,7 @@ let CURRENT_PROFILE = null;
 
 async function initNav(){
 try{
-const res = await fetch('/api/auth/me', { credentials: 'include' });
+const res = await fetch('/api/auth/session', { credentials: 'include' });
 const data = await res.json();
 CURRENT_USER = data.user || null;
 CURRENT_PROFILE = CURRENT_USER ? CURRENT_USER.profile : null;
@@ -436,7 +436,7 @@ return { user: CURRENT_USER, profile: CURRENT_PROFILE, isAdmin };
 }
 
 async function logout(){
-await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+await fetch('/api/auth/session', { method: 'DELETE', credentials: 'include' });
 window.location.href = 'index';
 }
 
@@ -630,7 +630,7 @@ secteur: document.getElementById('c-sector').value
 };
 
 try{
-const res = await fetch('/api/profiles/create', {
+const res = await fetch('/api/profiles', {
 method: 'POST',
 headers: { 'Content-Type': 'application/json' },
 credentials: 'include',
