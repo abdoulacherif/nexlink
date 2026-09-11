@@ -53,10 +53,14 @@ export function getSession(req: VercelRequest): SessionPayload | null {
   }
 }
 
+type Handler = (
+  req: VercelRequest,
+  res: VercelResponse,
+  session: SessionPayload
+) => Promise<void | VercelResponse> | void | VercelResponse;
+
 // Protège une route : utilisateur connecté requis
-export function requireAuth(
-  handler: (req: VercelRequest, res: VercelResponse, session: SessionPayload) => Promise<void> | void
-) {
+export function requireAuth(handler: Handler) {
   return async (req: VercelRequest, res: VercelResponse) => {
     const session = getSession(req);
     if (!session) {
@@ -68,9 +72,7 @@ export function requireAuth(
 }
 
 // Protège une route : admin requis
-export function requireAdmin(
-  handler: (req: VercelRequest, res: VercelResponse, session: SessionPayload) => Promise<void> | void
-) {
+export function requireAdmin(handler: Handler) {
   return requireAuth(async (req, res, session) => {
     if (!session.isAdmin) {
       res.status(403).json({ error: 'Accès réservé aux administrateurs' });
