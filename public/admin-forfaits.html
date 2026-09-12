@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Forfaits — Kontak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#FFFFFF;--bg-soft:#F3FBF5;--ink:#0E2A1B;--green:#25D366;--green-dark:#128C4A;
+--orange:#FF8A3D;--gold:#E8A33D;--line:rgba(14,42,27,0.10);--muted:rgba(14,42,27,0.55);--err:#D9534F;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Sora',sans-serif;-webkit-font-smoothing:antialiased;}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+.mono{font-family:'Space Mono',monospace;}
+a{color:inherit;}
+.logo{font-family:'Fraunces',serif;font-style:italic;font-size:22px;letter-spacing:0.3px;text-decoration:none;color:var(--ink);}
+.logo span{color:var(--green-dark);}
+.btn-fill{background:var(--green);color:#fff;border:none;padding:10px 18px;border-radius:100px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Sora',sans-serif;text-decoration:none;display:inline-block;}
+.btn-ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink);padding:8px 14px;border-radius:10px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Sora',sans-serif;text-decoration:none;}
+.hero{padding:36px 24px 16px;}
+.eyebrow{font-family:'Space Mono',monospace;font-size:12px;color:var(--orange);text-transform:uppercase;letter-spacing:2px;font-weight:700;}
+.admin-tabs{display:flex;gap:4px;padding:0 20px 16px;overflow-x:auto;}
+.admin-tab{flex-shrink:0;padding:9px 16px;border-radius:100px;border:1.5px solid var(--line);font-size:13px;color:var(--muted);background:#fff;cursor:pointer;font-family:'Sora',sans-serif;text-decoration:none;white-space:nowrap;font-weight:600;}
+.admin-tab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+.admin-toolbar{display:flex;justify-content:space-between;align-items:center;padding:0 20px 16px;flex-wrap:wrap;gap:10px;}
+.stats-bar{font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);}
+.table-wrap{padding:0 20px 60px;overflow-x:auto;}
+table.admin-table{width:100%;border-collapse:collapse;background:#fff;color:var(--ink);border-radius:14px;overflow:hidden;font-size:13.5px;min-width:720px;border:1px solid var(--line);}
+table.admin-table th{background:var(--bg-soft);text-align:left;padding:10px 12px;font-family:'Space Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);}
+table.admin-table td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:middle;}
+table.admin-table tr:hover td{background:var(--bg-soft);}
+.row-actions{display:flex;gap:6px;}
+.icon-btn{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-family:'Sora',sans-serif;color:var(--ink);}
+.gate{padding:80px 20px;text-align:center;color:var(--muted);}
+.gate h2{color:var(--ink);margin-bottom:10px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px;}
+.field input,.field select,.field textarea{width:100%;padding:11px 13px;border-radius:10px;border:1.5px solid var(--line);font-family:'Sora',sans-serif;font-size:14.5px;background:#fff;color:var(--ink);}
+.field textarea{resize:vertical;min-height:80px;}
+.form-actions{display:flex;gap:10px;margin-top:20px;}
+.btn-primary{flex:1;background:var(--green);color:#fff;border:none;padding:13px;border-radius:10px;font-weight:700;font-size:14.5px;cursor:pointer;font-family:'Sora',sans-serif;}
+.err-msg{font-size:12.5px;color:var(--err);margin-top:4px;display:none;}
+.err-msg.show{display:block;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 22px;border-radius:100px;font-size:13.5px;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none;max-width:90%;text-align:center;}
+.toast.show{opacity:1;}
+.modal-overlay{position:fixed;inset:0;background:rgba(14,42,27,0.55);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;z-index:100;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;color:var(--ink);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:26px 22px 30px;max-height:90vh;overflow-y:auto;position:relative;border:1px solid var(--line);}
+@media(min-width:640px){.modal-overlay{align-items:center;}.modal{border-radius:20px;}}
+.close-x{position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);}
+</style>
+</head>
+<body>
+<header style="padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;">
+<a class="logo" href="index" style="font-size:19px;">Kon<span>tak</span></a>
+<a class="btn-ghost" href="dashboard">Quitter l'admin</a>
+</header>
+<div id="gateMsg" class="gate" style="display:none;">
+<h2>Accès refusé</h2>
+<p>Cette page est réservée à l'administrateur.</p>
+<br>
+<a class="btn-fill" href="index">Retour à l'accueil</a>
+</div>
+<div id="adminContent" style="display:none;">
+<div class="hero">
+<div class="eyebrow">Panneau d'administration</div>
+<h1 style="font-size:26px;">Forfaits</h1>
+</div>
+<div class="admin-tabs">
+<a class="admin-tab" href="admin-fiches">Fiches</a>
+<a class="admin-tab" href="admin-navigation">Navigation</a>
+<a class="admin-tab" href="admin-demandes">Demandes</a>
+<a class="admin-tab active" href="admin-forfaits">Forfaits</a>
+<a class="admin-tab" href="admin-catalogue">Catalogue</a>
+<a class="admin-tab" href="admin-commandes">Commandes</a>
+</div>
+<div class="admin-toolbar">
+<div class="stats-bar" id="planStats"></div>
+<button class="btn-fill" onclick="openPlanEditor(null)">+ Nouveau forfait</button>
+</div>
+<div class="table-wrap">
+<table class="admin-table">
+<thead><tr><th>Nom</th><th>Prix</th><th>Période</th><th>Essai</th><th>Ordre</th><th>Actif</th><th>Actions</th></tr></thead>
+<tbody id="planRows"></tbody>
+</table>
+</div>
+</div>
+<div class="modal-overlay" id="planEditOverlay">
+<div class="modal">
+<button class="close-x" onclick="closePlanEditor()">✕</button>
+<h2 id="planEditTitle">Nouveau forfait</h2>
+<form id="planEditForm">
+<input type="hidden" id="pl-id">
+<div class="field"><label>Nom</label><input type="text" id="pl-name" required></div>
+<div class="field"><label>Prix (FCFA)</label><input type="number" id="pl-price" min="0" required></div>
+<div class="field"><label>Période</label><input type="text" id="pl-period" placeholder="Ex: mois" required></div>
+<div class="field"><label>Jours d'essai gratuit (0 = aucun)</label><input type="number" id="pl-trial" min="0" value="0"></div>
+<div class="field"><label>Avantages (un par ligne)</label><textarea id="pl-features" placeholder="Ex: 500 crédits offerts&#10;Badge vérifié"></textarea></div>
+<div class="field"><label>Position (ordre d'affichage)</label><input type="number" id="pl-position" value="1" min="0"></div>
+<div class="field">
+<label>Actif</label>
+<select id="pl-active"><option value="true">Oui</option><option value="false">Non</option></select>
+</div>
+<div class="err-msg" id="errPlanEdit"></div>
+<div class="form-actions">
+<button type="button" class="btn-ghost" onclick="closePlanEditor()">Annuler</button>
+<button type="submit" class="btn-primary" id="planEditSaveBtn">Enregistrer</button>
+</div>
+</form>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+// ---- Plus aucune clé Supabase ici : tout passe par /api/* ----
+
+function escapeHtml(s){
+const d = document.createElement('div');
+d.textContent = s || '';
+return d.innerHTML;
+}
+function showToast(msg){
+let t = document.getElementById('toast');
+if(!t){ t = document.createElement('div'); t.id='toast'; t.className='toast'; document.body.appendChild(t); }
+t.textContent = msg; t.classList.add('show');
+setTimeout(()=>t.classList.remove('show'), 3200);
+}
+function showErr(id,msg){ const e=document.getElementById(id); if(!e) return; e.textContent=msg; e.classList.add('show'); }
+function hideErr(id){ const e=document.getElementById(id); if(e) e.classList.remove('show'); }
+
+async function initNav(){
+try{
+const res = await fetch('/api/auth/session', { credentials: 'include' });
+const data = await res.json();
+return { user: data.user, isAdmin: !!(data.user && data.user.isAdmin) };
+}catch(e){ return { user: null, isAdmin: false }; }
+}
+
+let plans = [];
+
+async function loadPlans(){
+try{
+const res = await fetch('/api/admin/members?resource=plans', { credentials: 'include' });
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+plans = data.items || [];
+}catch(e){ plans = []; }
+renderPlans();
+}
+
+function renderPlans(){
+document.getElementById('planStats').textContent = `${plans.length} forfait(s)`;
+const tbody = document.getElementById('planRows');
+if(plans.length===0){
+tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted);">Aucun forfait pour l'instant.</td></tr>`;
+return;
+}
+tbody.innerHTML = plans.map(p=>`
+<tr>
+<td>${escapeHtml(p.name)}</td>
+<td class="mono">${(p.price||0).toLocaleString('fr-FR')} FCFA</td>
+<td>${escapeHtml(p.period)}</td>
+<td>${p.trial_days ? p.trial_days+' j' : '—'}</td>
+<td class="mono">${p.position ?? 0}</td>
+<td>${p.active ? 'Oui' : 'Non'}</td>
+<td>
+<div class="row-actions">
+<button class="icon-btn" onclick='openPlanEditor(${JSON.stringify(p).replace(/'/g,"&apos;")})'>Modifier</button>
+<button class="icon-btn" onclick="deletePlan('${p.id}')">Supprimer</button>
+</div>
+</td>
+</tr>
+`).join('');
+}
+
+function openPlanEditor(p){
+document.getElementById('planEditForm').reset();
+hideErr('errPlanEdit');
+if(p){
+document.getElementById('planEditTitle').textContent = 'Modifier le forfait';
+document.getElementById('pl-id').value = p.id;
+document.getElementById('pl-name').value = p.name || '';
+document.getElementById('pl-price').value = p.price || 0;
+document.getElementById('pl-period').value = p.period || '';
+document.getElementById('pl-trial').value = p.trial_days || 0;
+document.getElementById('pl-features').value = (Array.isArray(p.features) ? p.features : []).join('\n');
+document.getElementById('pl-position').value = p.position ?? 0;
+document.getElementById('pl-active').value = p.active ? 'true' : 'false';
+}else{
+document.getElementById('planEditTitle').textContent = 'Nouveau forfait';
+document.getElementById('pl-id').value = '';
+document.getElementById('pl-position').value = plans.length + 1;
+}
+document.getElementById('planEditOverlay').classList.add('open');
+}
+function closePlanEditor(){ document.getElementById('planEditOverlay').classList.remove('open'); }
+
+document.getElementById('planEditForm').addEventListener('submit', async (e)=>{
+e.preventDefault();
+const btn = document.getElementById('planEditSaveBtn');
+btn.disabled = true; btn.textContent = 'Enregistrement…';
+
+const id = document.getElementById('pl-id').value;
+const featuresList = document.getElementById('pl-features').value.split('\n').map(s=>s.trim()).filter(Boolean);
+const payload = {
+name: document.getElementById('pl-name').value.trim(),
+price: parseInt(document.getElementById('pl-price').value, 10) || 0,
+period: document.getElementById('pl-period').value.trim(),
+trial_days: parseInt(document.getElementById('pl-trial').value, 10) || 0,
+features: featuresList,
+position: parseInt(document.getElementById('pl-position').value, 10) || 0,
+active: document.getElementById('pl-active').value === 'true'
+};
+
+try{
+const url = id ? `/api/admin/members?resource=plans&id=${id}` : '/api/admin/members?resource=plans';
+const res = await fetch(url, {
+method: id ? 'PATCH' : 'POST',
+headers: { 'Content-Type': 'application/json' },
+credentials: 'include',
+body: JSON.stringify(payload)
+});
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+
+closePlanEditor();
+showToast('Forfait enregistré ✓');
+loadPlans();
+}catch(err){
+showErr('errPlanEdit', err.message || "Erreur lors de l'enregistrement.");
+}finally{
+btn.disabled = false; btn.textContent = 'Enregistrer';
+}
+});
+
+async function deletePlan(id){
+if(!confirm('Supprimer ce forfait ?')) return;
+try{
+const res = await fetch(`/api/admin/members?resource=plans&id=${id}`, { method:'DELETE', credentials:'include' });
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+showToast('Forfait supprimé');
+loadPlans();
+}catch(err){
+showToast(err.message || "Erreur lors de la suppression.");
+}
+}
+
+document.getElementById('planEditOverlay').addEventListener('click', (e)=>{
+if(e.target.id==='planEditOverlay') closePlanEditor();
+});
+
+(async ()=>{
+const { user, isAdmin } = await initNav();
+if(!user || !isAdmin){ document.getElementById('gateMsg').style.display = ''; return; }
+document.getElementById('adminContent').style.display = '';
+loadPlans();
+})();
+</script>
+</body>
+</html>
