@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business — Kontak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#FFFFFF;
+--bg-soft:#F3FBF5;
+--ink:#0E2A1B;
+--green:#25D366;
+--green-dark:#128C4A;
+--orange:#FF8A3D;
+--gold:#E8A33D;
+--line:rgba(14,42,27,0.10);
+--muted:rgba(14,42,27,0.55);
+--err:#D9534F;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Sora',sans-serif;-webkit-font-smoothing:antialiased;}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+.mono{font-family:'Space Mono',monospace;}
+a{color:inherit;}
+.btn-fill{background:var(--green);color:#fff;border:none;padding:10px 18px;border-radius:100px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Sora',sans-serif;text-decoration:none;display:inline-block;}
+.hero{padding:56px 24px 32px;text-align:left;background:linear-gradient(180deg,var(--bg-soft) 0%, #fff 100%);}
+.hero .eyebrow{font-family:'Space Mono',monospace;font-size:12px;color:var(--orange);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;font-weight:700;}
+.search-wrap{padding:0 20px 8px;}
+.search-box{background:var(--bg-soft);border:1px solid var(--line);border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:8px;}
+.search-box input{background:transparent;border:none;outline:none;color:var(--ink);font-family:'Sora',sans-serif;font-size:15px;flex:1;}
+.search-box input::placeholder{color:var(--muted);}
+.filters{display:flex;gap:8px;overflow-x:auto;padding:14px 20px 22px;-webkit-overflow-scrolling:touch;}
+.filters::-webkit-scrollbar{display:none;}
+.chip{flex-shrink:0;padding:7px 14px;border-radius:100px;border:1.5px solid var(--line);font-size:13px;color:var(--muted);background:#fff;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;}
+.chip.active{background:var(--green);color:#fff;border-color:var(--green);font-weight:700;}
+.stats-bar{padding:0 20px 18px;font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);}
+.ic-svg{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex-shrink:0;}
+.ic-svg svg{width:100%;height:100%;}
+.fixed-navbar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center;gap:2px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(14,42,27,0.06);}
+.fnav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px 10px;border-radius:12px;background:transparent;color:var(--ink);text-decoration:none;font-size:11px;font-weight:600;white-space:nowrap;flex:1;text-align:center;}
+.fnav-btn:hover{background:var(--bg-soft);}
+.fnav-btn .ic-svg{width:20px;height:20px;color:var(--green-dark);}
+body{padding-bottom:74px;}
+.dash-topbar{display:none;padding:14px 18px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:30;}
+.burger{width:38px;height:38px;border-radius:10px;border:1.5px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-direction:column;gap:4px;}
+.burger span{display:block;width:16px;height:2px;background:var(--ink);border-radius:2px;}
+.dash-shell{display:flex;min-height:100vh;}
+.sidebar{width:250px;flex-shrink:0;background:var(--bg-soft);border-right:1px solid var(--line);padding:24px 16px;position:sticky;top:0;height:100vh;overflow-y:auto;padding-bottom:90px;}
+.sidebar .logo{display:block;margin-bottom:30px;}
+.logo{font-family:'Fraunces',serif;font-style:italic;font-size:22px;letter-spacing:0.3px;text-decoration:none;color:var(--ink);}
+.logo span{color:var(--green-dark);}
+.side-section{margin-bottom:22px;}
+.side-label{font-family:'Space Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:0 12px;margin-bottom:8px;}
+.side-link{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;cursor:pointer;margin-bottom:2px;}
+.side-link:hover{background:#fff;}
+.side-link.active{background:var(--green);color:#fff;}
+.more-toggle{width:100%;border:none;background:none;cursor:pointer;}
+.more-toggle .chevron{width:14px;height:14px;transition:transform .2s;}
+.more-toggle .chevron svg{width:100%;height:100%;}
+.more-toggle.open .chevron{transform:rotate(180deg);}
+.more-menu-panel{display:none;padding-left:6px;margin-top:2px;border-left:2px solid var(--line);}
+.more-menu-panel.open{display:block;}
+.sub-link{font-size:13px;padding:9px 12px;}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(14,42,27,0.5);z-index:35;}
+.sidebar-overlay.open{display:block;}
+.dash-main{flex:1;min-width:0;}
+@media(max-width:880px){
+.dash-topbar{display:flex;}
+.sidebar{position:fixed;left:0;top:0;bottom:0;z-index:40;transform:translateX(-100%);transition:transform .25s ease;}
+.sidebar.open{transform:translateX(0);box-shadow:8px 0 24px rgba(0,0,0,0.15);}
+.hero{padding-left:20px;padding-right:20px;}
+}
+.group-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 20px 60px;max-width:960px;margin:0 auto;}
+@media(min-width:640px){.group-grid{grid-template-columns:repeat(3,1fr);}}
+@media(min-width:960px){.group-grid{grid-template-columns:repeat(4,1fr);}}
+.group-tile{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:14px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;}
+.group-tile .g-icon{width:34px;height:34px;border-radius:50%;background:var(--bg-soft);color:var(--green-dark);display:flex;align-items:center;justify-content:center;}
+.group-tile .g-icon svg{width:16px;height:16px;}
+.group-tile .g-name{font-size:12.5px;font-weight:700;line-height:1.3;min-height:32px;display:flex;align-items:center;justify-content:center;}
+.group-tile .g-theme{font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase;}
+.group-tile .g-join{width:100%;background:var(--green);color:#fff;border:none;padding:8px;border-radius:9px;font-weight:700;font-size:11.5px;cursor:pointer;font-family:'Sora',sans-serif;margin-top:2px;}
+.empty-groups{grid-column:1/-1;text-align:center;padding:50px 20px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="dash-topbar">
+<button class="burger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+<a class="logo" href="index" style="font-size:19px;">Kon<span>tak</span></a>
+<div style="width:38px;"></div>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<nav class="fixed-navbar" id="fixedNavbar"></nav>
+<div class="dash-shell">
+<aside class="sidebar" id="sidebar">
+<a class="logo" href="index">Kon<span>tak</span></a>
+<div class="side-section">
+<div class="side-label">Mon compte</div>
+<a class="side-link" href="dashboard"><span class="ic-svg" id="icOverview"></span> Vue d'ensemble</a>
+</div>
+<div class="side-section">
+<div class="side-label">Naviguer</div>
+<a class="side-link" href="annuaire"><span class="ic-svg" id="icAnnuaire"></span> Annuaire</a>
+<a class="side-link active" href="business"><span class="ic-svg" id="icBiz"></span> Groupes WhatsApp</a>
+</div>
+<div class="side-section">
+<button class="side-link more-toggle" id="moreMenuToggle" onclick="toggleMoreMenu()">
+<span class="ic-svg" id="icMore"></span> Plus
+<span class="ic-svg chevron" id="icChevron" style="margin-left:auto;"></span>
+</button>
+<div class="more-menu-panel" id="moreMenuPanel">
+<a class="side-link sub-link" href="abonnement"><span class="ic-svg" id="icWallet"></span> Crédits & Abonnement</a>
+<a class="side-link sub-link" href="reseau"><span class="ic-svg" id="icNetwork"></span> Réseau</a>
+<a class="side-link sub-link" href="gain"><span class="ic-svg" id="icGain"></span> Gains</a>
+<a class="side-link sub-link" href="support"><span class="ic-svg" id="icSupport"></span> Support</a>
+<a class="side-link sub-link" href="faq"><span class="ic-svg" id="icFaq"></span> FAQ</a>
+<a class="side-link sub-link" href="parrainage"><span class="ic-svg" id="icReferral"></span> Parrainage</a>
+<a class="side-link sub-link" href="conditions"><span class="ic-svg" id="icConditions"></span> Conditions</a>
+<a class="side-link sub-link" href="politique"><span class="ic-svg" id="icPolitique"></span> Politique</a>
+</div>
+</div>
+<div class="side-section">
+<div class="side-label">Session</div>
+<a class="side-link" href="#" data-action="logout"><span class="ic-svg" id="icLogout"></span> Déconnexion</a>
+</div>
+</aside>
+<main class="dash-main">
+<section class="hero" style="padding-bottom:12px;">
+<div class="eyebrow">Groupes</div>
+<h1 style="font-size:28px;">Groupes WhatsApp</h1>
+<p style="color:var(--muted);font-size:14.5px;margin-top:10px;">Plus de 1000 groupes classés par thème. Rejoindre un groupe coûte 2 crédits.</p>
+</section>
+<div class="search-wrap">
+<div class="search-box">
+<span class="mono">⌕</span>
+<input id="groupSearch" placeholder="Chercher un groupe…" oninput="debouncedGroupSearch()">
+</div>
+</div>
+<div class="filters" id="groupFilters" style="padding:0 20px 10px;"></div>
+<div class="stats-bar" id="groupStats"></div>
+<div class="group-grid" id="groupGrid"></div>
+</main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+// ---- Plus aucune clé Supabase ici : tout passe par /api/* ----
+
+function escapeHtml(s){
+const d = document.createElement('div');
+d.textContent = s || '';
+return d.innerHTML;
+}
+function showToast(msg){
+let t = document.getElementById('toast');
+if(!t){
+t = document.createElement('div');
+t.id = 'toast';
+t.className = 'toast';
+document.body.appendChild(t);
+}
+t.textContent = msg;
+t.classList.add('show');
+setTimeout(()=>t.classList.remove('show'), 3200);
+}
+
+let CURRENT_USER = null;
+let CURRENT_PROFILE = null;
+
+async function initNav(){
+try{
+const res = await fetch('/api/auth/session', { credentials: 'include' });
+const data = await res.json();
+CURRENT_USER = data.user || null;
+CURRENT_PROFILE = CURRENT_USER ? CURRENT_USER.profile : null;
+}catch(e){
+CURRENT_USER = null;
+CURRENT_PROFILE = null;
+}
+const isAdmin = !!(CURRENT_USER && CURRENT_USER.isAdmin);
+document.querySelectorAll('[data-auth="guest"]').forEach(el=> el.style.display = CURRENT_USER ? 'none' : '');
+document.querySelectorAll('[data-auth="user"]').forEach(el=> el.style.display = CURRENT_USER ? '' : 'none');
+document.querySelectorAll('[data-auth="admin"]').forEach(el=> el.style.display = isAdmin ? '' : 'none');
+return { user: CURRENT_USER, profile: CURRENT_PROFILE, isAdmin };
+}
+
+async function logout(){
+await fetch('/api/auth/session', { method: 'DELETE', credentials: 'include' });
+window.location.href = 'index';
+}
+
+document.addEventListener('click', (e)=>{
+if(e.target && e.target.matches('[data-action="logout"]')){
+e.preventDefault();
+logout();
+}
+});
+
+const ICONS = {
+grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7"/><path d="M9 22V12h6v10"/></svg>',
+message: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.4 8.4 0 0 1-4-1L3 20l1-4.5A8.4 8.4 0 0 1 3 11.5 8.5 8.5 0 0 1 11.5 3 8.5 8.5 0 0 1 21 11.5z"/></svg>',
+support: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="m5.2 5.2 3.3 3.3M18.8 5.2l-3.3 3.3M5.2 18.8l3.3-3.3M18.8 18.8l-3.3-3.3"/></svg>',
+faq: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 2-2.4 3.7"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+referral: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><path d="M2 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17.5" cy="8.5" r="2.3"/><path d="M15.2 14.6c2.6.2 4.8 2.2 4.8 5.4"/></svg>',
+network: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M8.2 7.3 10.5 16M15.8 7.3 13.5 16M8.3 6h7.4"/></svg>',
+gain: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>',
+document: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>',
+shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 11 4.6-2.3 8-6 8-11V5l-8-3Z"/></svg>',
+wallet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v3"/><path d="M3 7v11a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-5a2 2 0 0 0 0 4h5.5"/></svg>',
+menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>',
+chevronDown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'
+};
+function icon(key, cls){
+return `<span class="ic-svg ${cls||''}">${ICONS[key] || ICONS.grid}</span>`;
+}
+
+async function loadNavItems(){
+try{
+const res = await fetch('/api/nav-items');
+if(!res.ok) throw new Error('nav-items indisponible');
+const data = await res.json();
+return data.items || [];
+}catch(e){ console.error(e); return []; }
+}
+
+function toggleSidebar(){
+document.getElementById('sidebar').classList.toggle('open');
+document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeSidebar(){
+document.getElementById('sidebar').classList.remove('open');
+document.getElementById('sidebarOverlay').classList.remove('open');
+}
+document.getElementById('icOverview').innerHTML = ICONS.home;
+document.getElementById('icAnnuaire').innerHTML = ICONS.grid;
+document.getElementById('icBiz').innerHTML = ICONS.message;
+document.getElementById('icWallet').innerHTML = ICONS.wallet;
+document.getElementById('icSupport').innerHTML = ICONS.support;
+document.getElementById('icFaq').innerHTML = ICONS.faq;
+document.getElementById('icReferral').innerHTML = ICONS.referral;
+document.getElementById('icNetwork').innerHTML = ICONS.network;
+document.getElementById('icGain').innerHTML = ICONS.gain;
+document.getElementById('icConditions').innerHTML = ICONS.document;
+document.getElementById('icPolitique').innerHTML = ICONS.shield;
+document.getElementById('icMore').innerHTML = ICONS.menu;
+document.getElementById('icChevron').innerHTML = ICONS.chevronDown;
+function toggleMoreMenu(){
+document.getElementById('moreMenuPanel').classList.toggle('open');
+document.getElementById('moreMenuToggle').classList.toggle('open');
+}
+document.getElementById('icLogout').innerHTML = ICONS.logout;
+
+async function renderFixedNavbar(){
+const items = await loadNavItems();
+const bar = document.getElementById('fixedNavbar');
+if(items.length===0){ bar.style.display='none'; return; }
+bar.innerHTML = items.map(it=>`
+<a class="fnav-btn" href="${escapeHtml(it.url)}">${icon(it.icon)}<span>${escapeHtml(it.label)}</span></a>
+`).join('');
+}
+renderFixedNavbar();
+
+// ---- Dépense de crédits — vérifiée côté serveur ----
+async function spendCredits(amount, purpose){
+if(!CURRENT_USER){
+showToast(`Connecte-toi pour ${purpose}`);
+setTimeout(()=> window.location.href = 'connexion', 1300);
+return false;
+}
+try{
+const res = await fetch('/api/directory/list', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+credentials: 'include',
+body: JSON.stringify({ amount })
+});
+const data = await res.json();
+if(res.status === 402){
+showToast(`Crédits insuffisants (${amount} nécessaires) — recharge ton compte`);
+setTimeout(()=> window.location.href = 'abonnement', 1300);
+return false;
+}
+if(!res.ok) throw new Error(data.error || 'Erreur inconnue');
+if(CURRENT_PROFILE) CURRENT_PROFILE.credits = data.credits;
+return true;
+}catch(e){
+showToast('Erreur : impossible de vérifier tes crédits');
+return false;
+}
+}
+
+let groups = [];
+let groupTotalCount = 0;
+let groupOffset = 0;
+const GROUP_PAGE_SIZE = 40;
+let groupLoadToken = 0;
+let activeGroupTheme = 'Tous';
+let groupThemes = ['Tous'];
+
+function debounce(fn, delay){
+let t;
+return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), delay); };
+}
+const debouncedGroupSearch = debounce(()=> loadGroups(true), 350);
+
+async function loadGroupThemes(){
+try{
+const res = await fetch('/api/directory/list?type=group-themes');
+if(!res.ok) throw new Error();
+const data = await res.json();
+groupThemes = ['Tous', ...(data.themes || [])];
+}catch(e){ groupThemes = ['Tous']; }
+renderGroupFilters();
+}
+
+function renderGroupFilters(){
+document.getElementById('groupFilters').innerHTML = groupThemes.map(t=>
+`<button class="chip ${t===activeGroupTheme?'active':''}" onclick="setGroupTheme('${t}')">${t}</button>`
+).join('');
+}
+function setGroupTheme(t){ activeGroupTheme = t; loadGroups(true); }
+
+async function loadGroups(reset){
+const myToken = ++groupLoadToken;
+if(reset){ groupOffset = 0; groups = []; document.getElementById('groupGrid').innerHTML = `<div class="empty-groups">Chargement…</div>`; }
+const q = document.getElementById('groupSearch').value.trim();
+
+try{
+const params = new URLSearchParams();
+params.set('type', 'groups');
+if(activeGroupTheme !== 'Tous') params.set('theme', activeGroupTheme);
+if(q) params.set('q', q);
+params.set('offset', groupOffset);
+params.set('limit', GROUP_PAGE_SIZE);
+
+const res = await fetch(`/api/directory/list?${params.toString()}`);
+if(!res.ok) throw new Error();
+const data = await res.json();
+
+if(myToken !== groupLoadToken) return;
+
+groups = reset ? (data.groups || []) : groups.concat(data.groups || []);
+groupTotalCount = data.total ?? groups.length;
+groupOffset = groups.length;
+renderGroups();
+
+}catch(e){
+console.error(e);
+if(myToken === groupLoadToken) document.getElementById('groupGrid').innerHTML = `<div class="empty-groups">Erreur de chargement.</div>`;
+}
+}
+
+function renderGroups(){
+document.getElementById('groupStats').textContent = `${groupTotalCount} groupe${groupTotalCount!==1?'s':''} · ${groups.length} affiché${groups.length!==1?'s':''}`;
+const grid = document.getElementById('groupGrid');
+if(groups.length===0){
+grid.innerHTML = `<div class="empty-groups"><h3>Aucun groupe trouvé</h3></div>`;
+return;
+}
+const tilesHtml = groups.map(g=>`
+<div class="group-tile">
+<div class="g-icon">${ICONS.message}</div>
+<div class="g-name">${escapeHtml(g.name)}</div>
+<div class="g-theme">${escapeHtml(g.theme||'')}</div>
+<button class="g-join" data-link="${escapeHtml(g.invite_link)}" onclick="joinGroup(this.dataset.link)">Rejoindre · 2 crédits</button>
+</div>
+`).join('');
+const hasMore = groups.length < groupTotalCount;
+grid.innerHTML = tilesHtml + (hasMore
+? `<button class="btn-fill" style="grid-column:1/-1;justify-self:center;margin:10px 0;" onclick="loadGroups(false)">Charger plus (${groupTotalCount - groups.length})</button>`
+: '');
+}
+
+async function joinGroup(link){
+const ok = await spendCredits(2, 'rejoindre ce groupe');
+if(!ok) return;
+window.open(link, '_blank', 'noopener');
+}
+
+initNav();
+loadGroupThemes();
+loadGroups(true);
+</script>
+</body>
+</html>
