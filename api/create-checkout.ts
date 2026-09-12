@@ -1,13 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSession } from '../lib/auth';
 
-// TODO: cette route est un squelette. Je n'ai pas la documentation de l'API
-// LeekPay (endpoint de création de checkout, format exact du payload et de
-// la réponse), donc je ne peux pas deviner ça sans risquer de casser le
-// paiement en prod. Remplace le bloc "fetch(...)" ci-dessous par le vrai
-// appel LeekPay une fois que tu as leur doc API sous la main — la structure
-// générale (vérifier l'auth, créer le paiement, renvoyer payment_url) reste
-// correcte.
+// Crée une session de paiement LeekPay. La clé secrète ne quitte jamais le serveur.
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
@@ -16,31 +10,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!session) return res.status(401).json({ error: 'Non authentifié' });
 
   const { amount, description, metadata } = req.body || {};
-  if (!amount || !description) {
-    return res.status(400).json({ error: 'amount et description requis' });
+  if (!amount || !description || !metadata || !metadata.kind) {
+    return res.status(400).json({ error: 'Paramètres manquants' });
   }
 
   try {
-    // --- À REMPLACER par le vrai appel LeekPay ---
-    // const resp = await fetch('https://api.leekpay.example/v1/checkout', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Authorization': `Bearer ${process.env.LEEKPAY_SECRET_KEY}`,
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify({
-    //     amount,
-    //     description,
-    //     metadata: { ...metadata, user_id: session.userId },
-    //     success_url: `${process.env.SITE_URL}/dashboard`,
-    //     cancel_url: `${process.env.SITE_URL}/abonnement`,
-    //   }),
-    // });
-    // const data = await resp.json();
-    // return res.status(200).json({ payment_url: data.checkout_url });
+    const resp = await fetch('https://leekpay.fr/api/v1/checkout', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.LEEKPAY_SECRET_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        amount,
+        currency: 'XOF',
+        description,
+        return_url: 'https://kontaks.vercel.app/abonnement?paid=1',
+        cancel_url: 'https://kontaks.vercel.app/abonnement',
+        customer_email: session.email || undefined,
+        // user_id vient TOUJOURS de la session serveur, jamais du client,
+        // pour empêcher de créditer le compte de quelqu'un d'autre.
+        metadata: { ...metadata, user_id: session.userId },
+      }),
+    });
 
-    return res.status(501).json({ error: "Paiement LeekPay pas encore branché côté serveur." });
+    const data = await resp.json();
+    if (!resp.ok || !data.success) {
+      return res.status(400).json({ error: (data && data.message) || 'Erreur lors de la création du paiement' });
+    }
+
+    return res.status(200).json({
+      payment_url: data.data.payment_url,
+      checkout_id: data.data.id,
+    });
   } catch (err: any) {
-    return res.status(500).json({ error: err.message || 'Erreur lors de la création du paiement.' });
+    return res.status(500).json({ error: err.message || 'Erreur serveur' });
   }
 }
