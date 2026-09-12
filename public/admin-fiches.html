@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Fiches — Kontak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#FFFFFF;
+--bg-soft:#F3FBF5;
+--ink:#0E2A1B;
+--green:#25D366;
+--green-dark:#128C4A;
+--orange:#FF8A3D;
+--gold:#E8A33D;
+--line:rgba(14,42,27,0.10);
+--muted:rgba(14,42,27,0.55);
+--err:#D9534F;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Sora',sans-serif;-webkit-font-smoothing:antialiased;}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+.mono{font-family:'Space Mono',monospace;}
+a{color:inherit;}
+.logo{font-family:'Fraunces',serif;font-style:italic;font-size:22px;letter-spacing:0.3px;text-decoration:none;color:var(--ink);}
+.logo span{color:var(--green-dark);}
+.btn-fill{background:var(--green);color:#fff;border:none;padding:10px 18px;border-radius:100px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Sora',sans-serif;text-decoration:none;display:inline-block;}
+.hero{padding:36px 24px 16px;}
+.eyebrow{font-family:'Space Mono',monospace;font-size:12px;color:var(--orange);text-transform:uppercase;letter-spacing:2px;font-weight:700;}
+.admin-toolbar{display:flex;justify-content:space-between;align-items:center;padding:0 20px 16px;flex-wrap:wrap;gap:10px;}
+.search-wrap{padding:0 20px 14px;}
+.search-box{background:var(--bg-soft);border:1px solid var(--line);border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:8px;}
+.search-box input{background:transparent;border:none;outline:none;color:var(--ink);font-family:'Sora',sans-serif;font-size:15px;flex:1;}
+.stats-bar{font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);}
+.table-wrap{padding:0 20px 60px;overflow-x:auto;}
+table.admin-table{width:100%;border-collapse:collapse;background:#fff;color:var(--ink);border-radius:14px;overflow:hidden;font-size:13.5px;min-width:820px;border:1px solid var(--line);}
+table.admin-table th{background:var(--bg-soft);text-align:left;padding:10px 12px;font-family:'Space Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);}
+table.admin-table td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:middle;}
+table.admin-table tr:hover td{background:var(--bg-soft);}
+.row-actions{display:flex;gap:6px;}
+.icon-btn{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-family:'Sora',sans-serif;color:var(--ink);}
+.badge-admin{background:var(--gold);color:var(--ink);font-size:10px;padding:2px 8px;border-radius:100px;font-weight:700;margin-left:6px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px;}
+.field input,.field select{width:100%;padding:11px 13px;border-radius:10px;border:1.5px solid var(--line);font-family:'Sora',sans-serif;font-size:14.5px;background:#fff;color:var(--ink);}
+.form-actions{display:flex;gap:10px;margin-top:20px;}
+.btn-primary{flex:1;background:var(--green);color:#fff;border:none;padding:13px;border-radius:10px;font-weight:700;font-size:14.5px;cursor:pointer;font-family:'Sora',sans-serif;}
+.btn-ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink);padding:13px 18px;border-radius:10px;font-weight:600;font-size:14.5px;cursor:pointer;font-family:'Sora',sans-serif;}
+.err-msg{font-size:12.5px;color:var(--err);margin-top:4px;display:none;}
+.err-msg.show{display:block;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 22px;border-radius:100px;font-size:13.5px;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none;max-width:90%;text-align:center;}
+.toast.show{opacity:1;}
+.gate{padding:80px 20px;text-align:center;color:var(--muted);}
+.gate h2{color:var(--ink);margin-bottom:10px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(14,42,27,0.55);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;z-index:100;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;color:var(--ink);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:26px 22px 30px;max-height:90vh;overflow-y:auto;position:relative;border:1px solid var(--line);}
+@media(min-width:640px){.modal-overlay{align-items:center;}.modal{border-radius:20px;}}
+.close-x{position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);}
+.ic-svg{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex-shrink:0;}
+.ic-svg svg{width:100%;height:100%;}
+.admin-tabs{display:flex;gap:4px;padding:0 20px 16px;overflow-x:auto;}
+.admin-tab{flex-shrink:0;padding:9px 16px;border-radius:100px;border:1.5px solid var(--line);font-size:13px;color:var(--muted);background:#fff;cursor:pointer;font-family:'Sora',sans-serif;text-decoration:none;white-space:nowrap;font-weight:600;}
+.admin-tab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+</style>
+</head>
+<body>
+<header style="padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;">
+<a class="logo" href="index" style="font-size:19px;">Kon<span>tak</span></a>
+<a class="btn-ghost" href="dashboard" style="text-decoration:none;padding:8px 14px;font-size:13px;">Quitter l'admin</a>
+</header>
+<div id="gateMsg" class="gate" style="display:none;">
+<h2>Accès refusé</h2>
+<p>Cette page est réservée à l'administrateur.</p>
+<br>
+<a class="btn-fill" href="index">Retour à l'accueil</a>
+</div>
+<div id="adminContent" style="display:none;">
+<div class="hero">
+<div class="eyebrow">Panneau d'administration</div>
+<h1 style="font-size:26px;">Fiches</h1>
+</div>
+<div class="admin-tabs">
+<a class="admin-tab active" href="admin-fiches">Fiches</a>
+<a class="admin-tab" href="admin-navigation">Navigation</a>
+<a class="admin-tab" href="admin-demandes">Demandes</a>
+<a class="admin-tab" href="admin-forfaits">Forfaits</a>
+<a class="admin-tab" href="admin-catalogue">Catalogue</a>
+<a class="admin-tab" href="admin-commandes">Commandes</a>
+</div>
+<div class="admin-toolbar">
+<div class="stats-bar" id="adminStats"></div>
+<button class="btn-fill" onclick="openEditor(null)">+ Nouvelle fiche</button>
+</div>
+<div class="search-wrap">
+<div class="search-box">
+<span class="mono">⌕</span>
+<input id="adminSearch" placeholder="Chercher un nom, un email, une ville…" oninput="debouncedLoadAll()">
+</div>
+</div>
+<div class="table-wrap">
+<table class="admin-table">
+<thead>
+<tr>
+<th>Nom</th><th>Business</th><th>WhatsApp</th><th>Ville / Pays</th><th>Secteur</th><th>Crédits</th><th>Solde</th><th>Email</th><th>Actions</th>
+</tr>
+</thead>
+<tbody id="adminRows"></tbody>
+</table>
+</div>
+</div>
+<div class="modal-overlay" id="editOverlay">
+<div class="modal">
+<button class="close-x" onclick="closeEditor()">✕</button>
+<h2 id="editTitle">Nouvelle fiche</h2>
+<div class="sub" style="color:var(--muted);font-size:13px;margin-bottom:20px;">Modifiable uniquement par l'administrateur.</div>
+<form id="editForm">
+<input type="hidden" id="e-id">
+<div class="field"><label>Nom complet</label><input type="text" id="e-name" required></div>
+<div class="field"><label>Numéro WhatsApp</label><input type="tel" id="e-phone" required></div>
+<div class="field"><label>Email</label><input type="email" id="e-email"></div>
+<div class="field"><label>Pays</label><input type="text" id="e-country" required></div>
+<div class="field"><label>Ville</label><input type="text" id="e-city" required></div>
+<div class="field"><label>Nom du business</label><input type="text" id="e-business" required></div>
+<div class="field"><label>Secteur d'activité</label><select id="e-sector" required></select></div>
+<div class="field"><label>Crédits</label><input type="number" id="e-credits" min="0" value="150"></div>
+<div class="field"><label>Solde disponible (FCFA)</label><input type="number" id="e-solde" min="0" value="0"></div>
+<div class="field">
+<label>Administrateur</label>
+<select id="e-isadmin"><option value="false">Non</option><option value="true">Oui</option></select>
+</div>
+<div class="err-msg" id="errEdit"></div>
+<div id="commissionBox" style="display:none;background:var(--bg-soft);border-radius:12px;padding:14px;margin-top:6px;">
+<label style="display:block;font-size:12px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;color:rgba(14,42,36,0.6);margin-bottom:8px;">Attribuer une commission au parrain</label>
+<div class="sub" style="margin-bottom:10px;font-size:13px;color:var(--muted);" id="commissionSub">Ce membre a été parrainé.</div>
+<input type="number" id="commission-amount" placeholder="Montant de l'achat confirmé (FCFA)" style="width:100%;padding:11px 13px;border-radius:10px;border:1.5px solid rgba(14,42,36,0.15);font-family:'Sora',sans-serif;font-size:14.5px;margin-bottom:8px;">
+<button type="button" class="btn-ghost" style="width:100%;" onclick="grantCommission()">Créditer 10% au parrain</button>
+</div>
+<div class="form-actions">
+<button type="button" class="btn-ghost" onclick="closeEditor()">Annuler</button>
+<button type="submit" class="btn-primary" id="editSaveBtn">Enregistrer</button>
+</div>
+</form>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+// ---- Plus aucune clé Supabase ici : tout passe par /api/* ----
+
+const SECTORS = ['Commerce','Mode & beauté','Restauration','Services','Tech & digital','Immobilier','Éducation','Autre'];
+
+function escapeHtml(s){
+const d = document.createElement('div');
+d.textContent = s || '';
+return d.innerHTML;
+}
+function showToast(msg){
+let t = document.getElementById('toast');
+if(!t){
+t = document.createElement('div');
+t.id = 'toast';
+t.className = 'toast';
+document.body.appendChild(t);
+}
+t.textContent = msg;
+t.classList.add('show');
+setTimeout(()=>t.classList.remove('show'), 3200);
+}
+function showErr(id,msg){ const e=document.getElementById(id); if(!e) return; e.textContent=msg; e.classList.add('show'); }
+function hideErr(id){ const e=document.getElementById(id); if(e) e.classList.remove('show'); }
+
+async function initNav(){
+try{
+const res = await fetch('/api/auth/session', { credentials: 'include' });
+const data = await res.json();
+return { user: data.user, isAdmin: !!(data.user && data.user.isAdmin) };
+}catch(e){
+return { user: null, isAdmin: false };
+}
+}
+
+document.getElementById('e-sector').innerHTML = SECTORS.map(s=>`<option>${s}</option>`).join('');
+
+let allProfiles = [];
+let adminTotalCount = 0;
+let adminOffset = 0;
+const ADMIN_PAGE_SIZE = 50;
+let adminLoadToken = 0;
+
+function debounce(fn, delay){
+let t;
+return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), delay); };
+}
+const debouncedLoadAll = debounce(()=> loadAll(true), 350);
+
+async function loadAll(reset){
+const myToken = ++adminLoadToken;
+if(reset){ adminOffset = 0; allProfiles = []; }
+const q = document.getElementById('adminSearch').value.trim();
+
+try{
+const params = new URLSearchParams({ resource: 'profiles', offset: adminOffset, limit: ADMIN_PAGE_SIZE });
+if(q) params.set('q', q);
+const res = await fetch(`/api/admin/members?${params.toString()}`, { credentials: 'include' });
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+if(myToken !== adminLoadToken) return;
+
+allProfiles = reset ? (data.profiles || []) : allProfiles.concat(data.profiles || []);
+adminTotalCount = data.total ?? allProfiles.length;
+adminOffset = allProfiles.length;
+}catch(e){ if(reset) allProfiles = []; }
+renderTable();
+}
+
+function renderTable(){
+document.getElementById('adminStats').textContent = `${adminTotalCount} fiche${adminTotalCount!==1?'s':''} au total · ${allProfiles.length} chargée${allProfiles.length!==1?'s':''}`;
+const tbody = document.getElementById('adminRows');
+if(allProfiles.length===0){
+tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--muted);">Aucune fiche trouvée.</td></tr>`;
+return;
+}
+const rowsHtml = allProfiles.map(p=>`
+<tr>
+<td>${escapeHtml(p.nom)}${p.is_admin ? '<span class="badge-admin">Admin</span>' : ''}</td>
+<td>${escapeHtml(p.business)}</td>
+<td>${escapeHtml(p.whatsapp)}</td>
+<td>${escapeHtml(p.ville)}${p.pays?', '+escapeHtml(p.pays):''}</td>
+<td>${escapeHtml(p.secteur)}</td>
+<td class="mono">${p.credits ?? 0}</td>
+<td class="mono">${(p.solde ?? 0).toLocaleString('fr-FR')}</td>
+<td>${escapeHtml(p.email)}</td>
+<td>
+<div class="row-actions">
+<button class="icon-btn" onclick='openEditor(${JSON.stringify(p).replace(/'/g,"&apos;")})'>Modifier</button>
+<button class="icon-btn" onclick="deleteProfile('${p.id}')">Supprimer</button>
+</div>
+</td>
+</tr>
+`).join('');
+const hasMore = allProfiles.length < adminTotalCount;
+tbody.innerHTML = rowsHtml + (hasMore
+? `<tr><td colspan="9" style="text-align:center;padding:16px;"><button class="btn-fill" onclick="loadAll(false)">Charger plus (${adminTotalCount - allProfiles.length} restantes)</button></td></tr>`
+: '');
+}
+
+function openEditor(p){
+document.getElementById('editForm').reset();
+hideErr('errEdit');
+document.getElementById('commissionBox').style.display = 'none';
+if(p){
+document.getElementById('editTitle').textContent = 'Modifier la fiche';
+document.getElementById('e-id').value = p.id;
+document.getElementById('e-name').value = p.nom || '';
+document.getElementById('e-phone').value = p.whatsapp || '';
+document.getElementById('e-email').value = p.email || '';
+document.getElementById('e-country').value = p.pays || '';
+document.getElementById('e-city').value = p.ville || '';
+document.getElementById('e-business').value = p.business || '';
+document.getElementById('e-sector').value = p.secteur || '';
+document.getElementById('e-credits').value = p.credits ?? 0;
+document.getElementById('e-solde').value = p.solde ?? 0;
+document.getElementById('e-isadmin').value = p.is_admin ? 'true' : 'false';
+if(p.referred_by){
+document.getElementById('commissionSub').textContent = `Parrainé par le code ${p.referred_by} — ${p.nom||''} a effectué un achat ?`;
+document.getElementById('commissionBox').style.display = '';
+document.getElementById('commissionBox').dataset.referredBy = p.referred_by;
+document.getElementById('commissionBox').dataset.sourceName = p.nom || '';
+document.getElementById('commissionBox').dataset.sourceUserId = p.user_id || '';
+document.getElementById('commissionBox').dataset.sourceEmail = (p.email || '').toLowerCase();
+document.getElementById('commissionBox').dataset.sourceWhatsapp = p.whatsapp || '';
+}
+}else{
+document.getElementById('editTitle').textContent = 'Nouvelle fiche';
+document.getElementById('e-id').value = '';
+document.getElementById('e-credits').value = 150;
+document.getElementById('e-solde').value = 0;
+}
+document.getElementById('editOverlay').classList.add('open');
+}
+function closeEditor(){ document.getElementById('editOverlay').classList.remove('open'); }
+
+async function grantCommission(){
+const box = document.getElementById('commissionBox');
+const amount = parseFloat(document.getElementById('commission-amount').value);
+if(!amount || amount <= 0){ showToast('Indique un montant valide.'); return; }
+
+try{
+const res = await fetch('/api/admin/members?resource=profiles', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+credentials: 'include',
+body: JSON.stringify({
+action: 'grant-commission',
+referredBy: box.dataset.referredBy,
+sourceName: box.dataset.sourceName,
+sourceUserId: box.dataset.sourceUserId || null,
+sourceEmail: box.dataset.sourceEmail,
+sourceWhatsapp: box.dataset.sourceWhatsapp,
+amount
+})
+});
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+showToast(`✓ ${data.commission.toLocaleString('fr-FR')} FCFA crédités au parrain`);
+document.getElementById('commission-amount').value = '';
+}catch(err){
+showToast(err.message || "Erreur lors de l'attribution.");
+}
+}
+
+document.getElementById('editForm').addEventListener('submit', async (e)=>{
+e.preventDefault();
+const btn = document.getElementById('editSaveBtn');
+btn.disabled = true; btn.textContent = 'Enregistrement…';
+
+const id = document.getElementById('e-id').value;
+const payload = {
+nom: document.getElementById('e-name').value.trim(),
+whatsapp: document.getElementById('e-phone').value.trim(),
+email: document.getElementById('e-email').value.trim(),
+pays: document.getElementById('e-country').value.trim(),
+ville: document.getElementById('e-city').value.trim(),
+business: document.getElementById('e-business').value.trim(),
+secteur: document.getElementById('e-sector').value,
+credits: parseInt(document.getElementById('e-credits').value, 10) || 0,
+solde: parseInt(document.getElementById('e-solde').value, 10) || 0,
+is_admin: document.getElementById('e-isadmin').value === 'true'
+};
+
+try{
+const url = id ? `/api/admin/members?resource=profiles&id=${id}` : '/api/admin/members?resource=profiles';
+const res = await fetch(url, {
+method: id ? 'PATCH' : 'POST',
+headers: { 'Content-Type': 'application/json' },
+credentials: 'include',
+body: JSON.stringify(payload)
+});
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+
+closeEditor();
+showToast('Fiche enregistrée ✓');
+loadAll(true);
+}catch(err){
+showErr('errEdit', err.message || "Erreur lors de l'enregistrement.");
+}finally{
+btn.disabled = false; btn.textContent = 'Enregistrer';
+}
+});
+
+async function deleteProfile(id){
+if(!confirm('Supprimer définitivement cette fiche ?')) return;
+try{
+const res = await fetch(`/api/admin/members?resource=profiles&id=${id}`, { method: 'DELETE', credentials: 'include' });
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+showToast('Fiche supprimée');
+loadAll(true);
+}catch(err){
+showToast(err.message || "Erreur lors de la suppression.");
+}
+}
+
+document.getElementById('editOverlay').addEventListener('click', (e)=>{
+if(e.target.id==='editOverlay') closeEditor();
+});
+
+(async ()=>{
+const { user, isAdmin } = await initNav();
+if(!user || !isAdmin){
+document.getElementById('gateMsg').style.display = '';
+return;
+}
+document.getElementById('adminContent').style.display = '';
+loadAll(true);
+})();
+</script>
+</body>
+</html>
