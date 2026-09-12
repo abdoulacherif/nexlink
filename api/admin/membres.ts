@@ -120,5 +120,43 @@ export default requireAdmin(async (req, res) => {
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
 
+  // ---------------------------------------------------------------
+  // BARRE DE NAVIGATION (nav_items)
+  // ---------------------------------------------------------------
+  if (resource === 'nav-items') {
+    if (req.method === 'GET') {
+      const { data, error } = await supabaseAdmin
+        .from('nav_items')
+        .select('*')
+        .order('position', { ascending: true });
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ items: data });
+    }
+
+    if (req.method === 'POST') {
+      const { error } = await supabaseAdmin.from('nav_items').insert(req.body || {});
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+
+    if (req.method === 'PATCH') {
+      const id = req.query.id as string;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { error } = await supabaseAdmin.from('nav_items').update(req.body || {}).eq('id', id);
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+
+    if (req.method === 'DELETE') {
+      const id = req.query.id as string;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { error } = await supabaseAdmin.from('nav_items').delete().eq('id', id);
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+
+    return res.status(405).json({ error: 'Méthode non autorisée' });
+  }
+
   return res.status(400).json({ error: `Ressource inconnue : ${resource}` });
 });
