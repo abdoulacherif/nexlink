@@ -25,3 +25,19 @@ export async function sendAdminNotifEmail(name: string, email: string, phone: st
     html: `<p>Nom: ${name}</p><p>Email: ${email}</p><p>WhatsApp: ${phone}</p>`,
   });
 }
+
+// Envoi groupé (mode "automatique" de mail.html) — Gmail limite les volumes
+// (quotas quotidiens et par lot), donc on envoie par petits paquets en BCC.
+export async function sendBulkMail(subject: string, htmlBody: string, recipients: string[]) {
+  const chunkSize = 40;
+  for (let i = 0; i < recipients.length; i += chunkSize) {
+    const chunk = recipients.slice(i, i + chunkSize);
+    await transporter.sendMail({
+      from: `Kontak <${process.env.GMAIL_USER}>`,
+      to: process.env.GMAIL_USER,
+      bcc: chunk,
+      subject,
+      html: htmlBody,
+    });
+  }
+}
