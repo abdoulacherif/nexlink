@@ -7,16 +7,6 @@ function genReferralCode(): string {
 }
 
 export default requireAuth(async (req, res, session) => {
-  if (req.method === 'PATCH') {
-    const { nom, whatsapp, ville, pays, business, secteur } = req.body || {};
-    const { error } = await supabaseAdmin
-      .from('profiles')
-      .update({ nom, whatsapp, ville, pays, business, secteur })
-      .eq('user_id', session.userId);
-    if (error) return res.status(400).json({ error: error.message });
-    return res.status(200).json({ ok: true });
-  }
-
   if (req.method === 'POST') {
     const { nom, whatsapp, pays, ville, business, secteur } = req.body || {};
     if (!nom || !whatsapp || !pays || !ville || !business || !secteur) {
@@ -34,6 +24,34 @@ export default requireAuth(async (req, res, session) => {
       .single();
     if (error) return res.status(400).json({ error: error.message });
     return res.status(200).json({ profile: data });
+  }
+
+  if (req.method === 'PATCH') {
+    const { nom, whatsapp, ville, pays, business, secteur } = req.body || {};
+    const { error } = await supabaseAdmin
+      .from('profiles')
+      .update({ nom, whatsapp, ville, pays, business, secteur })
+      .eq('user_id', session.userId);
+    if (error) return res.status(400).json({ error: error.message });
+    return res.status(200).json({ ok: true });
+  }
+
+  if (req.method === 'PUT') {
+    // Changement de mot de passe
+    const { password } = req.body || {};
+    if (!password || password.length < 6) {
+      return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères.' });
+    }
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(session.userId, { password });
+    if (error) return res.status(400).json({ error: error.message });
+    return res.status(200).json({ ok: true });
+  }
+
+  if (req.method === 'DELETE') {
+    // Supprime la fiche de l'annuaire (garde le compte de connexion)
+    const { error } = await supabaseAdmin.from('profiles').delete().eq('user_id', session.userId);
+    if (error) return res.status(400).json({ error: error.message });
+    return res.status(200).json({ ok: true });
   }
 
   return res.status(405).json({ error: 'Méthode non autorisée' });
