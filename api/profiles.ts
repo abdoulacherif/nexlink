@@ -21,8 +21,19 @@ export default requireAuth(async (req, res, session) => {
       supabaseAdmin.from('subscription_requests').select('*').eq('user_id', session.userId).order('created_at', { ascending: false }),
       supabaseAdmin.from('server_orders').select('*').eq('user_id', session.userId).order('created_at', { ascending: false }),
       supabaseAdmin.from('business_orders').select('*').eq('user_id', session.userId).order('created_at', { ascending: false }),
+      profile?.referral_code
+        ? supabaseAdmin
+            .from('profiles')
+            .select('nom, business, ville, created_at', { count: 'exact' })
+            .eq('referred_by', profile.referral_code)
+            .order('created_at', { ascending: false })
+        : Promise.resolve({ data: [], count: 0 }),
     ]);
     const pick = (r: PromiseSettledResult<any>) => (r.status === 'fulfilled' ? r.value.data || [] : []);
+
+    const referralsResult = results[6];
+    const referrals = referralsResult.status === 'fulfilled' ? referralsResult.value.data || [] : [];
+    const referralsCount = referralsResult.status === 'fulfilled' ? referralsResult.value.count ?? referrals.length : 0;
 
     return res.status(200).json({
       profile,
@@ -32,6 +43,8 @@ export default requireAuth(async (req, res, session) => {
       subscriptions: pick(results[3]),
       serverOrders: pick(results[4]),
       bizOrders: pick(results[5]),
+      referrals,
+      referralsCount,
     });
   }
 
