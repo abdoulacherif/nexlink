@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Commandes — Kontak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#FFFFFF;--bg-soft:#F3FBF5;--ink:#0E2A1B;--green:#25D366;--green-dark:#128C4A;
+--orange:#FF8A3D;--gold:#E8A33D;--line:rgba(14,42,27,0.10);--muted:rgba(14,42,27,0.55);--err:#D9534F;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Sora',sans-serif;-webkit-font-smoothing:antialiased;}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+.mono{font-family:'Space Mono',monospace;}
+a{color:inherit;}
+.logo{font-family:'Fraunces',serif;font-style:italic;font-size:22px;letter-spacing:0.3px;text-decoration:none;color:var(--ink);}
+.logo span{color:var(--green-dark);}
+.btn-fill{background:var(--green);color:#fff;border:none;padding:10px 18px;border-radius:100px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Sora',sans-serif;text-decoration:none;display:inline-block;}
+.btn-ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink);padding:8px 14px;border-radius:10px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Sora',sans-serif;text-decoration:none;}
+.hero{padding:36px 24px 16px;}
+.eyebrow{font-family:'Space Mono',monospace;font-size:12px;color:var(--orange);text-transform:uppercase;letter-spacing:2px;font-weight:700;}
+.admin-tabs{display:flex;gap:4px;padding:0 20px 16px;overflow-x:auto;}
+.admin-tab{flex-shrink:0;padding:9px 16px;border-radius:100px;border:1.5px solid var(--line);font-size:13px;color:var(--muted);background:#fff;cursor:pointer;font-family:'Sora',sans-serif;text-decoration:none;white-space:nowrap;font-weight:600;}
+.admin-tab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+.page-tabs{display:flex;gap:4px;padding:4px 20px 0;border-bottom:1px solid var(--line);margin-bottom:20px;overflow-x:auto;}
+.page-tab-btn{background:none;border:none;padding:12px 16px;font-family:'Sora',sans-serif;font-weight:700;font-size:13.5px;color:var(--muted);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;}
+.page-tab-btn.active{color:var(--green-dark);border-bottom-color:var(--green);}
+.page-tab-content{display:none;}
+.page-tab-content.active{display:block;}
+.stats-bar{font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);padding:0 20px 14px;}
+.table-wrap{padding:0 20px 60px;overflow-x:auto;}
+table.admin-table{width:100%;border-collapse:collapse;background:#fff;color:var(--ink);border-radius:14px;overflow:hidden;font-size:13.5px;min-width:700px;border:1px solid var(--line);}
+table.admin-table th{background:var(--bg-soft);text-align:left;padding:10px 12px;font-family:'Space Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);}
+table.admin-table td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:middle;}
+table.admin-table tr:hover td{background:var(--bg-soft);}
+.row-actions{display:flex;gap:6px;}
+.icon-btn{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-family:'Sora',sans-serif;color:var(--ink);}
+.badge-admin{background:var(--gold);color:var(--ink);font-size:10px;padding:2px 8px;border-radius:100px;font-weight:700;}
+.gate{padding:80px 20px;text-align:center;color:var(--muted);}
+.gate h2{color:var(--ink);margin-bottom:10px;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 22px;border-radius:100px;font-size:13.5px;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none;max-width:90%;text-align:center;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<header style="padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;">
+<a class="logo" href="index" style="font-size:19px;">Kon<span>tak</span></a>
+<a class="btn-ghost" href="dashboard">Quitter l'admin</a>
+</header>
+<div id="gateMsg" class="gate" style="display:none;">
+<h2>Accès refusé</h2>
+<p>Cette page est réservée à l'administrateur.</p>
+<br>
+<a class="btn-fill" href="index">Retour à l'accueil</a>
+</div>
+<div id="adminContent" style="display:none;">
+<div class="hero">
+<div class="eyebrow">Panneau d'administration</div>
+<h1 style="font-size:26px;">Commandes</h1>
+</div>
+<div class="admin-tabs">
+<a class="admin-tab" href="admin-fiches">Fiches</a>
+<a class="admin-tab" href="admin-navigation">Navigation</a>
+<a class="admin-tab" href="admin-demandes">Demandes</a>
+<a class="admin-tab" href="admin-forfaits">Forfaits</a>
+<a class="admin-tab" href="admin-catalogue">Catalogue</a>
+<a class="admin-tab active" href="admin-commandes">Commandes</a>
+</div>
+<div class="page-tabs">
+<button class="page-tab-btn active" data-tab="tab-server-orders" onclick="switchCmdTab('tab-server-orders')">Serveur</button>
+<button class="page-tab-btn" data-tab="tab-biz-orders" onclick="switchCmdTab('tab-biz-orders')">Business</button>
+</div>
+<div class="page-tab-content active" id="tab-server-orders">
+<div class="stats-bar" id="serverOrderStats"></div>
+<div class="table-wrap">
+<table class="admin-table">
+<thead><tr><th>Date</th><th>Offre</th><th>Nom</th><th>Email</th><th>Statut</th><th>Actions</th></tr></thead>
+<tbody id="serverOrderRows"></tbody>
+</table>
+</div>
+</div>
+<div class="page-tab-content" id="tab-biz-orders">
+<div class="stats-bar" id="bizOrderStats"></div>
+<div class="table-wrap">
+<table class="admin-table">
+<thead><tr><th>Date</th><th>Service</th><th>Nom</th><th>Email</th><th>Statut</th><th>Actions</th></tr></thead>
+<tbody id="bizOrderRows"></tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+// ---- Plus aucune clé Supabase ici : tout passe par /api/* ----
+
+function escapeHtml(s){
+const d = document.createElement('div');
+d.textContent = s || '';
+return d.innerHTML;
+}
+function showToast(msg){
+let t = document.getElementById('toast');
+if(!t){ t = document.createElement('div'); t.id='toast'; t.className='toast'; document.body.appendChild(t); }
+t.textContent = msg; t.classList.add('show');
+setTimeout(()=>t.classList.remove('show'), 3200);
+}
+
+async function initNav(){
+try{
+const res = await fetch('/api/auth/session', { credentials: 'include' });
+const data = await res.json();
+return { user: data.user, isAdmin: !!(data.user && data.user.isAdmin) };
+}catch(e){ return { user: null, isAdmin: false }; }
+}
+
+function switchCmdTab(id){
+document.querySelectorAll('.page-tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===id));
+document.querySelectorAll('.page-tab-content').forEach(c=> c.classList.toggle('active', c.id===id));
+}
+
+// ---- Demandes serveur ----
+async function loadServerOrders(){
+const tbody = document.getElementById('serverOrderRows');
+try{
+const res = await fetch('/api/admin/members?resource=server-orders', { credentials: 'include' });
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+const list = data.items || [];
+document.getElementById('serverOrderStats').textContent = `${list.length} demande(s) au total`;
+if(list.length===0){
+tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted);">Aucune demande pour l'instant.</td></tr>`;
+return;
+}
+tbody.innerHTML = list.map(o=>`
+<tr>
+<td class="mono">${new Date(o.created_at).toLocaleDateString('fr-FR')}</td>
+<td>${escapeHtml(o.offer_name)}</td>
+<td>${escapeHtml(o.name)}</td>
+<td>${escapeHtml(o.email)}</td>
+<td>${o.status==='traité' ? '<span class="badge-admin">Traité</span>' : escapeHtml(o.status)}</td>
+<td>
+<div class="row-actions">
+${o.status!=='traité' ? `<button class="icon-btn" onclick="markServerOrderDone('${o.id}')">Marquer traité</button>` : ''}
+<button class="icon-btn" onclick="deleteServerOrder('${o.id}')">Supprimer</button>
+</div>
+</td>
+</tr>
+`).join('');
+}catch(e){
+tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted);">Impossible de charger les demandes.</td></tr>`;
+}
+}
+async function markServerOrderDone(id){
+try{
+const res = await fetch(`/api/admin/members?resource=server-orders&id=${id}`, {
+method:'PATCH', headers:{'Content-Type':'application/json'}, credentials:'include',
+body: JSON.stringify({ status: 'traité' })
+});
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+showToast('Marqué comme traité ✓');
+loadServerOrders();
+}catch(err){ showToast(err.message || 'Erreur.'); }
+}
+async function deleteServerOrder(id){
+if(!confirm('Supprimer cette demande ?')) return;
+try{
+const res = await fetch(`/api/admin/members?resource=server-orders&id=${id}`, { method:'DELETE', credentials:'include' });
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+showToast('Demande supprimée');
+loadServerOrders();
+}catch(err){ showToast(err.message || "Erreur lors de la suppression."); }
+}
+
+// ---- Demandes business ----
+async function loadBizOrders(){
+const tbody = document.getElementById('bizOrderRows');
+try{
+const res = await fetch('/api/admin/members?resource=biz-orders', { credentials: 'include' });
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+const list = data.items || [];
+document.getElementById('bizOrderStats').textContent = `${list.length} demande(s) au total`;
+if(list.length===0){
+tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted);">Aucune demande pour l'instant.</td></tr>`;
+return;
+}
+tbody.innerHTML = list.map(o=>`
+<tr>
+<td class="mono">${new Date(o.created_at).toLocaleDateString('fr-FR')}</td>
+<td>${escapeHtml(o.service_name)}</td>
+<td>${escapeHtml(o.name)}</td>
+<td>${escapeHtml(o.email)}</td>
+<td>${o.status==='traité' ? '<span class="badge-admin">Traité</span>' : escapeHtml(o.status)}</td>
+<td>
+<div class="row-actions">
+${o.status!=='traité' ? `<button class="icon-btn" onclick="markBizOrderDone('${o.id}')">Marquer traité</button>` : ''}
+<button class="icon-btn" onclick="deleteBizOrder('${o.id}')">Supprimer</button>
+</div>
+</td>
+</tr>
+`).join('');
+}catch(e){
+tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted);">Impossible de charger les demandes.</td></tr>`;
+}
+}
+async function markBizOrderDone(id){
+try{
+const res = await fetch(`/api/admin/members?resource=biz-orders&id=${id}`, {
+method:'PATCH', headers:{'Content-Type':'application/json'}, credentials:'include',
+body: JSON.stringify({ status: 'traité' })
+});
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+showToast('Marqué comme traité ✓');
+loadBizOrders();
+}catch(err){ showToast(err.message || 'Erreur.'); }
+}
+async function deleteBizOrder(id){
+if(!confirm('Supprimer cette demande ?')) return;
+try{
+const res = await fetch(`/api/admin/members?resource=biz-orders&id=${id}`, { method:'DELETE', credentials:'include' });
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+showToast('Demande supprimée');
+loadBizOrders();
+}catch(err){ showToast(err.message || "Erreur lors de la suppression."); }
+}
+
+(async ()=>{
+const { user, isAdmin } = await initNav();
+if(!user || !isAdmin){ document.getElementById('gateMsg').style.display = ''; return; }
+document.getElementById('adminContent').style.display = '';
+loadServerOrders();
+loadBizOrders();
+})();
+</script>
+</body>
+</html>
