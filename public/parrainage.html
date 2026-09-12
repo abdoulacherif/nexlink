@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parrainage — Kontak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#FFFFFF;
+--bg-soft:#F3FBF5;
+--ink:#0E2A1B;
+--green:#25D366;
+--green-dark:#128C4A;
+--orange:#FF8A3D;
+--gold:#E8A33D;
+--line:rgba(14,42,27,0.10);
+--muted:rgba(14,42,27,0.55);
+--err:#D9534F;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Sora',sans-serif;-webkit-font-smoothing:antialiased;}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+a{color:inherit;}
+.logo{font-family:'Fraunces',serif;font-style:italic;font-size:22px;letter-spacing:0.3px;text-decoration:none;color:var(--ink);}
+.logo span{color:var(--green-dark);}
+.panel{background:#fff;color:var(--ink);border-radius:18px;padding:24px 22px;border:1px solid var(--line);box-shadow:0 2px 14px rgba(14,42,27,0.05);}
+.panel .sub{color:var(--muted);font-size:13px;margin-bottom:20px;}
+.field{margin-bottom:14px;}
+.field input{width:100%;padding:11px 13px;border-radius:10px;border:1.5px solid var(--line);font-family:'Sora',sans-serif;font-size:14.5px;background:#fff;color:var(--ink);}
+.form-actions{display:flex;gap:10px;margin-top:20px;}
+.btn-primary{flex:1;background:var(--green);color:#fff;border:none;padding:13px;border-radius:10px;font-weight:700;font-size:14.5px;cursor:pointer;font-family:'Sora',sans-serif;}
+.btn-ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink);padding:13px 18px;border-radius:10px;font-weight:600;font-size:14.5px;cursor:pointer;font-family:'Sora',sans-serif;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 22px;border-radius:100px;font-size:13.5px;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none;max-width:90%;text-align:center;}
+.toast.show{opacity:1;}
+.ic-svg{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex-shrink:0;}
+.ic-svg svg{width:100%;height:100%;}
+.fixed-navbar{position:fixed;left:0;right:0;bottom:0;z-index:50;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center;gap:2px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(14,42,27,0.06);}
+.fnav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px 10px;border-radius:12px;background:transparent;color:var(--ink);text-decoration:none;font-size:11px;font-weight:600;white-space:nowrap;flex:1;text-align:center;}
+.fnav-btn:hover{background:var(--bg-soft);}
+.fnav-btn .ic-svg{width:20px;height:20px;color:var(--green-dark);}
+body{padding-bottom:74px;}
+.dash-topbar{display:none;padding:14px 18px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:30;}
+.burger{width:38px;height:38px;border-radius:10px;border:1.5px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-direction:column;gap:4px;}
+.burger span{display:block;width:16px;height:2px;background:var(--ink);border-radius:2px;}
+.dash-shell{display:flex;min-height:100vh;}
+.sidebar{width:250px;flex-shrink:0;background:var(--bg-soft);border-right:1px solid var(--line);padding:24px 16px;position:sticky;top:0;height:100vh;overflow-y:auto;padding-bottom:90px;}
+.sidebar .logo{display:block;margin-bottom:30px;}
+.side-section{margin-bottom:22px;}
+.side-label{font-family:'Space Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:0 12px;margin-bottom:8px;}
+.side-link{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;font-size:14px;font-weight:600;color:var(--ink);text-decoration:none;cursor:pointer;margin-bottom:2px;}
+.side-link:hover{background:#fff;}
+.side-link.active{background:var(--green);color:#fff;}
+.more-toggle{width:100%;border:none;background:none;cursor:pointer;}
+.more-toggle .chevron{width:14px;height:14px;transition:transform .2s;}
+.more-toggle .chevron svg{width:100%;height:100%;}
+.more-toggle.open .chevron{transform:rotate(180deg);}
+.more-menu-panel{display:none;padding-left:6px;margin-top:2px;border-left:2px solid var(--line);}
+.more-menu-panel.open{display:block;}
+.sub-link{font-size:13px;padding:9px 12px;}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(14,42,27,0.5);z-index:35;}
+.sidebar-overlay.open{display:block;}
+.dash-main{flex:1;min-width:0;}
+.dash-header{padding:36px 28px 8px;}
+.dash-header .eyebrow{font-family:'Space Mono',monospace;font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:8px;}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 28px 20px;}
+.stat-box{background:var(--bg-soft);border-radius:14px;padding:16px;}
+.stat-box .num{font-family:'Fraunces',serif;font-size:20px;}
+.stat-box .lbl{font-size:11.5px;color:var(--muted);margin-top:2px;}
+.dash-body{padding:0 28px 60px;max-width:640px;}
+@media(max-width:880px){
+.dash-topbar{display:flex;}
+.sidebar{position:fixed;left:0;top:0;bottom:0;z-index:40;transform:translateX(-100%);transition:transform .25s ease;}
+.sidebar.open{transform:translateX(0);box-shadow:8px 0 24px rgba(0,0,0,0.15);}
+.dash-header,.stat-row,.dash-body{padding-left:20px;padding-right:20px;}
+.stat-row{grid-template-columns:1fr 1fr;}
+}
+.how-wrap{padding:8px 20px 30px;max-width:600px;margin:0 auto;}
+.how-step{display:flex;gap:16px;margin-bottom:20px;}
+.how-num{width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:600;flex-shrink:0;}
+.how-step h3{font-size:15px;margin-bottom:4px;}
+.how-step p{font-size:13.5px;color:var(--muted);line-height:1.5;margin:0;}
+.ref-cta{background:var(--bg-soft);border-radius:18px;padding:24px;max-width:600px;margin:0 20px 60px;text-align:center;}
+@media(min-width:640px){.ref-cta{margin-left:auto;margin-right:auto;}}
+.page-tabs{display:flex;gap:4px;padding:4px 20px 0;border-bottom:1px solid var(--line);margin-bottom:22px;overflow-x:auto;}
+.page-tab-btn{background:none;border:none;padding:12px 16px;font-family:'Sora',sans-serif;font-weight:700;font-size:13.5px;color:var(--muted);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;}
+.page-tab-btn.active{color:var(--green-dark);border-bottom-color:var(--green);}
+.page-tab-content{display:none;}
+.page-tab-content.active{display:block;}
+.campaign-item{border-bottom:1px solid var(--line);padding:14px 0;}
+.campaign-item:last-child{border-bottom:none;}
+.campaign-subject{font-weight:700;font-size:14px;}
+.campaign-meta{font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;margin-top:2px;}
+.recipient-empty{padding:20px;text-align:center;color:var(--muted);font-size:13px;}
+</style>
+</head>
+<body>
+<div class="dash-topbar">
+<button class="burger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+<a class="logo" href="index" style="font-size:19px;">Kon<span>tak</span></a>
+<div style="width:38px;"></div>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<nav class="fixed-navbar" id="fixedNavbar"></nav>
+<div class="dash-shell">
+<aside class="sidebar" id="sidebar">
+<a class="logo" href="index">Kon<span>tak</span></a>
+<div class="side-section">
+<div class="side-label">Mon compte</div>
+<a class="side-link" href="dashboard"><span class="ic-svg" id="icOverview"></span> Vue d'ensemble</a>
+</div>
+<div class="side-section">
+<div class="side-label">Naviguer</div>
+<a class="side-link" href="annuaire"><span class="ic-svg" id="icAnnuaire"></span> Annuaire</a>
+</div>
+<div class="side-section">
+<button class="side-link more-toggle open" id="moreMenuToggle" onclick="toggleMoreMenu()">
+<span class="ic-svg" id="icMore"></span> Plus
+<span class="ic-svg chevron" id="icChevron" style="margin-left:auto;"></span>
+</button>
+<div class="more-menu-panel open" id="moreMenuPanel">
+<a class="side-link sub-link" href="abonnement"><span class="ic-svg" id="icWallet"></span> Crédits & Abonnement</a>
+<a class="side-link sub-link" href="reseau"><span class="ic-svg" id="icNetwork"></span> Réseau</a>
+<a class="side-link sub-link" href="gain"><span class="ic-svg" id="icGain"></span> Gains</a>
+<a class="side-link sub-link" href="support"><span class="ic-svg" id="icSupport"></span> Support</a>
+<a class="side-link sub-link" href="faq"><span class="ic-svg" id="icFaq"></span> FAQ</a>
+<a class="side-link sub-link active" href="parrainage"><span class="ic-svg" id="icReferral"></span> Parrainage</a>
+<a class="side-link sub-link" href="conditions"><span class="ic-svg" id="icConditions"></span> Conditions</a>
+<a class="side-link sub-link" href="politique"><span class="ic-svg" id="icPolitique"></span> Politique</a>
+</div>
+</div>
+<div class="side-section">
+<div class="side-label">Session</div>
+<a class="side-link" href="#" data-action="logout"><span class="ic-svg" id="icLogout"></span> Déconnexion</a>
+</div>
+</aside>
+<main class="dash-main">
+<div class="dash-header" style="padding-bottom:0;">
+<div class="eyebrow">Invite & gagne</div>
+<h1 style="font-size:28px;">Parrainage</h1>
+</div>
+<div class="page-tabs">
+<button class="page-tab-btn active" data-tab="tab-howto" onclick="switchParrTab('tab-howto')">Comment ça marche</button>
+<button class="page-tab-btn" data-tab="tab-link" onclick="switchParrTab('tab-link')">Mon lien</button>
+<button class="page-tab-btn" data-tab="tab-gains" onclick="switchParrTab('tab-gains')">Mes gains</button>
+</div>
+<div class="page-tab-content active" id="tab-howto">
+<div class="how-wrap">
+<div class="how-step">
+<div class="how-num">1</div>
+<div><h3>Partage ton lien</h3><p>Depuis l'onglet "Mon lien", copie ton lien unique et envoie-le à tes contacts.</p></div>
+</div>
+<div class="how-step">
+<div class="how-num">2</div>
+<div><h3>Ton filleul s'inscrit</h3><p>Il crée son compte Kontak via ton lien — il apparaît automatiquement dans ta liste de filleuls.</p></div>
+</div>
+<div class="how-step">
+<div class="how-num">3</div>
+<div><h3>Il fait un achat</h3><p>Crédits, abonnement... dès que son paiement est confirmé, une commission est calculée.</p></div>
+</div>
+<div class="how-step">
+<div class="how-num">4</div>
+<div><h3>Tu es crédité</h3><p>10% du montant est ajouté à ton solde disponible, retirable à tout moment.</p></div>
+</div>
+</div>
+<div class="ref-cta">
+<h3 style="margin-bottom:4px;">Prêt à commencer ?</h3>
+<p style="color:var(--muted);font-size:13.5px;margin-bottom:16px;">Récupère ton lien personnel dans l'onglet "Mon lien".</p>
+<button class="btn-primary" onclick="switchParrTab('tab-link')">Voir mon lien de parrainage</button>
+</div>
+</div>
+<div class="page-tab-content" id="tab-link">
+<div class="dash-body">
+<div class="panel" style="margin-bottom:20px;">
+<h3 style="margin-bottom:4px;">Ton lien de parrainage</h3>
+<div class="sub">Partage-le — quand quelqu'un s'inscrit avec, il devient ton filleul.</div>
+<div class="field">
+<input type="text" id="refLink" readonly style="font-family:'Space Mono',monospace;font-size:12.5px;">
+</div>
+<div class="form-actions">
+<button type="button" class="btn-ghost" onclick="copyRefLink()">Copier le lien</button>
+<button type="button" class="btn-primary" onclick="shareRefLink()">Partager</button>
+</div>
+</div>
+<div class="stat-row" style="margin:0 0 20px;">
+<div class="stat-box"><div class="num" id="statReferrals">—</div><div class="lbl">Filleuls</div></div>
+<div class="stat-box"><div class="num" id="statCode">—</div><div class="lbl">Ton code</div></div>
+</div>
+<div class="panel">
+<h3 style="margin-bottom:4px;">Mes filleuls</h3>
+<div class="sub">Les personnes inscrites grâce à toi.</div>
+<div id="referralsList"></div>
+</div>
+</div>
+</div>
+<div class="page-tab-content" id="tab-gains">
+<div class="stat-row" style="margin:0 20px 20px;">
+<div class="stat-box"><div class="num" id="statTotalGains">—</div><div class="lbl">Total gagné (FCFA)</div></div>
+<div class="stat-box"><div class="num" id="statSoldeGains">—</div><div class="lbl">Solde disponible</div></div>
+</div>
+<div class="dash-body">
+<div class="panel">
+<h3 style="margin-bottom:4px;">Historique des commissions</h3>
+<div class="sub">Chaque fois qu'un de tes filleuls fait un achat confirmé, tu touches une commission.</div>
+<div id="gainsList"></div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+// ---- Plus aucune clé Supabase ici : tout passe par /api/* ----
+
+function escapeHtml(s){
+const d = document.createElement('div');
+d.textContent = s || '';
+return d.innerHTML;
+}
+function showToast(msg){
+let t = document.getElementById('toast');
+if(!t){
+t = document.createElement('div');
+t.id = 'toast';
+t.className = 'toast';
+document.body.appendChild(t);
+}
+t.textContent = msg;
+t.classList.add('show');
+setTimeout(()=>t.classList.remove('show'), 3200);
+}
+
+let CURRENT_USER = null;
+let CURRENT_PROFILE = null;
+
+async function initNav(){
+try{
+const res = await fetch('/api/auth/session', { credentials: 'include' });
+const data = await res.json();
+CURRENT_USER = data.user || null;
+CURRENT_PROFILE = CURRENT_USER ? CURRENT_USER.profile : null;
+}catch(e){
+CURRENT_USER = null;
+CURRENT_PROFILE = null;
+}
+const isAdmin = !!(CURRENT_USER && CURRENT_USER.isAdmin);
+document.querySelectorAll('[data-auth="guest"]').forEach(el=> el.style.display = CURRENT_USER ? 'none' : '');
+document.querySelectorAll('[data-auth="user"]').forEach(el=> el.style.display = CURRENT_USER ? '' : 'none');
+document.querySelectorAll('[data-auth="admin"]').forEach(el=> el.style.display = isAdmin ? '' : 'none');
+return { user: CURRENT_USER, profile: CURRENT_PROFILE, isAdmin };
+}
+
+async function logout(){
+await fetch('/api/auth/session', { method: 'DELETE', credentials: 'include' });
+window.location.href = 'index';
+}
+
+document.addEventListener('click', (e)=>{
+if(e.target && e.target.matches('[data-action="logout"]')){
+e.preventDefault();
+logout();
+}
+});
+
+const ICONS = {
+grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7"/><path d="M9 22V12h6v10"/></svg>',
+support: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="m5.2 5.2 3.3 3.3M18.8 5.2l-3.3 3.3M5.2 18.8l3.3-3.3M18.8 18.8l-3.3-3.3"/></svg>',
+faq: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 2-2.4 3.7"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+referral: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><path d="M2 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17.5" cy="8.5" r="2.3"/><path d="M15.2 14.6c2.6.2 4.8 2.2 4.8 5.4"/></svg>',
+network: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M8.2 7.3 10.5 16M15.8 7.3 13.5 16M8.3 6h7.4"/></svg>',
+gain: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>',
+document: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>',
+shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 11 4.6-2.3 8-6 8-11V5l-8-3Z"/></svg>',
+wallet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v3"/><path d="M3 7v11a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-5a2 2 0 0 0 0 4h5.5"/></svg>',
+menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>',
+chevronDown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>'
+};
+function icon(key, cls){
+return `<span class="ic-svg ${cls||''}">${ICONS[key] || ICONS.grid}</span>`;
+}
+
+async function loadNavItems(){
+try{
+const res = await fetch('/api/nav-items');
+if(!res.ok) throw new Error('nav-items indisponible');
+const data = await res.json();
+return data.items || [];
+}catch(e){ console.error(e); return []; }
+}
+
+function toggleSidebar(){
+document.getElementById('sidebar').classList.toggle('open');
+document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeSidebar(){
+document.getElementById('sidebar').classList.remove('open');
+document.getElementById('sidebarOverlay').classList.remove('open');
+}
+document.getElementById('icOverview').innerHTML = ICONS.home;
+document.getElementById('icAnnuaire').innerHTML = ICONS.grid;
+document.getElementById('icWallet').innerHTML = ICONS.wallet;
+document.getElementById('icSupport').innerHTML = ICONS.support;
+document.getElementById('icFaq').innerHTML = ICONS.faq;
+document.getElementById('icReferral').innerHTML = ICONS.referral;
+document.getElementById('icNetwork').innerHTML = ICONS.network;
+document.getElementById('icGain').innerHTML = ICONS.gain;
+document.getElementById('icConditions').innerHTML = ICONS.document;
+document.getElementById('icPolitique').innerHTML = ICONS.shield;
+document.getElementById('icMore').innerHTML = ICONS.menu;
+document.getElementById('icChevron').innerHTML = ICONS.chevronDown;
+function toggleMoreMenu(){
+document.getElementById('moreMenuPanel').classList.toggle('open');
+document.getElementById('moreMenuToggle').classList.toggle('open');
+}
+document.getElementById('icLogout').innerHTML = ICONS.logout;
+
+async function renderFixedNavbar(){
+const items = await loadNavItems();
+const bar = document.getElementById('fixedNavbar');
+if(items.length===0){ bar.style.display='none'; return; }
+bar.innerHTML = items.map(it=>`
+<a class="fnav-btn" href="${escapeHtml(it.url)}">${icon(it.icon)}<span>${escapeHtml(it.label)}</span></a>
+`).join('');
+}
+renderFixedNavbar();
+
+function switchParrTab(id){
+document.querySelectorAll('.page-tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===id));
+document.querySelectorAll('.page-tab-content').forEach(c=> c.classList.toggle('active', c.id===id));
+}
+
+function copyRefLink(){
+const input = document.getElementById('refLink');
+input.select();
+navigator.clipboard.writeText(input.value).then(()=> showToast('Lien copié ✓')).catch(()=> showToast('Impossible de copier'));
+}
+function shareRefLink(){
+const link = document.getElementById('refLink').value;
+if(navigator.share){
+navigator.share({ title: 'Rejoins Kontak', text: 'Rejoins le réseau Kontak avec mon lien :', url: link }).catch(()=>{});
+}else{
+copyRefLink();
+}
+}
+
+function renderReferrals(list, count){
+document.getElementById('statReferrals').textContent = count ?? list.length;
+const el = document.getElementById('referralsList');
+if(list.length===0){
+el.innerHTML = '<div class="recipient-empty">Aucun filleul pour l\'instant — partage ton lien !</div>';
+return;
+}
+el.innerHTML = list.map(r=>`
+<div class="campaign-item">
+<div class="campaign-subject">${escapeHtml(r.business || r.nom)}</div>
+<div class="campaign-meta">${escapeHtml(r.ville||'')} · inscrit le ${new Date(r.created_at).toLocaleDateString('fr-FR')}</div>
+</div>
+`).join('');
+}
+
+function renderGains(list){
+const el = document.getElementById('gainsList');
+const total = list.reduce((sum,g)=> sum + (g.amount||0), 0);
+document.getElementById('statTotalGains').textContent = total.toLocaleString('fr-FR');
+if(list.length===0){
+el.innerHTML = '<div class="recipient-empty">Aucun gain pour l\'instant — invite des filleuls pour commencer à gagner.</div>';
+return;
+}
+el.innerHTML = list.map(g=>`
+<div class="campaign-item">
+<div class="campaign-subject">+ ${(g.amount||0).toLocaleString('fr-FR')} FCFA</div>
+<div class="campaign-meta">${escapeHtml(g.source_name||'Commission')} · ${new Date(g.created_at).toLocaleDateString('fr-FR')}</div>
+</div>
+`).join('');
+}
+
+async function initParrainagePage(){
+const { user, profile } = await initNav();
+if(!user || !profile){
+const msg = !user
+? '<div class="recipient-empty">Connecte-toi pour voir ton lien et tes gains.</div>'
+: '<div class="recipient-empty">Complète ta fiche pour accéder à ton lien de parrainage.</div>';
+document.getElementById('referralsList').innerHTML = msg;
+document.getElementById('gainsList').innerHTML = msg;
+return;
+}
+
+const link = `${window.location.origin}${window.location.pathname.replace('parrainage','inscription')}?ref=${profile.referral_code || ''}`;
+document.getElementById('refLink').value = link;
+document.getElementById('statCode').textContent = profile.referral_code || '—';
+document.getElementById('statSoldeGains').textContent = (profile.solde ?? 0).toLocaleString('fr-FR');
+
+try{
+const res = await fetch('/api/profiles', { credentials: 'include' });
+const data = await res.json();
+renderReferrals(data.referrals || [], data.referralsCount);
+renderGains(data.earnings || []);
+}catch(e){
+document.getElementById('referralsList').innerHTML = '<div class="recipient-empty">Erreur de chargement.</div>';
+document.getElementById('gainsList').innerHTML = '<div class="recipient-empty">Erreur de chargement.</div>';
+}
+}
+
+initParrainagePage();
+</script>
+</body>
+</html>
+
