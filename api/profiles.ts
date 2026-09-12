@@ -7,6 +7,34 @@ function genReferralCode(): string {
 }
 
 export default requireAuth(async (req, res, session) => {
+  if (req.method === 'GET') {
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('*')
+      .eq('user_id', session.userId)
+      .maybeSingle();
+
+    const results = await Promise.allSettled([
+      supabaseAdmin.from('referral_earnings').select('*').eq('referrer_id', session.userId).order('created_at', { ascending: false }),
+      supabaseAdmin.from('payments').select('*').eq('user_id', session.userId).order('created_at', { ascending: false }),
+      supabaseAdmin.from('withdrawal_requests').select('*').eq('user_id', session.userId).order('created_at', { ascending: false }),
+      supabaseAdmin.from('subscription_requests').select('*').eq('user_id', session.userId).order('created_at', { ascending: false }),
+      supabaseAdmin.from('server_orders').select('*').eq('user_id', session.userId).order('created_at', { ascending: false }),
+      supabaseAdmin.from('business_orders').select('*').eq('user_id', session.userId).order('created_at', { ascending: false }),
+    ]);
+    const pick = (r: PromiseSettledResult<any>) => (r.status === 'fulfilled' ? r.value.data || [] : []);
+
+    return res.status(200).json({
+      profile,
+      earnings: pick(results[0]),
+      payments: pick(results[1]),
+      withdrawals: pick(results[2]),
+      subscriptions: pick(results[3]),
+      serverOrders: pick(results[4]),
+      bizOrders: pick(results[5]),
+    });
+  }
+
   if (req.method === 'POST') {
     const { nom, whatsapp, pays, ville, business, secteur } = req.body || {};
     if (!nom || !whatsapp || !pays || !ville || !business || !secteur) {
