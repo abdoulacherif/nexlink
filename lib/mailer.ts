@@ -17,6 +17,15 @@ export async function sendWelcomeEmail(name: string, email: string) {
   });
 }
 
+export async function sendConfirmationEmail(name: string, email: string, link: string) {
+  await transporter.sendMail({
+    from: `Kontak <${process.env.GMAIL_USER}>`,
+    to: email,
+    subject: 'Confirme ton adresse email — Kontak',
+    html: `<p>Bonjour ${name},</p><p>Clique sur le lien ci-dessous pour confirmer ton adresse email et activer ton compte Kontak :</p><p><a href="${link}">Confirmer mon compte</a></p><p>Si tu n'es pas à l'origine de cette inscription, ignore cet email.</p>`,
+  });
+}
+
 export async function sendAdminNotifEmail(name: string, email: string, phone: string) {
   await transporter.sendMail({
     from: `Kontak <${process.env.GMAIL_USER}>`,
