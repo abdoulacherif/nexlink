@@ -12,6 +12,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { data, error } = await supabaseAdmin.auth.signInWithPassword({ email, password });
   if (error || !data.user) {
+    if (error?.message?.toLowerCase().includes('not confirmed') || error?.message?.toLowerCase().includes('email not confirmed')) {
+      return res.status(401).json({ error: "Ton email n'est pas encore confirmé — vérifie ta boîte mail." });
+    }
     return res.status(401).json({ error: 'Identifiants incorrects.' });
   }
 
