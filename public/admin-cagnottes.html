@@ -38,6 +38,8 @@ a{color:inherit;}
 @media(min-width:480px){.campaign-meta{grid-template-columns:repeat(4,1fr);}}
 .meta-item .v{font-family:'Fraunces',serif;font-size:17px;}
 .meta-item .l{font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;}
+.tiers-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.tier-chip{background:var(--bg-soft);border-radius:100px;padding:5px 12px;font-size:11.5px;font-family:'Space Mono',monospace;color:var(--green-dark);font-weight:700;}
 .campaign-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
 .icon-btn{background:none;border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:12.5px;font-family:'Sora',sans-serif;color:var(--ink);}
 .icon-btn.danger{border-color:var(--err);color:var(--err);}
@@ -45,7 +47,12 @@ a{color:inherit;}
 .gate h2{color:var(--ink);margin-bottom:10px;}
 .field{margin-bottom:14px;}
 .field label{display:block;font-size:12px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px;}
-.field input{width:100%;padding:11px 13px;border-radius:10px;border:1.5px solid var(--line);font-family:'Sora',sans-serif;font-size:14.5px;background:#fff;color:var(--ink);}
+.field input,.field textarea{width:100%;padding:11px 13px;border-radius:10px;border:1.5px solid var(--line);font-family:'Sora',sans-serif;font-size:14.5px;background:#fff;color:var(--ink);}
+.field textarea{resize:vertical;min-height:70px;}
+.tiers-inputs{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.tier-input label{font-size:11px;}
+.calc-box{background:var(--bg-soft);border-radius:12px;padding:14px;margin:12px 0 4px;font-size:13px;line-height:1.6;}
+.calc-box .big{font-family:'Fraunces',serif;font-size:20px;color:var(--green-dark);}
 .form-actions{display:flex;gap:10px;margin-top:20px;}
 .btn-primary{flex:1;background:var(--green);color:#fff;border:none;padding:13px;border-radius:10px;font-weight:700;font-size:14.5px;cursor:pointer;font-family:'Sora',sans-serif;}
 .err-msg{font-size:12.5px;color:var(--err);margin-top:4px;display:none;}
@@ -56,8 +63,17 @@ a{color:inherit;}
 .modal-overlay.open{display:flex;}
 .modal{background:#fff;color:var(--ink);width:100%;max-width:460px;border-radius:20px 20px 0 0;padding:26px 22px 30px;max-height:90vh;overflow-y:auto;position:relative;border:1px solid var(--line);}
 @media(min-width:640px){.modal-overlay{align-items:center;}.modal{border-radius:20px;}}
+.modal.wide{max-width:620px;}
 .close-x{position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);}
 .empty-camp{text-align:center;padding:50px 20px;color:var(--muted);}
+.entry-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+.entry-row:last-child{border-bottom:none;}
+.entry-name{font-weight:700;font-size:13.5px;flex:1;min-width:120px;}
+.entry-proof{font-size:12px;color:var(--green-dark);text-decoration:underline;}
+.entry-badge{font-size:10.5px;font-family:'Space Mono',monospace;padding:2px 8px;border-radius:100px;font-weight:700;}
+.entry-badge.pending{background:#FBF3DE;color:var(--gold);}
+.entry-badge.verified{background:var(--bg-soft);color:var(--green-dark);}
+.entry-badge.none{background:rgba(14,42,27,0.06);color:var(--muted);}
 </style>
 </head>
 <body>
@@ -91,17 +107,31 @@ a{color:inherit;}
 </div>
 <div class="campaign-grid" id="campaignGrid"></div>
 </div>
+
 <div class="modal-overlay" id="campEditOverlay">
 <div class="modal">
 <button class="close-x" onclick="closeCampaignEditor()">✕</button>
 <h2>Nouvelle cagnotte</h2>
-<div class="sub" style="color:var(--muted);font-size:13px;margin-bottom:20px;">Le paiement d'entrée crédite des crédits (comme un pack classique) et ajoute un ticket dans le tirage.</div>
+<div class="sub" style="color:var(--muted);font-size:13px;margin-bottom:16px;">Le paiement d'entrée crédite des crédits immédiatement. Pour participer au tirage, le membre doit en plus soumettre une preuve de publication que tu valides.</div>
 <form id="campEditForm">
 <div class="field"><label>Nom de la cagnotte</label><input type="text" id="cp-name" required placeholder="Ex: Cagnotte spéciale août"></div>
 <div class="field"><label>Prix d'entrée (FCFA)</label><input type="number" id="cp-price" min="1" required></div>
 <div class="field"><label>Crédits offerts par entrée</label><input type="number" id="cp-credits" min="0" value="500"></div>
-<div class="field"><label>Nombre de gagnants</label><input type="number" id="cp-winners" min="1" value="5" required></div>
-<div class="field"><label>Montant gagné par gagnant (FCFA)</label><input type="number" id="cp-prize" min="1" required></div>
+<div class="field">
+<label>Consignes de publication (affichées au membre)</label>
+<textarea id="cp-promo" placeholder="Ex: Crée une affiche ou vidéo professionnelle à propos de Kontak et partage-la sur tes réseaux sociaux."></textarea>
+</div>
+<div class="field">
+<label>Paliers de gains (du 1er au 5e, FCFA)</label>
+<div class="tiers-inputs">
+<div class="tier-input"><label>Niveau 1</label><input type="number" id="tier-1" min="0" value="40000"></div>
+<div class="tier-input"><label>Niveau 2</label><input type="number" id="tier-2" min="0" value="25000"></div>
+<div class="tier-input"><label>Niveau 3</label><input type="number" id="tier-3" min="0" value="18000"></div>
+<div class="tier-input"><label>Niveau 4</label><input type="number" id="tier-4" min="0" value="10000"></div>
+<div class="tier-input"><label>Niveau 5</label><input type="number" id="tier-5" min="0" value="5500"></div>
+</div>
+</div>
+<div class="calc-box" id="calcBox">Renseigne un prix d'entrée pour voir le nombre minimum de participants nécessaire.</div>
 <div class="err-msg" id="errCampEdit"></div>
 <div class="form-actions">
 <button type="button" class="btn-ghost" onclick="closeCampaignEditor()">Annuler</button>
@@ -110,6 +140,16 @@ a{color:inherit;}
 </form>
 </div>
 </div>
+
+<div class="modal-overlay" id="entriesOverlay">
+<div class="modal wide">
+<button class="close-x" onclick="closeEntries()">✕</button>
+<h2>Participants</h2>
+<div class="sub" style="color:var(--muted);font-size:13px;margin-bottom:16px;">Valide la preuve de publication avant de lancer le tirage — seuls les participants "Vérifié" y sont inclus.</div>
+<div id="entriesList"></div>
+</div>
+</div>
+
 <div class="toast" id="toast"></div>
 <script>
 // ---- Plus aucune clé Supabase ici : tout passe par /api/* ----
@@ -155,7 +195,9 @@ if(campaigns.length===0){
 grid.innerHTML = `<div class="empty-camp">Aucune cagnotte pour l'instant.</div>`;
 return;
 }
-grid.innerHTML = campaigns.map(c=>`
+grid.innerHTML = campaigns.map(c=>{
+const tiers = Array.isArray(c.prize_tiers) ? c.prize_tiers : [];
+return `
 <div class="campaign-card">
 <div class="campaign-top">
 <div class="campaign-name">${escapeHtml(c.name)}</div>
@@ -164,22 +206,53 @@ grid.innerHTML = campaigns.map(c=>`
 <div class="campaign-meta">
 <div class="meta-item"><div class="v mono">${(c.entry_price||0).toLocaleString('fr-FR')}</div><div class="l">FCFA / entrée</div></div>
 <div class="meta-item"><div class="v mono">${c.entries_count||0}</div><div class="l">participants</div></div>
-<div class="meta-item"><div class="v mono">${c.winners_count||0}</div><div class="l">gagnants</div></div>
-<div class="meta-item"><div class="v mono">${(c.prize_per_winner||0).toLocaleString('fr-FR')}</div><div class="l">FCFA / gagnant</div></div>
+<div class="meta-item"><div class="v mono">${c.verified_count||0}</div><div class="l">vérifiés</div></div>
+<div class="meta-item"><div class="v mono">${tiers.length}</div><div class="l">gagnants</div></div>
+</div>
+<div class="tiers-row">
+${tiers.map((t,i)=>`<span class="tier-chip">N${i+1}: ${t.toLocaleString('fr-FR')} FCFA</span>`).join('')}
 </div>
 <div class="campaign-actions">
-${c.status==='open' ? `<button class="icon-btn" onclick="triggerDraw('${c.id}', ${c.entries_count||0})">Lancer le tirage</button>` : ''}
+<button class="icon-btn" onclick="openEntries('${c.id}')">Voir les participants (${c.entries_count||0})</button>
+${c.status==='open' ? `<button class="icon-btn" onclick="triggerDraw('${c.id}', ${c.verified_count||0})">Lancer le tirage</button>` : ''}
 <button class="icon-btn danger" onclick="deleteCampaign('${c.id}')">Supprimer</button>
 </div>
 </div>
-`).join('');
+`;}).join('');
 }
+
+// ---- Calcul en direct du minimum de participants (marge 40%) ----
+function updateCalc(){
+const price = parseInt(document.getElementById('cp-price').value, 10) || 0;
+const tiers = [1,2,3,4,5].map(i => parseInt(document.getElementById('tier-'+i).value,10) || 0);
+const totalPrizes = tiers.reduce((a,b)=>a+b,0);
+const box = document.getElementById('calcBox');
+if(!price || totalPrizes===0){
+box.innerHTML = 'Renseigne un prix d\'entrée et les paliers pour voir le calcul.';
+return;
+}
+const minParticipants = Math.ceil(totalPrizes / (0.6 * price));
+const revenue = minParticipants * price;
+const margin = revenue - totalPrizes;
+const marginPct = ((margin/revenue)*100).toFixed(1);
+box.innerHTML = `Total des gains à verser : <strong>${totalPrizes.toLocaleString('fr-FR')} FCFA</strong><br>
+Participants minimum pour 40% de marge : <span class="big">${minParticipants}</span><br>
+À ce seuil : recette ${revenue.toLocaleString('fr-FR')} FCFA — marge ${margin.toLocaleString('fr-FR')} FCFA (${marginPct}%)`;
+}
+['cp-price','tier-1','tier-2','tier-3','tier-4','tier-5'].forEach(id=>{
+document.getElementById(id).addEventListener('input', updateCalc);
+});
 
 function openCampaignEditor(){
 document.getElementById('campEditForm').reset();
 hideErr('errCampEdit');
 document.getElementById('cp-credits').value = 500;
-document.getElementById('cp-winners').value = 5;
+document.getElementById('tier-1').value = 40000;
+document.getElementById('tier-2').value = 25000;
+document.getElementById('tier-3').value = 18000;
+document.getElementById('tier-4').value = 10000;
+document.getElementById('tier-5').value = 5500;
+updateCalc();
 document.getElementById('campEditOverlay').classList.add('open');
 }
 function closeCampaignEditor(){ document.getElementById('campEditOverlay').classList.remove('open'); }
@@ -189,12 +262,14 @@ e.preventDefault();
 const btn = document.getElementById('campEditSaveBtn');
 btn.disabled = true; btn.textContent = 'Création…';
 
+const tiers = [1,2,3,4,5].map(i => parseInt(document.getElementById('tier-'+i).value,10) || 0).filter(v=>v>0);
+
 const payload = {
 name: document.getElementById('cp-name').value.trim(),
 entry_price: parseInt(document.getElementById('cp-price').value, 10) || 0,
 credits_reward: parseInt(document.getElementById('cp-credits').value, 10) || 0,
-winners_count: parseInt(document.getElementById('cp-winners').value, 10) || 5,
-prize_per_winner: parseInt(document.getElementById('cp-prize').value, 10) || 0,
+promo_instructions: document.getElementById('cp-promo').value.trim(),
+prize_tiers: tiers,
 };
 
 try{
@@ -217,9 +292,9 @@ btn.disabled = false; btn.textContent = 'Créer';
 }
 });
 
-async function triggerDraw(campaignId, entriesCount){
-if(entriesCount === 0){ showToast('Aucun participant à tirer au sort.'); return; }
-if(!confirm(`Lancer le tirage pour cette cagnotte (${entriesCount} participant(s)) ? Cette action est définitive.`)) return;
+async function triggerDraw(campaignId, verifiedCount){
+if(verifiedCount === 0){ showToast('Aucun participant vérifié à tirer au sort.'); return; }
+if(!confirm(`Lancer le tirage pour cette cagnotte (${verifiedCount} participant(s) vérifié(s)) ? Cette action est définitive.`)) return;
 
 try{
 const res = await fetch('/api/admin/members?resource=cagnottes', {
@@ -231,7 +306,7 @@ body: JSON.stringify({ action: 'draw', campaignId })
 const data = await res.json();
 if(!res.ok) throw new Error(data.error);
 
-showToast(`Tirage effectué ✓ ${data.winnersCount} gagnant(s)`);
+showToast(`Tirage effectué ✓ ${data.winnersCount} gagnant(s) parmi ${data.eligibleCount} vérifiés`);
 loadCampaigns();
 }catch(err){
 showToast(err.message || 'Erreur lors du tirage.');
@@ -251,8 +326,73 @@ showToast(err.message || "Erreur lors de la suppression.");
 }
 }
 
+// ---- Vérification des preuves de publication ----
+let currentEntriesCampaign = null;
+
+async function openEntries(campaignId){
+currentEntriesCampaign = campaignId;
+document.getElementById('entriesList').innerHTML = 'Chargement…';
+document.getElementById('entriesOverlay').classList.add('open');
+try{
+const res = await fetch(`/api/admin/members?resource=cagnottes&campaignId=${campaignId}`, { credentials: 'include' });
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+renderEntries(data.entries || []);
+}catch(e){
+document.getElementById('entriesList').innerHTML = 'Impossible de charger les participants.';
+}
+}
+function closeEntries(){ document.getElementById('entriesOverlay').classList.remove('open'); }
+
+function renderEntries(entries){
+const el = document.getElementById('entriesList');
+if(entries.length===0){
+el.innerHTML = '<div class="empty-camp">Aucun participant pour l\'instant.</div>';
+return;
+}
+el.innerHTML = entries.map(e=>{
+const name = e.profile ? (e.profile.business || e.profile.nom) : 'Membre';
+let badge, badgeClass;
+if(e.is_winner){ badge = `Gagnant N${e.rank} · +${(e.amount_won||0).toLocaleString('fr-FR')} FCFA`; badgeClass='verified'; }
+else if(e.verified){ badge = 'Vérifié'; badgeClass='verified'; }
+else if(e.proof_url){ badge = 'En attente de validation'; badgeClass='pending'; }
+else { badge = 'Pas de preuve soumise'; badgeClass='none'; }
+return `
+<div class="entry-row">
+<span class="entry-name">${escapeHtml(name)}</span>
+${e.proof_url ? `<a class="entry-proof" href="${escapeHtml(e.proof_url)}" target="_blank" rel="noopener">Voir la preuve</a>` : ''}
+<span class="entry-badge ${badgeClass}">${badge}</span>
+${!e.is_winner && e.proof_url ? `
+<button class="icon-btn" onclick="verifyEntry('${e.id}', ${!e.verified})">${e.verified ? 'Retirer' : 'Valider'}</button>
+` : ''}
+</div>
+`;
+}).join('');
+}
+
+ async function verifyEntry(entryId, verified){
+try{
+const res = await fetch('/api/admin/members?resource=cagnottes', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+credentials: 'include',
+body: JSON.stringify({ action: 'verify-entry', entryId, verified })
+});
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+showToast(verified ? 'Participant validé ✓' : 'Validation retirée');
+openEntries(currentEntriesCampaign);
+loadCampaigns();
+}catch(err){
+showToast(err.message || 'Erreur.');
+}
+}
+
 document.getElementById('campEditOverlay').addEventListener('click', (e)=>{
 if(e.target.id==='campEditOverlay') closeCampaignEditor();
+});
+document.getElementById('entriesOverlay').addEventListener('click', (e)=>{
+if(e.target.id==='entriesOverlay') closeEntries();
 });
 
 (async ()=>{
