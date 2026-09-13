@@ -276,7 +276,8 @@ credentials: 'include',
 body: JSON.stringify({
 amount: campaign.entry_price,
 description: `Cagnotte Kontak — ${campaign.name}`,
-metadata: { kind: 'cagnotte', campaign_id: campaign.id, credits_reward: campaign.credits_reward }
+metadata: { kind: 'cagnotte', campaign_id: campaign.id, credits_reward: campaign.credits_reward },
+returnPath: 'cagnotte'
 })
 });
 const data = await resp.json();
@@ -305,10 +306,38 @@ document.getElementById('ticketsList').innerHTML = tickets.map(t=>`
 }catch(e){ /* silencieux */ }
 }
 
+async function checkPendingPayment(){
+if(new URLSearchParams(window.location.search).get('paid') !== '1') return;
+history.replaceState(null, '', window.location.pathname);
+
+let tries = 0;
+const maxTries = 6;
+const poll = async ()=>{
+tries++;
+try{
+const res = await fetch('/api/create-checkout', { credentials: 'include' });
+const data = await res.json();
+if(data.status === 'paid'){
+showToast('Participation confirmée ✓ Crédits ajoutés !');
+loadMyTickets();
+return;
+}
+if(data.status === 'failed' || data.status === 'cancelled' || data.status === 'expired'){
+showToast('Le paiement n\'a pas abouti.');
+return;
+}
+}catch(e){ /* on réessaie */ }
+if(tries < maxTries) setTimeout(poll, 2500);
+else showToast('Vérification du paiement en cours — recharge la page dans un instant.');
+};
+poll();
+}
+
 (async ()=>{
 await initNav();
 loadCampaigns();
 loadMyTickets();
+checkPendingPayment();
 })();
 </script>
 </body>
