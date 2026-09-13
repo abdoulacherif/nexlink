@@ -4,11 +4,16 @@ import crypto from 'crypto';
 import { getSession } from '../lib/auth';
 import { supabaseAdmin } from '../lib/supabaseAdmin';
 
-// Ce fichier gère DEUX choses pour ne pas dépasser la limite de 12 fonctions
+// Ce fichier gère TROIS choses pour ne pas dépasser la limite de 12 fonctions
 // serverless du plan Vercel Hobby :
-//  1. La création d'un paiement LeekPay (appelée depuis nos pages)
-//  2. Le webhook LeekPay qui confirme qu'un paiement a réellement abouti
-// On les distingue par la présence du header X-LeekPay-Signature.
+//  1. POST (sans domaine perso pour l'instant) — création d'un paiement LeekPay
+//  2. GET  — polling : le client revient de la page de paiement et demande
+//            "est-ce que mon dernier paiement est passé ?" (obligatoire tant
+//            qu'aucun webhook n'est configuré côté LeekPay)
+//  3. POST avec header X-LeekPay-Signature — webhook, prêt pour quand le
+//            domaine sera acheté et le webhook configuré ; peut cohabiter
+//            avec le polling sans risque (les deux vérifient si le paiement
+//            est déjà confirmé avant de créditer, donc jamais de double-crédit)
 //
 // Body parsing désactivé : la signature du webhook se vérifie sur le corps
 // BRUT de la requête, pas sur du JSON reparsé.
@@ -24,14 +29,95 @@ async function getRawBody(readable: Readable): Promise<Buffer> {
   return Buffer.concat(chunks);
 }
 
+// Applique le crédit correspondant au type de paiement — utilisé à la fois
+// par le polling et par le webhook, jamais deux fois pour le même paiement.
+async function applyPaymentCredit(userId: string, metadata: any, amount: number) {
+  if (metadata.kind === 'credits') {
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('credits')
+      .eq('user_id', userId)
+      .maybeSingle();
+    const newCredits = (profile?.credits || 0) + (metadata.credits || 0);
+    await supabaseAdmin.from('profiles').update({ credits: newCredits }).eq('user_id', userId);
+  }
+
+  if (metadata.kind === 'subscription') {
+    await supabaseAdmin.from('subscription_requests').insert({
+      user_id: userId,
+      plan_id: metadata.plan_id,
+      plan_name: metadata.plan_name,
+      price: amount,
+      status: 'payé',
+    });
+  }
+
+  if (metadata.kind === 'cagnotte') {
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('credits')
+      .eq('user_id', userId)
+      .maybeSingle();
+    const newCredits = (profile?.credits || 0) + (metadata.credits_reward || 0);
+    await supabaseAdmin.from('profiles').update({ credits: newCredits }).eq('user_id', userId);
+
+    await supabaseAdmin.from('cagnotte_entries').insert({
+      campaign_id: metadata.campaign_id,
+      user_id: userId,
+    });
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // =================================================================
+  // GET — Polling : "mon dernier paiement en attente est-il passé ?"
+  // =================================================================
+  if (req.method === 'GET') {
+    const session = getSession(req);
+    if (!session) return res.status(401).json({ error: 'Non authentifié' });
+
+    const { data: payment } = await supabaseAdmin
+      .from('payments')
+      .select('*')
+      .eq('user_id', session.userId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!payment) return res.status(200).json({ status: null });
+
+    try {
+      const resp = await fetch(`https://leekpay.fr/api/v1/checkout/${payment.checkout_id}`, {
+        headers: { Authorization: `Bearer ${process.env.LEEKPAY_SECRET_KEY}` },
+      });
+      const data = await resp.json();
+      const remoteStatus = data?.data?.status;
+
+      if (remoteStatus === 'paid') {
+        await applyPaymentCredit(session.userId, payment.metadata, payment.amount);
+        await supabaseAdmin.from('payments').update({ status: 'confirmé' }).eq('id', payment.id);
+        return res.status(200).json({ status: 'paid' });
+      }
+
+      if (['failed', 'cancelled', 'expired'].includes(remoteStatus)) {
+        await supabaseAdmin.from('payments').update({ status: remoteStatus }).eq('id', payment.id);
+        return res.status(200).json({ status: remoteStatus });
+      }
+
+      return res.status(200).json({ status: 'pending' });
+    } catch (err: any) {
+      return res.status(200).json({ status: 'pending' });
+    }
+  }
+
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
   const rawBody = await getRawBody(req);
   const signature = req.headers['x-leekpay-signature'] as string | undefined;
 
   // =================================================================
-  // CAS 1 — Webhook LeekPay : confirmation réelle d'un paiement
+  // POST avec signature — Webhook LeekPay (prêt pour plus tard)
   // =================================================================
   if (signature) {
     const expected = crypto
@@ -47,7 +133,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch {
       valid = false;
     }
-
     if (!valid) return res.status(401).json({ error: 'Signature invalide' });
 
     let payload: any;
@@ -58,9 +143,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const { event, data } = payload || {};
-
-    // On accuse toujours réception (200) même si on ignore l'événement,
-    // sinon LeekPay va continuer à réessayer indéfiniment.
     if (event !== 'payment.completed' || !data || data.status !== 'paid') {
       return res.status(200).json({ ok: true, ignored: true });
     }
@@ -69,59 +151,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const userId = metadata.user_id;
     if (!userId) return res.status(200).json({ ok: true, ignored: true });
 
+    const { data: existing } = await supabaseAdmin
+      .from('payments')
+      .select('id, status')
+      .eq('checkout_id', data.checkout_id)
+      .maybeSingle();
+
+    if (existing?.status === 'confirmé') {
+      return res.status(200).json({ ok: true, alreadyProcessed: true });
+    }
+
     try {
-      if (metadata.kind === 'credits') {
-        const { data: profile } = await supabaseAdmin
-          .from('profiles')
-          .select('credits')
-          .eq('user_id', userId)
-          .maybeSingle();
-        const newCredits = (profile?.credits || 0) + (metadata.credits || 0);
-        await supabaseAdmin.from('profiles').update({ credits: newCredits }).eq('user_id', userId);
-
+      await applyPaymentCredit(userId, metadata, data.amount);
+      if (existing) {
+        await supabaseAdmin.from('payments').update({ status: 'confirmé' }).eq('id', existing.id);
+      } else {
         await supabaseAdmin.from('payments').insert({
           user_id: userId,
-          kind: 'credits',
+          checkout_id: data.checkout_id,
+          kind: metadata.kind,
           amount: data.amount,
+          metadata,
           status: 'confirmé',
-        });
-      }
-
-      if (metadata.kind === 'subscription') {
-        await supabaseAdmin.from('subscription_requests').insert({
-          user_id: userId,
-          plan_id: metadata.plan_id,
-          plan_name: metadata.plan_name,
-          price: data.amount,
-          status: 'payé',
-        });
-
-        await supabaseAdmin.from('payments').insert({
-          user_id: userId,
-          kind: 'subscription',
-          amount: data.amount,
-          status: 'confirmé',
-        });
-      }
-
-      if (metadata.kind === 'cagnotte') {
-        const { data: profile } = await supabaseAdmin
-          .from('profiles')
-          .select('credits')
-          .eq('user_id', userId)
-          .maybeSingle();
-        const newCredits = (profile?.credits || 0) + (metadata.credits_reward || 0);
-        await supabaseAdmin.from('profiles').update({ credits: newCredits }).eq('user_id', userId);
-
-        await supabaseAdmin.from('cagnotte_entries').insert({
-          campaign_id: metadata.campaign_id,
-          user_id: userId,
         });
       }
     } catch (err) {
-      // On logue l'erreur mais on renvoie quand même 200 : le paiement a
-      // réellement eu lieu chez LeekPay, ce n'est pas à eux de réessayer
-      // indéfiniment à cause d'un bug de notre côté — on corrige à la main.
       console.error('Erreur traitement webhook LeekPay:', err);
     }
 
@@ -129,7 +183,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // =================================================================
-  // CAS 2 — Création d'un paiement (appelée depuis nos pages)
+  // POST sans signature — Création d'un paiement (depuis nos pages)
   // =================================================================
   const session = getSession(req);
   if (!session) return res.status(401).json({ error: 'Non authentifié' });
@@ -141,7 +195,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'JSON invalide' });
   }
 
-  const { amount, description, metadata } = body || {};
+  const { amount, description, metadata, returnPath } = body || {};
   if (!amount || !description || !metadata || !metadata.kind) {
     return res.status(400).json({ error: 'Paramètres manquants' });
   }
@@ -157,11 +211,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         amount,
         currency: 'XOF',
         description,
-        return_url: 'https://kontaks.vercel.app/abonnement?paid=1',
-        cancel_url: 'https://kontaks.vercel.app/abonnement',
+        return_url: `https://kontaks.vercel.app/${returnPath || 'abonnement'}?paid=1`,
+        cancel_url: `https://kontaks.vercel.app/${returnPath || 'abonnement'}`,
         customer_email: session.email || undefined,
-        // user_id vient TOUJOURS de la session serveur, jamais du client,
-        // pour empêcher de créditer le compte de quelqu'un d'autre.
         metadata: { ...metadata, user_id: session.userId },
       }),
     });
@@ -170,6 +222,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!resp.ok || !data.success) {
       return res.status(400).json({ error: (data && data.message) || 'Erreur lors de la création du paiement' });
     }
+
+    // On enregistre le paiement en attente pour pouvoir le confirmer par
+    // polling au retour du client (tant qu'il n'y a pas de webhook).
+    await supabaseAdmin.from('payments').insert({
+      user_id: session.userId,
+      checkout_id: data.data.id,
+      kind: metadata.kind,
+      amount,
+      metadata,
+      status: 'pending',
+    });
 
     return res.status(200).json({
       payment_url: data.data.payment_url,
