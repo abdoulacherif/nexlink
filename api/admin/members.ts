@@ -376,5 +376,120 @@ export default requireAdmin(async (req, res) => {
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
 
+  // ---------------------------------------------------------------
+  // CAGNOTTES (cagnotte_campaigns + cagnotte_entries)
+  // ---------------------------------------------------------------
+  if (resource === 'cagnottes') {
+    if (req.method === 'GET') {
+      const { data: campaigns, error } = await supabaseAdmin
+        .from('cagnotte_campaigns')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) return res.status(400).json({ error: error.message });
+
+      // Nombre de participants par campagne
+      const withCounts = await Promise.all(
+        (campaigns || []).map(async (c: any) => {
+          const { count } = await supabaseAdmin
+            .from('cagnotte_entries')
+            .select('*', { count: 'exact', head: true })
+            .eq('campaign_id', c.id);
+          return { ...c, entries_count: count ?? 0 };
+        })
+      );
+
+      return res.status(200).json({ items: withCounts });
+    }
+
+    if (req.method === 'POST') {
+      const { action } = req.body || {};
+
+      // Déclenche le tirage au sort d'une campagne
+      if (action === 'draw') {
+        const { campaignId } = req.body || {};
+        if (!campaignId) return res.status(400).json({ error: 'campaignId requis' });
+
+        const { data: campaign, error: campErr } = await supabaseAdmin
+          .from('cagnotte_campaigns')
+          .select('*')
+          .eq('id', campaignId)
+          .maybeSingle();
+        if (campErr || !campaign) return res.status(404).json({ error: 'Campagne introuvable.' });
+        if (campaign.status === 'drawn') return res.status(400).json({ error: 'Le tirage a déjà eu lieu.' });
+
+        const { data: entries, error: entErr } = await supabaseAdmin
+          .from('cagnotte_entries')
+          .select('*')
+          .eq('campaign_id', campaignId);
+        if (entErr) return res.status(400).json({ error: entErr.message });
+        if (!entries || entries.length === 0) {
+          return res.status(400).json({ error: 'Aucun participant pour cette campagne.' });
+        }
+
+        const winnersCount = Math.min(campaign.winners_count || 5, entries.length);
+        const shuffled = [...entries].sort(() => Math.random() - 0.5);
+        const winners = shuffled.slice(0, winnersCount);
+
+        for (const w of winners) {
+          const { data: profile } = await supabaseAdmin
+            .from('profiles')
+            .select('solde')
+            .eq('user_id', w.user_id)
+            .maybeSingle();
+          const solde = profile?.solde || 0;
+          await supabaseAdmin
+            .from('profiles')
+            .update({ solde: solde + (campaign.prize_per_winner || 0) })
+            .eq('user_id', w.user_id);
+          await supabaseAdmin
+            .from('cagnotte_entries')
+            .update({ is_winner: true, amount_won: campaign.prize_per_winner })
+            .eq('id', w.id);
+        }
+
+        await supabaseAdmin
+          .from('cagnotte_campaigns')
+          .update({ status: 'drawn', drawn_at: new Date().toISOString() })
+          .eq('id', campaignId);
+
+        return res.status(200).json({ ok: true, winnersCount, winners: winners.map((w: any) => w.user_id) });
+      }
+
+      // Création d'une nouvelle campagne
+      const { name, entry_price, credits_reward, winners_count, prize_per_winner } = req.body || {};
+      if (!name || !entry_price || !winners_count || !prize_per_winner) {
+        return res.status(400).json({ error: 'Champs manquants.' });
+      }
+      const { error } = await supabaseAdmin.from('cagnotte_campaigns').insert({
+        name,
+        entry_price,
+        credits_reward: credits_reward || 0,
+        winners_count,
+        prize_per_winner,
+        status: 'open',
+      });
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+
+    if (req.method === 'PATCH') {
+      const id = req.query.id as string;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { error } = await supabaseAdmin.from('cagnotte_campaigns').update(req.body || {}).eq('id', id);
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+
+    if (req.method === 'DELETE') {
+      const id = req.query.id as string;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { error } = await supabaseAdmin.from('cagnotte_campaigns').delete().eq('id', id);
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+
+    return res.status(405).json({ error: 'Méthode non autorisée' });
+  }
+
   return res.status(400).json({ error: `Ressource inconnue : ${resource}` });
 });
