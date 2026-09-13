@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confirmation — Kontak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+--bg:#FFFFFF;--bg-soft:#F3FBF5;--ink:#0E2A1B;--green:#25D366;--green-dark:#128C4A;
+--orange:#FF8A3D;--gold:#E8A33D;--line:rgba(14,42,27,0.10);--muted:rgba(14,42,27,0.55);--err:#D9534F;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Sora',sans-serif;-webkit-font-smoothing:antialiased;}
+h1{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+a{color:inherit;}
+.logo{font-family:'Fraunces',serif;font-style:italic;font-size:22px;letter-spacing:0.3px;text-decoration:none;color:var(--ink);}
+.logo span{color:var(--green-dark);}
+header{padding:20px 24px;border-bottom:1px solid var(--line);}
+.btn-fill{background:var(--green);color:#fff;border:none;padding:10px 18px;border-radius:100px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Sora',sans-serif;text-decoration:none;display:inline-block;}
+.confirm-wrap{min-height:80vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.confirm-card{max-width:440px;width:100%;text-align:center;padding:20px 8px;}
+.confirm-icon{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 22px;}
+.confirm-icon.success{background:var(--bg-soft);color:var(--green-dark);}
+.confirm-icon.error{background:#FDEDEB;color:var(--err);}
+.confirm-icon.loading{background:var(--bg-soft);color:var(--green-dark);}
+.confirm-icon svg{width:34px;height:34px;}
+.confirm-icon.loading svg{animation:spin 1s linear infinite;}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<header>
+<a class="logo" href="index">Kon<span>tak</span></a>
+</header>
+<div class="confirm-wrap">
+<div class="confirm-card">
+<div class="confirm-icon loading" id="confirmIcon"></div>
+<h1 id="confirmTitle" style="font-size:24px;">Vérification…</h1>
+<p id="confirmText" style="color:var(--muted);font-size:14.5px;margin-top:10px;">Un instant, on confirme ton compte.</p>
+<div style="margin-top:26px;">
+<a class="btn-fill" id="confirmBtn" href="dashboard" style="display:none;">Accéder à mon compte</a>
+</div>
+</div>
+</div>
+<script>
+// ---- Cette page est la SEULE à utiliser le client Supabase côté navigateur ----
+// C'est nécessaire pour lire le token de vérification présent dans l'URL
+// (#access_token=...) — c'est le mécanisme standard de Supabase Auth, la clé
+// "anon" est publique par conception. Une fois la session Supabase obtenue,
+// on l'échange immédiatement contre notre propre session (cookie signé) et
+// on ne réutilise plus jamais le client Supabase ailleurs sur le site.
+
+const SUPABASE_URL = "https://opzdertwtnssqgexzklt.supabase.co";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const ICONS = {
+check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+cross: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+loading: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.9" y1="4.9" x2="7.8" y2="7.8"/><line x1="16.2" y1="16.2" x2="19.1" y2="19.1"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.9" y1="19.1" x2="7.8" y2="16.2"/><line x1="16.2" y1="7.8" x2="19.1" y2="4.9"/></svg>'
+};
+
+function setState(state, title, text, btnLabel, btnHref){
+const icon = document.getElementById('confirmIcon');
+icon.className = 'confirm-icon ' + state;
+icon.innerHTML = state === 'success' ? ICONS.check : state === 'error' ? ICONS.cross : ICONS.loading;
+document.getElementById('confirmTitle').textContent = title;
+document.getElementById('confirmText').textContent = text;
+const btn = document.getElementById('confirmBtn');
+if(btnLabel){
+btn.style.display = 'inline-block';
+btn.textContent = btnLabel;
+btn.href = btnHref;
+}else{
+btn.style.display = 'none';
+}
+}
+
+(async ()=>{
+const hash = window.location.hash;
+const hasError = hash.includes('error=') || hash.includes('error_description=');
+
+if(hasError){
+const params = new URLSearchParams(hash.replace('#','?'));
+const desc = params.get('error_description') || 'Le lien de confirmation est invalide ou a expiré.';
+setState('error', 'Confirmation échouée', decodeURIComponent(desc).replace(/\+/g,' '), 'Se réinscrire', 'inscription');
+return;
+}
+
+// supabase-js détecte automatiquement le token dans l'URL et crée une session Supabase
+await new Promise(r => setTimeout(r, 600));
+const { data } = await sb.auth.getSession();
+
+if(!data.session){
+setState('error', 'Lien invalide', "Ce lien de confirmation n'est plus valide. Réessaie de t'inscrire ou connecte-toi si ton compte est déjà confirmé.", 'Se connecter', 'connexion');
+return;
+}
+
+try{
+const res = await fetch('/api/auth/session', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+credentials: 'include',
+body: JSON.stringify({ access_token: data.session.access_token })
+});
+const result = await res.json();
+if(!res.ok) throw new Error(result.error || 'Erreur lors de la confirmation.');
+
+setState('success', 'Compte confirmé !', 'Ton adresse email a été vérifiée avec succès. Bienvenue sur Kontak.', 'Accéder à mon compte', 'dashboard');
+}catch(err){
+setState('error', 'Erreur', err.message || 'Impossible de finaliser la confirmation.', 'Se connecter', 'connexion');
+}
+})();
+</script>
+</body>
+</html>
