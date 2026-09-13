@@ -158,5 +158,223 @@ export default requireAdmin(async (req, res) => {
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
 
+  // ---------------------------------------------------------------
+  // DEMANDES DE RETRAIT (withdrawal_requests)
+  // ---------------------------------------------------------------
+  if (resource === 'withdrawals') {
+    if (req.method === 'GET') {
+      const { data, error } = await supabaseAdmin
+        .from('withdrawal_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ items: data });
+    }
+    if (req.method === 'PATCH') {
+      const id = req.query.id as string;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { error } = await supabaseAdmin.from('withdrawal_requests').update(req.body || {}).eq('id', id);
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+    if (req.method === 'DELETE') {
+      const id = req.query.id as string;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { error } = await supabaseAdmin.from('withdrawal_requests').delete().eq('id', id);
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+    return res.status(405).json({ error: 'Méthode non autorisée' });
+  }
+
+  // ---------------------------------------------------------------
+  // DEMANDES D'ABONNEMENT (subscription_requests)
+  // ---------------------------------------------------------------
+  if (resource === 'subscriptions') {
+    if (req.method === 'GET') {
+      const { data, error } = await supabaseAdmin
+        .from('subscription_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ items: data });
+    }
+    if (req.method === 'PATCH') {
+      const id = req.query.id as string;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { error } = await supabaseAdmin.from('subscription_requests').update(req.body || {}).eq('id', id);
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+    if (req.method === 'DELETE') {
+      const id = req.query.id as string;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { error } = await supabaseAdmin.from('subscription_requests').delete().eq('id', id);
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+    return res.status(405).json({ error: 'Méthode non autorisée' });
+  }
+
+  // ---------------------------------------------------------------
+  // FORFAITS D'ABONNEMENT (subscription_plans)
+  // ---------------------------------------------------------------
+  if (resource === 'plans') {
+    if (req.method === 'GET') {
+      const { data, error } = await supabaseAdmin
+        .from('subscription_plans')
+        .select('*')
+        .order('position', { ascending: true });
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ items: data });
+    }
+    if (req.method === 'POST') {
+      const { error } = await supabaseAdmin.from('subscription_plans').insert(req.body || {});
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+    if (req.method === 'PATCH') {
+      const id = req.query.id as string;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { error } = await supabaseAdmin.from('subscription_plans').update(req.body || {}).eq('id', id);
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+    if (req.method === 'DELETE') {
+      const id = req.query.id as string;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { error } = await supabaseAdmin.from('subscription_plans').delete().eq('id', id);
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+    return res.status(405).json({ error: 'Méthode non autorisée' });
+  }
+
+  // ---------------------------------------------------------------
+  // OFFRES SERVEUR (server_offers)
+  // ---------------------------------------------------------------
+  if (resource === 'server-offers') {
+    if (req.method === 'GET') {
+      const { data, error } = await supabaseAdmin
+        .from('server_offers')
+        .select('*')
+        .order('position', { ascending: true });
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ items: data });
+    }
+    if (req.method === 'POST') {
+      const { error } = await supabaseAdmin.from('server_offers').insert(req.body || {});
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+    if (req.method === 'PATCH') {
+      const id = req.query.id as string;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { error } = await supabaseAdmin.from('server_offers').update(req.body || {}).eq('id', id);
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+    if (req.method === 'DELETE') {
+      const id = req.query.id as string;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { error } = await supabaseAdmin.from('server_offers').delete().eq('id', id);
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+    return res.status(405).json({ error: 'Méthode non autorisée' });
+  }
+
+  // ---------------------------------------------------------------
+  // DEMANDES SERVEUR (server_orders)
+  // ---------------------------------------------------------------
+  if (resource === 'server-orders') {
+    if (req.method === 'GET') {
+      const { data, error } = await supabaseAdmin
+        .from('server_orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ items: data });
+    }
+    if (req.method === 'PATCH') {
+      const id = req.query.id as string;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { error } = await supabaseAdmin.from('server_orders').update(req.body || {}).eq('id', id);
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+    if (req.method === 'DELETE') {
+      const id = req.query.id as string;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { error } = await supabaseAdmin.from('server_orders').delete().eq('id', id);
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+    return res.status(405).json({ error: 'Méthode non autorisée' });
+  }
+
+  // ---------------------------------------------------------------
+  // SERVICES BUSINESS (business_services)
+  // ---------------------------------------------------------------
+  if (resource === 'biz-services') {
+    if (req.method === 'GET') {
+      const { data, error } = await supabaseAdmin
+        .from('business_services')
+        .select('*')
+        .order('position', { ascending: true });
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ items: data });
+    }
+    if (req.method === 'POST') {
+      const { error } = await supabaseAdmin.from('business_services').insert(req.body || {});
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+    if (req.method === 'PATCH') {
+      const id = req.query.id as string;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { error } = await supabaseAdmin.from('business_services').update(req.body || {}).eq('id', id);
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+    if (req.method === 'DELETE') {
+      const id = req.query.id as string;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { error } = await supabaseAdmin.from('business_services').delete().eq('id', id);
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+    return res.status(405).json({ error: 'Méthode non autorisée' });
+  }
+
+  // ---------------------------------------------------------------
+  // DEMANDES BUSINESS (business_orders)
+  // ---------------------------------------------------------------
+  if (resource === 'biz-orders') {
+    if (req.method === 'GET') {
+      const { data, error } = await supabaseAdmin
+        .from('business_orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ items: data });
+    }
+    if (req.method === 'PATCH') {
+      const id = req.query.id as string;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { error } = await supabaseAdmin.from('business_orders').update(req.body || {}).eq('id', id);
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+    if (req.method === 'DELETE') {
+      const id = req.query.id as string;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { error } = await supabaseAdmin.from('business_orders').delete().eq('id', id);
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+    return res.status(405).json({ error: 'Méthode non autorisée' });
+  }
+
   return res.status(400).json({ error: `Ressource inconnue : ${resource}` });
 });
