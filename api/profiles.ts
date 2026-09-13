@@ -21,6 +21,7 @@ export default requireAuth(async (req, res, session) => {
       supabaseAdmin.from('subscription_requests').select('*').eq('user_id', session.userId).order('created_at', { ascending: false }),
       supabaseAdmin.from('server_orders').select('*').eq('user_id', session.userId).order('created_at', { ascending: false }),
       supabaseAdmin.from('business_orders').select('*').eq('user_id', session.userId).order('created_at', { ascending: false }),
+      supabaseAdmin.from('cagnotte_entries').select('*, cagnotte_campaigns(name, status)').eq('user_id', session.userId).order('created_at', { ascending: false }),
       profile?.referral_code
         ? supabaseAdmin
             .from('profiles')
@@ -31,7 +32,7 @@ export default requireAuth(async (req, res, session) => {
     ]);
     const pick = (r: PromiseSettledResult<any>) => (r.status === 'fulfilled' ? r.value.data || [] : []);
 
-    const referralsResult = results[6];
+    const referralsResult = results[7];
     const referrals = referralsResult.status === 'fulfilled' ? referralsResult.value.data || [] : [];
     const referralsCount = referralsResult.status === 'fulfilled' ? referralsResult.value.count ?? referrals.length : 0;
 
@@ -43,6 +44,7 @@ export default requireAuth(async (req, res, session) => {
       subscriptions: pick(results[3]),
       serverOrders: pick(results[4]),
       bizOrders: pick(results[5]),
+      cagnotteEntries: pick(results[6]),
       referrals,
       referralsCount,
     });
