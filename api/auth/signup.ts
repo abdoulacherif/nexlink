@@ -1,11 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabaseAdmin } from '../../lib/supabaseAdmin';
-import { signSession, setSessionCookie } from '../../lib/auth';
-import { sendWelcomeEmail, sendAdminNotifEmail } from '../../lib/mailer';
+import { sendConfirmationEmail } from '../../lib/mailer';
 
 function genReferralCode(): string {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
+
+const SITE_URL = 'https://kontaks.vercel.app';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
@@ -19,17 +20,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères.' });
   }
 
-  const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+  // Crée le compte NON confirmé et génère le lien de vérification en un seul appel
+  const { data, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+    type: 'signup',
     email,
     password,
-    email_confirm: true,
+    options: { redirectTo: `${SITE_URL}/confirmation` },
   });
 
-  if (authError || !authData.user) {
-    return res.status(400).json({ error: authError?.message || 'Impossible de créer le compte.' });
+  if (linkError || !data.user) {
+    return res.status(400).json({ error: linkError?.message || 'Impossible de créer le compte.' });
   }
 
-  const userId = authData.user.id;
+  const userId = data.user.id;
+  const actionLink = data.properties?.action_link;
 
   const { error: insertError } = await supabaseAdmin.from('profiles').insert({
     user_id: userId,
@@ -45,14 +49,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   });
 
   if (insertError) {
+    // Rollback : on supprime le compte auth si la création du profil échoue
     await supabaseAdmin.auth.admin.deleteUser(userId);
     return res.status(400).json({ error: insertError.message });
   }
 
-  const token = signSession({ userId, email, isAdmin: false });
-  setSessionCookie(res, token);
+  if (actionLink) {
+    sendConfirmationEmail(name, email, actionLink).catch(() => {});
+  }
 
-  Promise.allSettled([sendWelcomeEmail(name, email), sendAdminNotifEmail(name, email, phone)]).catch(() => {});
-
-  return res.status(200).json({ ok: true });
+  return res.status(200).json({ ok: true, pendingConfirmation: true });
 }
