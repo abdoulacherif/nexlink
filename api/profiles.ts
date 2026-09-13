@@ -70,6 +70,30 @@ export default requireAuth(async (req, res, session) => {
   }
 
   if (req.method === 'PATCH') {
+    const { action } = req.body || {};
+
+    // Soumission du lien de publication (affiche/vidéo) pour une cagnotte
+    if (action === 'submit-cagnotte-proof') {
+      const { entryId, proofUrl } = req.body || {};
+      if (!entryId || !proofUrl) return res.status(400).json({ error: 'Champs manquants.' });
+
+      const { data: entry } = await supabaseAdmin
+        .from('cagnotte_entries')
+        .select('user_id')
+        .eq('id', entryId)
+        .maybeSingle();
+      if (!entry || entry.user_id !== session.userId) {
+        return res.status(403).json({ error: 'Non autorisé.' });
+      }
+
+      const { error } = await supabaseAdmin
+        .from('cagnotte_entries')
+        .update({ proof_url: proofUrl, verified: false })
+        .eq('id', entryId);
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ ok: true });
+    }
+
     const { nom, whatsapp, ville, pays, business, secteur } = req.body || {};
     const { error } = await supabaseAdmin
       .from('profiles')
