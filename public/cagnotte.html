@@ -71,6 +71,11 @@ body{padding-bottom:74px;}
 .ticket-badge{font-size:11px;font-family:'Space Mono',monospace;padding:3px 9px;border-radius:100px;font-weight:700;}
 .ticket-badge.win{background:var(--bg-soft);color:var(--green-dark);}
 .ticket-badge.pending{background:#FBF3DE;color:var(--gold);}
+.tiers-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.tier-chip{background:var(--bg-soft);border-radius:100px;padding:4px 10px;font-size:11px;font-family:'Space Mono',monospace;color:var(--green-dark);font-weight:700;}
+.proof-form{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);}
+.proof-form input{width:100%;padding:9px 11px;border-radius:8px;border:1.5px solid var(--line);font-family:'Sora',sans-serif;font-size:13px;margin-bottom:8px;}
+.proof-form button{background:var(--ink);color:#fff;border:none;padding:9px 14px;border-radius:8px;font-weight:700;font-size:12.5px;cursor:pointer;font-family:'Sora',sans-serif;}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 22px;border-radius:100px;font-size:13.5px;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none;max-width:90%;text-align:center;}
 .toast.show{opacity:1;}
 </style>
@@ -244,18 +249,25 @@ if(campaigns.length===0){
 grid.innerHTML = '<div class="empty-camp">Aucune cagnotte en cours pour le moment. Reviens bientôt !</div>';
 return;
 }
-grid.innerHTML = campaigns.map(c=>`
+grid.innerHTML = campaigns.map(c=>{
+const tiers = Array.isArray(c.prize_tiers) ? c.prize_tiers : [];
+return `
 <div class="campaign-card">
 <div class="campaign-name">${escapeHtml(c.name)}</div>
 <div class="campaign-meta">
 <div class="meta-item"><div class="v">${(c.entry_price||0).toLocaleString('fr-FR')}</div><div class="l">FCFA</div></div>
 <div class="meta-item"><div class="v">${c.credits_reward||0}</div><div class="l">crédits offerts</div></div>
-<div class="meta-item"><div class="v">${c.winners_count||0}</div><div class="l">gagnants</div></div>
+<div class="meta-item"><div class="v">${tiers.length}</div><div class="l">gagnants</div></div>
 </div>
-<div class="explain">Tu paies ${(c.entry_price||0).toLocaleString('fr-FR')} FCFA et reçois immédiatement ${c.credits_reward||0} crédits à utiliser sur Kontak. Tu entres aussi dans le tirage : ${c.winners_count||0} gagnants recevront chacun ${(c.prize_per_winner||0).toLocaleString('fr-FR')} FCFA sur leur solde.</div>
+<div class="tiers-row">
+${tiers.map((t,i)=>`<span class="tier-chip">${i+1}${i===0?'er':'e'}: ${t.toLocaleString('fr-FR')} FCFA</span>`).join('')}
+</div>
+<div class="explain">Tu paies ${(c.entry_price||0).toLocaleString('fr-FR')} FCFA et reçois immédiatement ${c.credits_reward||0} crédits.
+${c.promo_instructions ? `<br><br><strong>Pour participer au tirage</strong>, tu dois en plus : ${escapeHtml(c.promo_instructions)} Un admin doit valider ta publication avant le tirage.` : ''}
+</div>
 <button class="btn-primary" onclick='participate(${JSON.stringify(c).replace(/'/g,"&apos;")})'>Participer — ${(c.entry_price||0).toLocaleString('fr-FR')} FCFA</button>
 </div>
-`).join('');
+`;}).join('');
 }catch(e){
 grid.innerHTML = '<div class="empty-camp">Impossible de charger la cagnotte pour l\'instant.</div>';
 }
@@ -297,13 +309,53 @@ const tickets = data.cagnotteEntries || [];
 if(tickets.length===0) return;
 
 document.getElementById('myTicketsSection').style.display = '';
-document.getElementById('ticketsList').innerHTML = tickets.map(t=>`
-<div class="ticket-item">
+document.getElementById('ticketsList').innerHTML = tickets.map(t=>{
+let badgeClass, badgeText;
+if(t.is_winner){ badgeClass='win'; badgeText = 'Gagnant · +'+(t.amount_won||0).toLocaleString('fr-FR')+' FCFA'; }
+else if(t.verified){ badgeClass='win'; badgeText = 'Vérifié — en lice pour le tirage'; }
+else if(t.proof_url){ badgeClass='pending'; badgeText = 'Preuve en attente de validation'; }
+else { badgeClass='pending'; badgeText = 'Preuve à soumettre'; }
+
+const needsProof = !t.proof_url && !t.is_winner;
+
+return `
+<div class="ticket-item" style="flex-direction:column;align-items:stretch;">
+<div style="display:flex;justify-content:space-between;align-items:center;">
 <span>${escapeHtml(t.cagnotte_campaigns?.name || 'Cagnotte')}</span>
-<span class="ticket-badge ${t.is_winner ? 'win' : 'pending'}">${t.is_winner ? '+'+(t.amount_won||0).toLocaleString('fr-FR')+' FCFA' : 'En attente du tirage'}</span>
+<span class="ticket-badge ${badgeClass}">${badgeText}</span>
 </div>
-`).join('');
+${needsProof ? `
+<div class="proof-form">
+<input type="url" id="proof-${t.id}" placeholder="Lien de ta publication (Facebook, Instagram, TikTok…)">
+<button onclick="submitProof('${t.id}')">Soumettre ma preuve</button>
+</div>
+` : ''}
+</div>
+`;
+}).join('');
 }catch(e){ /* silencieux */ }
+}
+
+async function submitProof(entryId){
+const input = document.getElementById('proof-'+entryId);
+const url = input.value.trim();
+if(!url){ showToast('Colle le lien de ta publication.'); return; }
+
+try{
+const res = await fetch('/api/profiles', {
+method: 'PATCH',
+headers: { 'Content-Type': 'application/json' },
+credentials: 'include',
+body: JSON.stringify({ action: 'submit-cagnotte-proof', entryId, proofUrl: url })
+});
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+
+showToast('Preuve envoyée ✓ En attente de validation par un admin.');
+loadMyTickets();
+}catch(err){
+showToast(err.message || "Erreur lors de l'envoi.");
+}
 }
 
 async function checkPendingPayment(){
