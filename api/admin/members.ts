@@ -381,20 +381,46 @@ export default requireAdmin(async (req, res) => {
   // ---------------------------------------------------------------
   if (resource === 'cagnottes') {
     if (req.method === 'GET') {
+      const campaignId = req.query.campaignId as string | undefined;
+
+      // Liste des participants d'une campagne, pour vérification par l'admin
+      if (campaignId) {
+        const { data: entries, error } = await supabaseAdmin
+          .from('cagnotte_entries')
+          .select('*')
+          .eq('campaign_id', campaignId)
+          .order('created_at', { ascending: false });
+        if (error) return res.status(400).json({ error: error.message });
+
+        const userIds = [...new Set((entries || []).map((e: any) => e.user_id))];
+        const { data: profiles } = await supabaseAdmin
+          .from('profiles')
+          .select('user_id, nom, business, whatsapp')
+          .in('user_id', userIds.length ? userIds : ['00000000-0000-0000-0000-000000000000']);
+        const profileMap = Object.fromEntries((profiles || []).map((p: any) => [p.user_id, p]));
+
+        const merged = (entries || []).map((e: any) => ({ ...e, profile: profileMap[e.user_id] || null }));
+        return res.status(200).json({ entries: merged });
+      }
+
       const { data: campaigns, error } = await supabaseAdmin
         .from('cagnotte_campaigns')
         .select('*')
         .order('created_at', { ascending: false });
       if (error) return res.status(400).json({ error: error.message });
 
-      // Nombre de participants par campagne
       const withCounts = await Promise.all(
         (campaigns || []).map(async (c: any) => {
-          const { count } = await supabaseAdmin
+          const { count: total } = await supabaseAdmin
             .from('cagnotte_entries')
             .select('*', { count: 'exact', head: true })
             .eq('campaign_id', c.id);
-          return { ...c, entries_count: count ?? 0 };
+          const { count: verified } = await supabaseAdmin
+            .from('cagnotte_entries')
+            .select('*', { count: 'exact', head: true })
+            .eq('campaign_id', c.id)
+            .eq('verified', true);
+          return { ...c, entries_count: total ?? 0, verified_count: verified ?? 0 };
         })
       );
 
@@ -404,7 +430,19 @@ export default requireAdmin(async (req, res) => {
     if (req.method === 'POST') {
       const { action } = req.body || {};
 
-      // Déclenche le tirage au sort d'une campagne
+      // Valide ou rejette la preuve de publication d'un participant
+      if (action === 'verify-entry') {
+        const { entryId, verified } = req.body || {};
+        if (!entryId) return res.status(400).json({ error: 'entryId requis' });
+        const { error } = await supabaseAdmin
+          .from('cagnotte_entries')
+          .update({ verified: !!verified })
+          .eq('id', entryId);
+        if (error) return res.status(400).json({ error: error.message });
+        return res.status(200).json({ ok: true });
+      }
+
+      // Déclenche le tirage — uniquement parmi les participants vérifiés
       if (action === 'draw') {
         const { campaignId } = req.body || {};
         if (!campaignId) return res.status(400).json({ error: 'campaignId requis' });
@@ -417,33 +455,37 @@ export default requireAdmin(async (req, res) => {
         if (campErr || !campaign) return res.status(404).json({ error: 'Campagne introuvable.' });
         if (campaign.status === 'drawn') return res.status(400).json({ error: 'Le tirage a déjà eu lieu.' });
 
+        const prizeTiers: number[] = Array.isArray(campaign.prize_tiers) ? campaign.prize_tiers : [];
+        if (prizeTiers.length === 0) {
+          return res.status(400).json({ error: "Cette campagne n'a pas de paliers de gains définis." });
+        }
+
         const { data: entries, error: entErr } = await supabaseAdmin
           .from('cagnotte_entries')
           .select('*')
-          .eq('campaign_id', campaignId);
+          .eq('campaign_id', campaignId)
+          .eq('verified', true);
         if (entErr) return res.status(400).json({ error: entErr.message });
         if (!entries || entries.length === 0) {
-          return res.status(400).json({ error: 'Aucun participant pour cette campagne.' });
+          return res.status(400).json({ error: 'Aucun participant vérifié (preuve de publication validée) pour cette campagne.' });
         }
 
-        const winnersCount = Math.min(campaign.winners_count || 5, entries.length);
         const shuffled = [...entries].sort(() => Math.random() - 0.5);
-        const winners = shuffled.slice(0, winnersCount);
+        const winners = shuffled.slice(0, prizeTiers.length);
 
-        for (const w of winners) {
+        for (let i = 0; i < winners.length; i++) {
+          const w = winners[i];
+          const prize = prizeTiers[i];
           const { data: profile } = await supabaseAdmin
             .from('profiles')
             .select('solde')
             .eq('user_id', w.user_id)
             .maybeSingle();
           const solde = profile?.solde || 0;
-          await supabaseAdmin
-            .from('profiles')
-            .update({ solde: solde + (campaign.prize_per_winner || 0) })
-            .eq('user_id', w.user_id);
+          await supabaseAdmin.from('profiles').update({ solde: solde + prize }).eq('user_id', w.user_id);
           await supabaseAdmin
             .from('cagnotte_entries')
-            .update({ is_winner: true, amount_won: campaign.prize_per_winner })
+            .update({ is_winner: true, amount_won: prize, rank: i + 1 })
             .eq('id', w.id);
         }
 
@@ -452,20 +494,25 @@ export default requireAdmin(async (req, res) => {
           .update({ status: 'drawn', drawn_at: new Date().toISOString() })
           .eq('id', campaignId);
 
-        return res.status(200).json({ ok: true, winnersCount, winners: winners.map((w: any) => w.user_id) });
+        return res.status(200).json({
+          ok: true,
+          winnersCount: winners.length,
+          eligibleCount: entries.length,
+          winners: winners.map((w: any) => w.user_id),
+        });
       }
 
       // Création d'une nouvelle campagne
-      const { name, entry_price, credits_reward, winners_count, prize_per_winner } = req.body || {};
-      if (!name || !entry_price || !winners_count || !prize_per_winner) {
+      const { name, entry_price, credits_reward, prize_tiers, promo_instructions } = req.body || {};
+      if (!name || !entry_price || !Array.isArray(prize_tiers) || prize_tiers.length === 0) {
         return res.status(400).json({ error: 'Champs manquants.' });
       }
       const { error } = await supabaseAdmin.from('cagnotte_campaigns').insert({
         name,
         entry_price,
         credits_reward: credits_reward || 0,
-        winners_count,
-        prize_per_winner,
+        prize_tiers,
+        promo_instructions: promo_instructions || null,
         status: 'open',
       });
       if (error) return res.status(400).json({ error: error.message });
