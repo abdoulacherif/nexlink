@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Catalogue — Kontak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#FFFFFF;--bg-soft:#F3FBF5;--ink:#0E2A1B;--green:#25D366;--green-dark:#128C4A;
+--orange:#FF8A3D;--gold:#E8A33D;--line:rgba(14,42,27,0.10);--muted:rgba(14,42,27,0.55);--err:#D9534F;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Sora',sans-serif;-webkit-font-smoothing:antialiased;}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+.mono{font-family:'Space Mono',monospace;}
+a{color:inherit;}
+.logo{font-family:'Fraunces',serif;font-style:italic;font-size:22px;letter-spacing:0.3px;text-decoration:none;color:var(--ink);}
+.logo span{color:var(--green-dark);}
+.btn-fill{background:var(--green);color:#fff;border:none;padding:10px 18px;border-radius:100px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Sora',sans-serif;text-decoration:none;display:inline-block;}
+.btn-ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink);padding:8px 14px;border-radius:10px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Sora',sans-serif;text-decoration:none;}
+.hero{padding:36px 24px 16px;}
+.eyebrow{font-family:'Space Mono',monospace;font-size:12px;color:var(--orange);text-transform:uppercase;letter-spacing:2px;font-weight:700;}
+.admin-tabs{display:flex;gap:4px;padding:0 20px 16px;overflow-x:auto;}
+.admin-tab{flex-shrink:0;padding:9px 16px;border-radius:100px;border:1.5px solid var(--line);font-size:13px;color:var(--muted);background:#fff;cursor:pointer;font-family:'Sora',sans-serif;text-decoration:none;white-space:nowrap;font-weight:600;}
+.admin-tab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+.page-tabs{display:flex;gap:4px;padding:4px 20px 0;border-bottom:1px solid var(--line);margin-bottom:20px;overflow-x:auto;}
+.page-tab-btn{background:none;border:none;padding:12px 16px;font-family:'Sora',sans-serif;font-weight:700;font-size:13.5px;color:var(--muted);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;}
+.page-tab-btn.active{color:var(--green-dark);border-bottom-color:var(--green);}
+.page-tab-content{display:none;}
+.page-tab-content.active{display:block;}
+.admin-toolbar{display:flex;justify-content:space-between;align-items:center;padding:0 20px 16px;flex-wrap:wrap;gap:10px;}
+.stats-bar{font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);}
+.table-wrap{padding:0 20px 60px;overflow-x:auto;}
+table.admin-table{width:100%;border-collapse:collapse;background:#fff;color:var(--ink);border-radius:14px;overflow:hidden;font-size:13.5px;min-width:760px;border:1px solid var(--line);}
+table.admin-table th{background:var(--bg-soft);text-align:left;padding:10px 12px;font-family:'Space Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);}
+table.admin-table td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:middle;}
+table.admin-table tr:hover td{background:var(--bg-soft);}
+.row-actions{display:flex;gap:6px;}
+.icon-btn{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-family:'Sora',sans-serif;color:var(--ink);}
+.card-cat{display:inline-block;font-size:11px;background:var(--bg-soft);color:var(--green-dark);padding:4px 10px;border-radius:100px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;}
+.gate{padding:80px 20px;text-align:center;color:var(--muted);}
+.gate h2{color:var(--ink);margin-bottom:10px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px;}
+.field input,.field select,.field textarea{width:100%;padding:11px 13px;border-radius:10px;border:1.5px solid var(--line);font-family:'Sora',sans-serif;font-size:14.5px;background:#fff;color:var(--ink);}
+.field textarea{resize:vertical;min-height:80px;}
+.form-actions{display:flex;gap:10px;margin-top:20px;}
+.btn-primary{flex:1;background:var(--green);color:#fff;border:none;padding:13px;border-radius:10px;font-weight:700;font-size:14.5px;cursor:pointer;font-family:'Sora',sans-serif;}
+.err-msg{font-size:12.5px;color:var(--err);margin-top:4px;display:none;}
+.err-msg.show{display:block;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 22px;border-radius:100px;font-size:13.5px;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none;max-width:90%;text-align:center;}
+.toast.show{opacity:1;}
+.modal-overlay{position:fixed;inset:0;background:rgba(14,42,27,0.55);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;z-index:100;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;color:var(--ink);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:26px 22px 30px;max-height:90vh;overflow-y:auto;position:relative;border:1px solid var(--line);}
+@media(min-width:640px){.modal-overlay{align-items:center;}.modal{border-radius:20px;}}
+.close-x{position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);}
+</style>
+</head>
+<body>
+<header style="padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;">
+<a class="logo" href="index" style="font-size:19px;">Kon<span>tak</span></a>
+<a class="btn-ghost" href="dashboard">Quitter l'admin</a>
+</header>
+<div id="gateMsg" class="gate" style="display:none;">
+<h2>Accès refusé</h2>
+<p>Cette page est réservée à l'administrateur.</p>
+<br>
+<a class="btn-fill" href="index">Retour à l'accueil</a>
+</div>
+<div id="adminContent" style="display:none;">
+<div class="hero">
+<div class="eyebrow">Panneau d'administration</div>
+<h1 style="font-size:26px;">Catalogue</h1>
+</div>
+<div class="admin-tabs">
+<a class="admin-tab" href="admin-fiches">Fiches</a>
+<a class="admin-tab" href="admin-navigation">Navigation</a>
+<a class="admin-tab" href="admin-demandes">Demandes</a>
+<a class="admin-tab" href="admin-forfaits">Forfaits</a>
+<a class="admin-tab active" href="admin-catalogue">Catalogue</a>
+<a class="admin-tab" href="admin-commandes">Commandes</a>
+</div>
+<div class="page-tabs">
+<button class="page-tab-btn active" data-tab="tab-server" onclick="switchCatTab('tab-server')">Offres serveur</button>
+<button class="page-tab-btn" data-tab="tab-biz" onclick="switchCatTab('tab-biz')">Services business</button>
+</div>
+<div class="page-tab-content active" id="tab-server">
+<div class="admin-toolbar">
+<div class="stats-bar" id="serverStats"></div>
+<button class="btn-fill" onclick="openServerEditor(null)">+ Nouvelle offre</button>
+</div>
+<div class="table-wrap">
+<table class="admin-table">
+<thead><tr><th>Catégorie</th><th>Nom</th><th>Prix</th><th>Période</th><th>Détails</th><th>Actif</th><th>Actions</th></tr></thead>
+<tbody id="serverRows"></tbody>
+</table>
+</div>
+</div>
+<div class="page-tab-content" id="tab-biz">
+<div class="admin-toolbar">
+<div class="stats-bar" id="bizStats"></div>
+<button class="btn-fill" onclick="openBizEditor(null)">+ Nouveau service</button>
+</div>
+<div class="table-wrap">
+<table class="admin-table">
+<thead><tr><th>Nom</th><th>Prix</th><th>Période</th><th>Détails</th><th>Actif</th><th>Actions</th></tr></thead>
+<tbody id="bizRows"></tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div class="modal-overlay" id="serverEditOverlay">
+<div class="modal">
+<button class="close-x" onclick="closeServerEditor()">✕</button>
+<h2 id="serverEditTitle">Nouvelle offre</h2>
+<form id="serverEditForm">
+<input type="hidden" id="sv-id">
+<div class="field">
+<label>Catégorie</label>
+<select id="sv-category"><option value="numero">Numéro WhatsApp</option><option value="outil">Outil/Logiciel</option></select>
+</div>
+<div class="field"><label>Nom</label><input type="text" id="sv-name" required></div>
+<div class="field"><label>Prix (FCFA)</label><input type="number" id="sv-price" min="0" required></div>
+<div class="field"><label>Période</label><input type="text" id="sv-period" placeholder="Ex: unique, mois" required></div>
+<div class="field"><label>Détails (un par ligne)</label><textarea id="sv-specs" placeholder="Ex: Numéro dédié&#10;Support 7j/7"></textarea></div>
+<div class="field"><label>Position (ordre)</label><input type="number" id="sv-position" value="1" min="0"></div>
+<div class="field">
+<label>Actif</label>
+<select id="sv-active"><option value="true">Oui</option><option value="false">Non</option></select>
+</div>
+<div class="err-msg" id="errServerEdit"></div>
+<div class="form-actions">
+<button type="button" class="btn-ghost" onclick="closeServerEditor()">Annuler</button>
+<button type="submit" class="btn-primary" id="serverEditSaveBtn">Enregistrer</button>
+</div>
+</form>
+</div>
+</div>
+
+<div class="modal-overlay" id="bizEditOverlay">
+<div class="modal">
+<button class="close-x" onclick="closeBizEditor()">✕</button>
+<h2 id="bizEditTitle">Nouveau service</h2>
+<form id="bizEditForm">
+<input type="hidden" id="bz-id">
+<div class="field"><label>Nom</label><input type="text" id="bz-name" required></div>
+<div class="field"><label>Prix (FCFA)</label><input type="number" id="bz-price" min="0" required></div>
+<div class="field"><label>Période</label><input type="text" id="bz-period" placeholder="Ex: unique, mois" required></div>
+<div class="field"><label>Détails (un par ligne)</label><textarea id="bz-specs" placeholder="Ex: Livraison en 48h&#10;Révision incluse"></textarea></div>
+<div class="field"><label>Position (ordre)</label><input type="number" id="bz-position" value="1" min="0"></div>
+<div class="field">
+<label>Actif</label>
+<select id="bz-active"><option value="true">Oui</option><option value="false">Non</option></select>
+</div>
+<div class="err-msg" id="errBizEdit"></div>
+<div class="form-actions">
+<button type="button" class="btn-ghost" onclick="closeBizEditor()">Annuler</button>
+<button type="submit" class="btn-primary" id="bizEditSaveBtn">Enregistrer</button>
+</div>
+</form>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+// ---- Plus aucune clé Supabase ici : tout passe par /api/* ----
+
+function escapeHtml(s){
+const d = document.createElement('div');
+d.textContent = s || '';
+return d.innerHTML;
+}
+function showToast(msg){
+let t = document.getElementById('toast');
+if(!t){ t = document.createElement('div'); t.id='toast'; t.className='toast'; document.body.appendChild(t); }
+t.textContent = msg; t.classList.add('show');
+setTimeout(()=>t.classList.remove('show'), 3200);
+}
+function showErr(id,msg){ const e=document.getElementById(id); if(!e) return; e.textContent=msg; e.classList.add('show'); }
+function hideErr(id){ const e=document.getElementById(id); if(e) e.classList.remove('show'); }
+
+async function initNav(){
+try{
+const res = await fetch('/api/auth/session', { credentials: 'include' });
+const data = await res.json();
+return { user: data.user, isAdmin: !!(data.user && data.user.isAdmin) };
+}catch(e){ return { user: null, isAdmin: false }; }
+}
+
+function switchCatTab(id){
+document.querySelectorAll('.page-tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===id));
+document.querySelectorAll('.page-tab-content').forEach(c=> c.classList.toggle('active', c.id===id));
+}
+
+// ---- Offres serveur ----
+let serverOffers = [];
+
+async function loadServerOffers(){
+try{
+const res = await fetch('/api/admin/members?resource=server-offers', { credentials: 'include' });
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+serverOffers = data.items || [];
+}catch(e){ serverOffers = []; }
+renderServerOffers();
+}
+
+function renderServerOffers(){
+document.getElementById('serverStats').textContent = `${serverOffers.length} offre(s)`;
+const tbody = document.getElementById('serverRows');
+if(serverOffers.length===0){
+tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted);">Aucune offre pour l'instant.</td></tr>`;
+return;
+}
+tbody.innerHTML = serverOffers.map(o=>{
+const specs = Array.isArray(o.specs) ? o.specs : [];
+const catLabel = o.category === 'outil' ? 'Outil/Logiciel' : 'Numéro WhatsApp';
+return `
+<tr>
+<td><span class="card-cat">${catLabel}</span></td>
+<td>${escapeHtml(o.name)}</td>
+<td class="mono">${(o.price||0).toLocaleString('fr-FR')} FCFA</td>
+<td>${escapeHtml(o.period)}</td>
+<td style="max-width:220px;font-size:12px;color:var(--muted);">${specs.map(escapeHtml).join(' · ') || '—'}</td>
+<td>${o.active ? 'Oui' : 'Non'}</td>
+<td>
+<div class="row-actions">
+<button class="icon-btn" onclick='openServerEditor(${JSON.stringify(o).replace(/'/g,"&apos;")})'>Modifier</button>
+<button class="icon-btn" onclick="deleteServerOffer('${o.id}')">Supprimer</button>
+</div>
+</td>
+</tr>
+`;}).join('');
+}
+
+function openServerEditor(o){
+document.getElementById('serverEditForm').reset();
+hideErr('errServerEdit');
+if(o){
+document.getElementById('serverEditTitle').textContent = "Modifier l'offre";
+document.getElementById('sv-id').value = o.id;
+document.getElementById('sv-category').value = o.category || 'numero';
+document.getElementById('sv-name').value = o.name || '';
+document.getElementById('sv-price').value = o.price || 0;
+document.getElementById('sv-period').value = o.period || 'unique';
+document.getElementById('sv-specs').value = (Array.isArray(o.specs) ? o.specs : []).join('\n');
+document.getElementById('sv-position').value = o.position ?? 0;
+document.getElementById('sv-active').value = o.active ? 'true' : 'false';
+}else{
+document.getElementById('serverEditTitle').textContent = 'Nouvelle offre';
+document.getElementById('sv-id').value = '';
+document.getElementById('sv-position').value = serverOffers.length + 1;
+}
+document.getElementById('serverEditOverlay').classList.add('open');
+}
+function closeServerEditor(){ document.getElementById('serverEditOverlay').classList.remove('open'); }
+
+document.getElementById('serverEditForm').addEventListener('submit', async (e)=>{
+e.preventDefault();
+const btn = document.getElementById('serverEditSaveBtn');
+btn.disabled = true; btn.textContent = 'Enregistrement…';
+const id = document.getElementById('sv-id').value;
+const specsList = document.getElementById('sv-specs').value.split('\n').map(s=>s.trim()).filter(Boolean);
+const payload = {
+category: document.getElementById('sv-category').value,
+name: document.getElementById('sv-name').value.trim(),
+price: parseInt(document.getElementById('sv-price').value, 10) || 0,
+period: document.getElementById('sv-period').value,
+specs: specsList,
+position: parseInt(document.getElementById('sv-position').value, 10) || 0,
+active: document.getElementById('sv-active').value === 'true'
+};
+try{
+const url = id ? `/api/admin/members?resource=server-offers&id=${id}` : '/api/admin/members?resource=server-offers';
+const res = await fetch(url, {
+method: id ? 'PATCH' : 'POST',
+headers: { 'Content-Type': 'application/json' },
+credentials: 'include',
+body: JSON.stringify(payload)
+});
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+closeServerEditor();
+showToast('Offre enregistrée ✓');
+loadServerOffers();
+}catch(err){
+showErr('errServerEdit', err.message || "Erreur lors de l'enregistrement.");
+}finally{
+btn.disabled = false; btn.textContent = 'Enregistrer';
+}
+});
+
+async function deleteServerOffer(id){
+if(!confirm('Supprimer cette offre ?')) return;
+try{
+const res = await fetch(`/api/admin/members?resource=server-offers&id=${id}`, { method:'DELETE', credentials:'include' });
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+showToast('Offre supprimée');
+loadServerOffers();
+}catch(err){
+showToast(err.message || "Erreur lors de la suppression.");
+}
+}
+document.getElementById('serverEditOverlay').addEventListener('click', (e)=>{
+if(e.target.id==='serverEditOverlay') closeServerEditor();
+});
+
+// ---- Services Business ----
+let bizServices = [];
+
+async function loadBizServices(){
+try{
+const res = await fetch('/api/admin/members?resource=biz-services', { credentials: 'include' });
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+bizServices = data.items || [];
+}catch(e){ bizServices = []; }
+renderBizServices();
+}
+
+function renderBizServices(){
+document.getElementById('bizStats').textContent = `${bizServices.length} service(s)`;
+const tbody = document.getElementById('bizRows');
+if(bizServices.length===0){
+tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted);">Aucun service pour l'instant.</td></tr>`;
+return;
+}
+tbody.innerHTML = bizServices.map(s=>{
+const specs = Array.isArray(s.specs) ? s.specs : [];
+return `
+<tr>
+<td>${escapeHtml(s.name)}</td>
+<td class="mono">${(s.price||0).toLocaleString('fr-FR')} FCFA</td>
+<td>${escapeHtml(s.period)}</td>
+<td style="max-width:220px;font-size:12px;color:var(--muted);">${specs.map(escapeHtml).join(' · ') || '—'}</td>
+<td>${s.active ? 'Oui' : 'Non'}</td>
+<td>
+<div class="row-actions">
+<button class="icon-btn" onclick='openBizEditor(${JSON.stringify(s).replace(/'/g,"&apos;")})'>Modifier</button>
+<button class="icon-btn" onclick="deleteBizService('${s.id}')">Supprimer</button>
+</div>
+</td>
+</tr>
+`;}).join('');
+}
+
+function openBizEditor(s){
+document.getElementById('bizEditForm').reset();
+hideErr('errBizEdit');
+if(s){
+document.getElementById('bizEditTitle').textContent = "Modifier le service";
+document.getElementById('bz-id').value = s.id;
+document.getElementById('bz-name').value = s.name || '';
+document.getElementById('bz-price').value = s.price || 0;
+document.getElementById('bz-period').value = s.period || 'unique';
+document.getElementById('bz-specs').value = (Array.isArray(s.specs) ? s.specs : []).join('\n');
+document.getElementById('bz-position').value = s.position ?? 0;
+document.getElementById('bz-active').value = s.active ? 'true' : 'false';
+}else{
+document.getElementById('bizEditTitle').textContent = 'Nouveau service';
+document.getElementById('bz-id').value = '';
+document.getElementById('bz-position').value = bizServices.length + 1;
+}
+document.getElementById('bizEditOverlay').classList.add('open');
+}
+function closeBizEditor(){ document.getElementById('bizEditOverlay').classList.remove('open'); }
+
+document.getElementById('bizEditForm').addEventListener('submit', async (e)=>{
+e.preventDefault();
+const btn = document.getElementById('bizEditSaveBtn');
+btn.disabled = true; btn.textContent = 'Enregistrement…';
+const id = document.getElementById('bz-id').value;
+const specsList = document.getElementById('bz-specs').value.split('\n').map(s=>s.trim()).filter(Boolean);
+const payload = {
+name: document.getElementById('bz-name').value.trim(),
+price: parseInt(document.getElementById('bz-price').value, 10) || 0,
+period: document.getElementById('bz-period').value,
+specs: specsList,
+position: parseInt(document.getElementById('bz-position').value, 10) || 0,
+active: document.getElementById('bz-active').value === 'true'
+};
+try{
+const url = id ? `/api/admin/members?resource=biz-services&id=${id}` : '/api/admin/members?resource=biz-services';
+const res = await fetch(url, {
+method: id ? 'PATCH' : 'POST',
+headers: { 'Content-Type': 'application/json' },
+credentials: 'include',
+body: JSON.stringify(payload)
+});
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+closeBizEditor();
+showToast('Service enregistré ✓');
+loadBizServices();
+}catch(err){
+showErr('errBizEdit', err.message || "Erreur lors de l'enregistrement.");
+}finally{
+btn.disabled = false; btn.textContent = 'Enregistrer';
+}
+});
+
+async function deleteBizService(id){
+if(!confirm('Supprimer ce service ?')) return;
+try{
+const res = await fetch(`/api/admin/members?resource=server-offers&id=${id}`, { method:'DELETE', credentials:'include' });
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+showToast('Offre supprimée');
+loadServerOffers();
+}catch(err){
+showToast(err.message || "Erreur lors de la suppression.");
+}
+}
+document.getElementById('serverEditOverlay').addEventListener('click', (e)=>{
+if(e.target.id==='serverEditOverlay') closeServerEditor();
+});
+
+// ---- Services Business ----
+let bizServices = [];
+
+async function loadBizServices(){
+try{
+const res = await fetch('/api/admin/members?resource=biz-services', { credentials: 'include' });
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+bizServices = data.items || [];
+}catch(e){ bizServices = []; }
+renderBizServices();
+}
+
+function renderBizServices(){
+document.getElementById('bizStats').textContent = `${bizServices.length} service(s)`;
+const tbody = document.getElementById('bizRows');
+if(bizServices.length===0){
+tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted);">Aucun service pour l'instant.</td></tr>`;
+return;
+}
+tbody.innerHTML = bizServices.map(s=>{
+const specs = Array.isArray(s.specs) ? s.specs : [];
+return `
+<tr>
+<td>${escapeHtml(s.name)}</td>
+<td class="mono">${(s.price||0).toLocaleString('fr-FR')} FCFA</td>
+<td>${escapeHtml(s.period)}</td>
+<td style="max-width:220px;font-size:12px;color:var(--muted);">${specs.map(escapeHtml).join(' · ') || '—'}</td>
+<td>${s.active ? 'Oui' : 'Non'}</td>
+<td>
+<div class="row-actions">
+<button class="icon-btn" onclick='openBizEditor(${JSON.stringify(s).replace(/'/g,"&apos;")})'>Modifier</button>
+<button class="icon-btn" onclick="deleteBizService('${s.id}')">Supprimer</button>
+</div>
+</td>
+</tr>
+`;}).join('');
+}
+
+function openBizEditor(s){
+document.getElementById('bizEditForm').reset();
+hideErr('errBizEdit');
+if(s){
+document.getElementById('bizEditTitle').textContent = "Modifier le service";
+document.getElementById('bz-id').value = s.id;
+document.getElementById('bz-name').value = s.name || '';
+document.getElementById('bz-price').value = s.price || 0;
+document.getElementById('bz-period').value = s.period || 'unique';
+document.getElementById('bz-specs').value = (Array.isArray(s.specs) ? s.specs : []).join('\n');
+document.getElementById('bz-position').value = s.position ?? 0;
+document.getElementById('bz-active').value = s.active ? 'true' : 'false';
+}else{
+document.getElementById('bizEditTitle').textContent = 'Nouveau service';
+document.getElementById('bz-id').value = '';
+document.getElementById('bz-position').value = bizServices.length + 1;
+}
+document.getElementById('bizEditOverlay').classList.add('open');
+}
+function closeBizEditor(){ document.getElementById('bizEditOverlay').classList.remove('open'); }
+
+document.getElementById('bizEditForm').addEventListener('submit', async (e)=>{
+e.preventDefault();
+const btn = document.getElementById('bizEditSaveBtn');
+btn.disabled = true; btn.textContent = 'Enregistrement…';
+const id = document.getElementById('bz-id').value;
+const specsList = document.getElementById('bz-specs').value.split('\n').map(s=>s.trim()).filter(Boolean);
+const payload = {
+name: document.getElementById('bz-name').value.trim(),
+price: parseInt(document.getElementById('bz-price').value, 10) || 0,
+period: document.getElementById('bz-period').value,
+specs: specsList,
+position: parseInt(document.getElementById('bz-position').value, 10) || 0,
+active: document.getElementById('bz-active').value === 'true'
+};
+try{
+const url = id ? `/api/admin/members?resource=biz-services&id=${id}` : '/api/admin/members?resource=biz-services';
+const res = await fetch(url, {
+method: id ? 'PATCH' : 'POST',
+headers: { 'Content-Type': 'application/json' },
+credentials: 'include',
+body: JSON.stringify(payload)
+});
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+closeBizEditor();
+showToast('Service enregistré ✓');
+loadBizServices();
+}catch(err){
+showErr('errBizEdit', err.message || "Erreur lors de l'enregistrement.");
+}finally{
+btn.disabled = false; btn.textContent = 'Enregistrer';
+}
+});
+
+async function deleteBizService(id){
+if(!confirm('Supprimer ce service ?')) return;
+try{
+const res = await fetch(`/api/admin/members?resource=biz-services&id=${id}`, { method:'DELETE', credentials:'include' });
+const data = await res.json();
+if(!res.ok) throw new Error(data.error);
+showToast('Service supprimé');
+loadBizServices();
+}catch(err){
+showToast(err.message || "Erreur lors de la suppression.");
+}
+}
+document.getElementById('bizEditOverlay').addEventListener('click', (e)=>{
+if(e.target.id==='bizEditOverlay') closeBizEditor();
+});
+
+(async ()=>{
+const { user, isAdmin } = await initNav();
+if(!user || !isAdmin){ document.getElementById('gateMsg').style.display = ''; return; }
+document.getElementById('adminContent').style.display = '';
+loadServerOffers();
+loadBizServices();
+})();
+</script>
+</body>
+</html>
