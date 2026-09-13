@@ -241,8 +241,7 @@ logout();
 }
 });
 
-
-// ---- Icônes SVG (jamais d'emoji) ----
+ // ---- Icônes SVG (jamais d'emoji) ----
 const ICONS = {
 business: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
 mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>',
@@ -337,8 +336,16 @@ body: JSON.stringify({ name, phone, email, password: pass, country, city, busine
 const data = await res.json();
 if(!res.ok) throw new Error(data.error || 'Une erreur est survenue.');
 
-showToast('Compte créé ✓ Bienvenue sur Kontak !');
-setTimeout(()=> window.location.href = 'dashboard', 1200);
+// Le compte n'est pas encore confirmé : pas de session, on affiche
+// un écran "vérifie ton email" au lieu de rediriger vers le dashboard.
+document.getElementById('signupForm').style.display = 'none';
+document.getElementById('signupSub').textContent = '';
+document.querySelector('.panel').insertAdjacentHTML('beforeend', `
+<div style="text-align:center;padding:10px 0;">
+<h3 style="margin-bottom:10px;">Vérifie ta boîte mail</h3>
+<p style="color:var(--muted);font-size:14px;line-height:1.6;">Un email de confirmation a été envoyé à <strong>${escapeHtml(email)}</strong>. Clique sur le lien qu'il contient pour activer ton compte.</p>
+</div>
+`);
 
 }catch(err){
 showErr('err3', err.message || "Une erreur est survenue.");
