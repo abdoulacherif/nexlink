@@ -39,7 +39,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ themes });
     }
 
-    // ---- Annuaire des profils (page annuaire.html) ----
+    // ---- Cagnottes actives (page cagnotte.html) ----
+    if (type === 'cagnottes') {
+      const { data, error } = await supabaseAdmin
+        .from('cagnotte_campaigns')
+        .select('*')
+        .eq('status', 'open')
+        .order('created_at', { ascending: false });
+      if (error) return res.status(400).json({ error: error.message });
+      return res.status(200).json({ campaigns: data });
+    }
+
+
     const { city, sector, q, offset, limit } = req.query;
     const from = parseInt((offset as string) || '0', 10) || 0;
     const size = Math.min(parseInt((limit as string) || '30', 10) || 30, 60);
