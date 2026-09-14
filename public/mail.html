@@ -403,7 +403,7 @@ document.getElementById('recipientList').addEventListener('change', updateRecipi
 
 function updateRecipientCount(){
 const n = document.querySelectorAll('.recipient-check:checked').length;
-document.getElementById('recipientCount').textContent = `${n} destinataire${n!==1?'s':''} sélectionné${n!==1?'s':''}`;
+document.getElementById('recipientCount').textContent = `${n} destinataire${n!==1?'s':''} sélectionné${n!==1?'s':''} · coût estimé : ${n*2} crédits`;
 }
 function selectAllRecipients(state){
 document.querySelectorAll('.recipient-check').forEach(cb=> cb.checked = state);
@@ -432,14 +432,20 @@ credentials: 'include',
 body: JSON.stringify({ subject, body, recipients, method: CURRENT_METHOD })
 });
 const data = await res.json();
+
+if(res.status === 402){
+showErr('errMail', data.error);
+setTimeout(()=> window.location.href = 'abonnement', 1800);
+return;
+}
 if(!res.ok) throw new Error(data.error || "Erreur lors de l'envoi.");
 
 if(CURRENT_METHOD==='manuel'){
 const mailto = `mailto:?bcc=${encodeURIComponent(recipients.join(','))}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 window.location.href = mailto;
-showToast('Campagne prête ✓ Envoie depuis ton application mail.');
+showToast(`Campagne prête ✓ ${data.creditsSpent} crédits débités. Envoie depuis ton application mail.`);
 }else{
-showToast(`Campagne envoyée ✓ (${recipients.length} destinataire${recipients.length!==1?'s':''})`);
+showToast(`Campagne envoyée ✓ ${data.creditsSpent} crédits débités (${data.creditsRemaining} restants)`);
 }
 
 }catch(err){
@@ -449,6 +455,7 @@ btn.disabled = false;
 setMethod(CURRENT_METHOD);
 }
 }
+
 function loadCampaignHistory(){
 const el = document.getElementById('campaignHistory');
 const campaigns = (mailData && mailData.campaigns) || [];
