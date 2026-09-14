@@ -30,6 +30,24 @@ export default requireAuth(async (req, res, session) => {
       return res.status(400).json({ error: 'Méthode invalide.' });
     }
 
+    // 2 crédits par email, manuel ou automatique — vérifié et débité côté serveur.
+    const cost = recipients.length * 2;
+    const { data: profile, error: profErr } = await supabaseAdmin
+      .from('profiles')
+      .select('credits')
+      .eq('user_id', session.userId)
+      .maybeSingle();
+    if (profErr || !profile) return res.status(400).json({ error: 'Profil introuvable.' });
+
+    const credits = profile.credits || 0;
+    if (credits < cost) {
+      return res.status(402).json({
+        error: `Crédits insuffisants : il te faut ${cost} crédits (2 par email), il t'en reste ${credits}.`,
+        credits,
+        needed: cost,
+      });
+    }
+
     if (method === 'automatique') {
       try {
         await sendBulkMail(subject, String(body).replace(/\n/g, '<br>'), recipients);
@@ -37,6 +55,12 @@ export default requireAuth(async (req, res, session) => {
         return res.status(500).json({ error: err.message || "Erreur lors de l'envoi automatique." });
       }
     }
+
+    const { error: deductErr } = await supabaseAdmin
+      .from('profiles')
+      .update({ credits: credits - cost })
+      .eq('user_id', session.userId);
+    if (deductErr) return res.status(400).json({ error: deductErr.message });
 
     await supabaseAdmin.from('mail_campaigns').insert({
       user_id: session.userId,
@@ -46,7 +70,7 @@ export default requireAuth(async (req, res, session) => {
       method,
     });
 
-    return res.status(200).json({ ok: true, method });
+    return res.status(200).json({ ok: true, method, creditsSpent: cost, creditsRemaining: credits - cost });
   }
 
   return res.status(405).json({ error: 'Méthode non autorisée' });
