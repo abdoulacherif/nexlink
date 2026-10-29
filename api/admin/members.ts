@@ -404,7 +404,6 @@ export default requireAdmin(async (req, res) => {
 
     const count = Math.min(parseInt(req.body?.count, 10) || 100, 5000);
 
-    // Récupérer les profils sans slug
     const { data: profiles, error: fetchError } = await supabaseAdmin
       .from('profiles')
       .select('id, business, user_id')
@@ -412,13 +411,14 @@ export default requireAdmin(async (req, res) => {
       .limit(count);
 
     if (fetchError) return res.status(400).json({ error: fetchError.message });
+    if (!profiles || profiles.length === 0) {
       return res.status(200).json({ ok: true, updated: 0, remaining: 0 });
     }
 
-    // Générer et mettre à jour chaque slug
     let updated = 0;
     for (const p of profiles) {
-      let base = (p.business || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      let base = (p.business || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      if (!base) base = 'membre';
       const slug = `${base}-${p.user_id.slice(0, 4)}`;
 
       const { error: updateError } = await supabaseAdmin
@@ -426,9 +426,9 @@ export default requireAdmin(async (req, res) => {
         .update({ slug })
         .eq('id', p.id);
 
+      if (!updateError) updated++;
     }
 
-    // Compter combien il reste
     const { count: remaining } = await supabaseAdmin
       .from('profiles')
       .select('*', { count: 'exact', head: true })
