@@ -111,6 +111,7 @@ async function loadProfile() {
   }
 
   try {
+    // On utilise l'URL correcte de l'API fusionnée
     const res = await fetch('/api/profiles?action=public&slug=' + encodeURIComponent(slug));
     const data = await res.json();
 
@@ -138,15 +139,19 @@ async function loadProfile() {
     }
 
     const waBtn = document.getElementById('waBtn');
+    // On nettoie le numéro pour ne garder que les chiffres
     const cleanPhone = (p.whatsapp || '').replace(/\D/g, '');
     const message = encodeURIComponent(`Bonjour, je vous ai trouvé sur Kontak — je voudrais discuter de ${p.business || 'votre activité'}.`);
+    
     waBtn.addEventListener('click', () => {
+      // Format universel qui fonctionne partout (mobile et desktop)
       window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
     });
 
     document.getElementById('loader').style.display = 'none';
     document.getElementById('content').style.display = 'block';
   } catch (e) {
+    console.error("Erreur chargement profil:", e);
     document.getElementById('loader').style.display = 'none';
     document.getElementById('notFound').style.display = 'block';
   }
