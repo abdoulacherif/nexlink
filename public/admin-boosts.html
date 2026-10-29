@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Boosts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFFFFF;--bg-soft:#F3FBF5;--ink:#0E2A1B;--green:#25D366;--green-dark:#128C4A;--orange:#FF8A3D;--gold:#E8A33D;--line:rgba(14,42,27,0.10);--muted:rgba(14,42,27,0.55);--err:#D9534F;}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Sora',sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:40px;}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+a{color:inherit;}
+.logo{font-family:'Fraunces',serif;font-style:italic;font-size:22px;letter-spacing:0.3px;text-decoration:none;color:var(--ink);}
+.logo span{color:var(--green-dark);}
+.btn-ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink);padding:8px 14px;border-radius:10px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Sora',sans-serif;text-decoration:none;}
+.btn-fill{background:var(--green);color:#fff;border:none;padding:10px 18px;border-radius:100px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Sora',sans-serif;text-decoration:none;display:inline-block;}
+.hero{padding:30px 20px 10px;}
+.eyebrow{font-family:'Space Mono',monospace;font-size:12px;color:var(--orange);text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:8px;}
+.gate{padding:80px 20px;text-align:center;color:var(--muted);}
+.gate h2{color:var(--ink);margin-bottom:10px;}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 20px 20px;}
+.stat-box{background:var(--bg-soft);border-radius:12px;padding:14px;}
+.stat-box .num{font-family:'Fraunces',serif;font-size:20px;color:var(--green-dark);}
+.stat-box .lbl{font-size:11px;color:var(--muted);margin-top:2px;}
+.table-wrap{padding:0 20px 40px;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;background:#fff;color:var(--ink);border-radius:14px;overflow:hidden;font-size:13.5px;min-width:680px;border:1px solid var(--line);}
+th{background:var(--bg-soft);text-align:left;padding:10px 12px;font-family:'Space Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);}
+td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:middle;}
+tr:hover td{background:var(--bg-soft);}
+.badge{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;}
+.badge.active{background:#E8F8EE;color:var(--green-dark);}
+.badge.expired{background:#FBE9EA;color:var(--err);}
+.badge.free{background:var(--bg-soft);color:var(--muted);}
+.empty{padding:60px 20px;text-align:center;color:var(--muted);}
+</style>
+</head>
+<body>
+<header style="padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;">
+<a class="logo" href="index" style="font-size:19px;">Kon<span>tak</span></a>
+<a class="btn-ghost" href="admin">← Retour admin</a>
+</header>
+
+<div id="gateMsg" class="gate" style="display:none;">
+<h2>Accès refusé</h2>
+<p>Cette page est réservée à l'administrateur.</p>
+<br>
+<a class="btn-fill" href="index">Retour à l'accueil</a>
+</div>
+
+<div id="adminContent" style="display:none;">
+<div class="hero">
+<div class="eyebrow">Monétisation</div>
+<h1 style="font-size:26px;">⭐ Boosts</h1>
+<p style="color:var(--muted);font-size:13.5px;margin-top:6px;">Suivi des fiches boostées et des revenus générés.</p>
+</div>
+
+<div class="stat-row">
+<div class="stat-box"><div class="num" id="statTotal">—</div><div class="lbl">Boosts vendus (total)</div></div>
+<div class="stat-box"><div class="num" id="statActive">—</div><div class="lbl">Actifs en ce moment</div></div>
+<div class="stat-box"><div class="num" id="statRevenue">—</div><div class="lbl">Revenus (FCFA)</div></div>
+</div>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Business</th>
+<th>Ville</th>
+<th>Statut</th>
+<th>Fin du boost</th>
+<th>Prix payé</th>
+</tr>
+</thead>
+<tbody id="boostsTable">
+<tr><td colspan="5" class="empty">Chargement…</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<script>
+const BOOST_PRICE_FCFA = 500; // Prix de référence pour calculer les revenus (500 crédits = 500 FCFA pour l'exemple)
+
+(async ()=>{
+try{
+const res = await fetch('/api/auth/session', { credentials: 'include' });
+const data = await res.json();
+const isAdmin = !!(data.user && data.user.isAdmin);
+if(!data.user || !isAdmin){
+document.getElementById('gateMsg').style.display = '';
+return;
+}
+document.getElementById('adminContent').style.display = '';
+loadBoosts();
+}catch(e){
+document.getElementById('gateMsg').style.display = '';
+}
+})();
+
+async function loadBoosts(){
+  try{
+    // On récupère les profils boostés (is_boosted = true)
+    const res = await fetch('/api/admin?resource=profiles&q=&limit=100&offset=0', { credentials: 'include' });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'Erreur');
+
+    const boosted = (data.profiles || []).filter(p => p.is_boosted);
+    const now = new Date();
+    
+    let activeCount = 0;
+    let totalRevenue = 0;
+
+    const rows = boosted.map(p => {
+      const endDate = p.boosted_until ? new Date(p.boosted_until) : null;
+      const isActive = endDate && endDate > now;
+      if (isActive) activeCount++;
+      totalRevenue += BOOST_PRICE_FCFA;
+
+      return `
+      <tr>
+        <td><strong>${escapeHtml(p.business || p.nom || '—')}</strong></td>
+        <td>${escapeHtml(p.ville || '—')}</td>
+        <td><span class="badge ${isActive ? 'active' : 'expired'}">${isActive ? 'Actif' : 'Expiré'}</span></td>
+        <td>${endDate ? endDate.toLocaleDateString('fr-FR', {day:'numeric', month:'short', year:'numeric'}) : '—'}</td>
+        <td>${BOOST_PRICE_FCFA.toLocaleString('fr-FR')} FCFA</td>
+      </tr>
+      `;
+    }).join('');
+
+    document.getElementById('statTotal').textContent = boosted.length;
+    document.getElementById('statActive').textContent = activeCount;
+    document.getElementById('statRevenue').textContent = totalRevenue.toLocaleString('fr-FR');
+    
+    document.getElementById('boostsTable').innerHTML = rows || `<tr><td colspan="5" class="empty">Aucun boost pour l'instant.</td></tr>`;
+  }catch(e){
+    document.getElementById('boostsTable').innerHTML = `<tr><td colspan="5" class="empty">Erreur de chargement.</td></tr>`;
+  }
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>
