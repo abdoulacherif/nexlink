@@ -558,7 +558,7 @@ document.getElementById('avatarInput')?.addEventListener('change', async (e) => 
   });
 
   try {
-    const res = await fetch('/api/profiles/upload-avatar', {
+    const res = await fetch('/api/profiles?action=upload-avatar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

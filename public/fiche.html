@@ -111,7 +111,7 @@ async function loadProfile() {
   }
 
   try {
-    const res = await fetch('/api/profiles/public?slug=' + encodeURIComponent(slug));
+    const res = await fetch('/api/profiles?action=public&slug=' + encodeURIComponent(slug));
     const data = await res.json();
 
     if (!res.ok || !data.profile) {
