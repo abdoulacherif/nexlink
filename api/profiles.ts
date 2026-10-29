@@ -22,7 +22,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const action = req.query.action as string;
 
   // ============================================================
-  // ROUTE PUBLIQUE (pas besoin d'être connecté)
+  // ROUTE PUBLIQUE (accessible à tous)
   // ============================================================
   if (action === 'public') {
     if (req.method !== 'GET') return res.status(405).json({ error: 'Méthode non autorisée' });
@@ -30,19 +30,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { slug, id } = req.query;
     if (!slug && !id) return res.status(400).json({ error: 'Paramètre slug ou id requis.' });
 
-    const publicFields = 'nom, business, ville, pays, secteur, whatsapp, description, avatar_url, slug, created_at';
+    const publicFields = 'nom, business, ville, pays, secteur, whatsapp, description, avatar_url, slug, created_at, user_id';
+    
+    // 1. On cherche par slug ou par ID
     let query = supabaseAdmin.from('profiles').select(publicFields);
-
     if (slug) query = query.eq('slug', String(slug).toLowerCase());
     else query = query.eq('user_id', String(id));
 
-    const { data: profile, error } = await query.maybeSingle();
+    let { data: profile, error } = await query.maybeSingle();
 
     if (error) {
       console.error('[profiles/public]', error.message);
       return res.status(400).json({ error: 'Erreur de lecture.' });
     }
     if (!profile) return res.status(404).json({ error: 'Fiche introuvable.' });
+
+    // 2. ASTUCE DEV SENIOR : Si le profil existe mais n'a pas de slug, on le génère et on le sauvegarde
+    if (!profile.slug && profile.business) {
+      const newSlug = makeSlug(profile.business, profile.user_id);
+      const { error: updateError } = await supabaseAdmin
+        .from('profiles')
+        .update({ slug: newSlug })
+        .eq('user_id', profile.user_id);
+
+      if (!updateError) {
+        profile.slug = newSlug; // On met à jour l'objet renvoyé
+      }
+    }
 
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
     return res.status(200).json({ profile });
@@ -89,10 +103,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // ============================================================
-  // ROUTES CLASSIQUES DU PROFIL UTILISATEUR (connecté requis)
+  // ROUTES CLASSIQUES DU PROFIL (connecté requis)
   // ============================================================
   return requireAuth(async (req, res, session) => {
-    // --- GET : récupérer mon profil + données ---
     if (req.method === 'GET') {
       const { data: profile } = await supabaseAdmin
         .from('profiles')
@@ -132,7 +145,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // --- POST : créer mon profil (si pas encore créé) ---
     if (req.method === 'POST') {
       const { nom, whatsapp, pays, ville, business, secteur } = req.body || {};
       if (!nom || !whatsapp || !pays || !ville || !business || !secteur) {
@@ -163,7 +175,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ profile: data });
     }
 
-    // --- PATCH : modifier mon profil ---
     if (req.method === 'PATCH') {
       const { action: patchAction, entryId, proofUrl } = req.body || {};
 
@@ -179,11 +190,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const { nom, whatsapp, ville, pays, business, secteur, description } = req.body || {};
       
-      const { data: currentProfile } = await supabaseAdmin
-        .from('profiles')
-        .select('slug')
-        .eq('user_id', session.userId)
-        .maybeSingle();
+      const { data: currentProfile } = await supabaseAdmin.from('profiles').select('slug').eq('user_id', session.userId).maybeSingle();
 
       let updates: any = { nom, whatsapp, ville, pays, business, secteur };
       if (description !== undefined) updates.description = description;
@@ -192,15 +199,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         updates.slug = makeSlug(business, session.userId);
       }
 
-      const { error } = await supabaseAdmin
-        .from('profiles')
-        .update(updates)
-        .eq('user_id', session.userId);
+      const { error } = await supabaseAdmin.from('profiles').update(updates).eq('user_id', session.userId);
       if (error) return res.status(400).json({ error: error.message });
       return res.status(200).json({ ok: true });
     }
 
-    // --- PUT : changer mon mot de passe ---
     if (req.method === 'PUT') {
       const { password } = req.body || {};
       if (!password || password.length < 6) {
@@ -211,7 +214,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ ok: true });
     }
 
-    // --- DELETE : supprimer ma fiche ---
     if (req.method === 'DELETE') {
       const { error } = await supabaseAdmin.from('profiles').delete().eq('user_id', session.userId);
       if (error) return res.status(400).json({ error: error.message });

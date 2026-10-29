@@ -469,7 +469,7 @@ ${c.avatar_url ? `<img src="${escapeHtml(c.avatar_url)}" style="width:100%;heigh
 </div>
 <div class="card-actions-secondary">
 <button class="sec-btn" onclick='openDownloadMenu(${JSON.stringify(c).replace(/'/g,"&apos;")})'>${ICON_DOWNLOAD} Télécharger</button>
-<a class="sec-btn" href="fiche?slug=${escapeHtml(c.slug || '')}">${ICON_EYE} Voir la fiche</a>
+<a class="sec-btn" href="fiche?slug=${escapeHtml(c.slug || '')}&id=${escapeHtml(c.user_id || '')}">${ICON_EYE} Voir la fiche</a>
 </div>
 </div>
 `).join('');

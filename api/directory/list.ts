@@ -6,6 +6,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'GET') {
     const { type } = req.query;
 
+    // ---- Groupes WhatsApp ----
     if (type === 'groups') {
       const { theme, q, offset, limit } = req.query;
       const from = parseInt((offset as string) || '0', 10) || 0;
@@ -38,6 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ themes });
     }
 
+    // ---- Cagnottes ----
     if (type === 'cagnottes') {
       const { data, error } = await supabaseAdmin
         .from('cagnotte_campaigns')
@@ -48,13 +50,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ campaigns: data });
     }
 
+    // ---- Annuaire public ----
     const { city, sector, q, offset, limit } = req.query;
     const from = parseInt((offset as string) || '0', 10) || 0;
     const size = Math.min(parseInt((limit as string) || '30', 10) || 30, 60);
 
+    // On ajoute "user_id" et "slug" pour le lien vers la fiche
     let query = supabaseAdmin
       .from('profiles')
-      .select('nom, ville, pays, business, secteur, whatsapp, slug, avatar_url, created_at', { count: 'exact' });
+      .select('nom, ville, pays, business, secteur, whatsapp, slug, avatar_url, user_id, created_at', { count: 'exact' });
 
     if (city) query = query.ilike('ville', `%${city}%`);
     if (sector) query = query.eq('secteur', sector as string);
@@ -68,9 +72,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const { data, error, count } = await query;
     if (error) return res.status(400).json({ error: error.message });
+    
+    res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
     return res.status(200).json({ profiles: data, total: count ?? 0 });
   }
 
+  // ---- POST : dépense de crédits ----
   if (req.method === 'POST') {
     const session = getSession(req);
     if (!session) return res.status(401).json({ error: 'Non authentifié' });
