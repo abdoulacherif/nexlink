@@ -5,7 +5,7 @@ import { supabaseAdmin } from '../../lib/supabaseAdmin';
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '5mb', // Limite à 5 Mo pour la photo
+      sizeLimit: '5mb',
     },
   },
 };
@@ -19,16 +19,12 @@ export default requireAuth(async (req, res, session) => {
   }
 
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(mimeType)) {
-    return res.status(400).json({ error: 'Format d\'image non supporté (JPEG, PNG, WEBP uniquement).' });
+    return res.status(400).json({ error: "Format d'image non supporté (JPEG, PNG, WEBP uniquement)." });
   }
 
-  // Convertir le base64 en Buffer
   const buffer = Buffer.from(base64Image.replace(/^data:image\/\w+;base64,/, ''), 'base64');
-  
-  // Nom de fichier unique basé sur l'ID utilisateur
   const fileName = `${session.userId}-${Date.now()}.${mimeType.split('/')[1]}`;
 
-  // Upload vers Supabase Storage
   const { error: uploadError } = await supabaseAdmin.storage
     .from('avatars')
     .upload(fileName, buffer, {
@@ -38,17 +34,15 @@ export default requireAuth(async (req, res, session) => {
 
   if (uploadError) {
     console.error('[upload-avatar]', uploadError.message);
-    return res.status(400).json({ error: 'Erreur lors de l\'upload.' });
+    return res.status(400).json({ error: "Erreur lors de l'upload." });
   }
 
-  // Récupérer l'URL publique
   const { data: urlData } = supabaseAdmin.storage
     .from('avatars')
     .getPublicUrl(fileName);
 
   const avatarUrl = urlData.publicUrl;
 
-  // Mettre à jour le profil de l'utilisateur
   const { error: updateError } = await supabaseAdmin
     .from('profiles')
     .update({ avatar_url: avatarUrl })

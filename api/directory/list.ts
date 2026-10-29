@@ -54,7 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     let query = supabaseAdmin
       .from('profiles')
-      .select('nom, ville, pays, business, secteur, whatsapp, created_at', { count: 'exact' });
+      .select('nom, ville, pays, business, secteur, whatsapp, slug, avatar_url, created_at', { count: 'exact' });
 
     if (city) query = query.ilike('ville', `%${city}%`);
     if (sector) query = query.eq('secteur', sector as string);

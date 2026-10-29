@@ -10,7 +10,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Paramètre slug ou id requis.' });
   }
 
-  // Champs publics uniquement (jamais email, solde, credits, is_admin)
   const publicFields = 'nom, business, ville, pays, secteur, whatsapp, description, avatar_url, slug, created_at';
 
   let query = supabaseAdmin.from('profiles').select(publicFields);
@@ -32,7 +31,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(404).json({ error: 'Fiche introuvable.' });
   }
 
-  // Petit cache HTTP pour soulager la base (60s côté CDN Vercel)
   res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
 
   return res.status(200).json({ profile });

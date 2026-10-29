@@ -185,6 +185,13 @@ body{padding-bottom:74px;}
 <div class="panel">
 <h3 style="margin-bottom:4px;">Informations du profil</h3>
 <div class="sub">Ces informations sont visibles dans l'annuaire public.</div>
+<div class="field" style="text-align:center; margin-bottom:24px;">
+  <div class="avatar-ring" style="width:90px;height:90px;margin:0 auto 12px;">
+    <div class="avatar" id="avatarPreview" style="font-size:28px;">--</div>
+  </div>
+  <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/webp" style="display:none;">
+  <button type="button" class="btn-ghost" onclick="document.getElementById('avatarInput').click()" style="font-size:13px;padding:8px 14px;">📷 Changer ma photo</button>
+</div>
 <form id="dashForm">
 <div class="field"><label>Nom complet</label><input type="text" id="d-name" required></div>
 <div class="field"><label>Numéro WhatsApp</label><input type="tel" id="d-phone" required></div>
@@ -372,6 +379,15 @@ document.querySelectorAll('.tab-content').forEach(c=> c.classList.toggle('active
 function fillDashboard(p){
 document.getElementById('dashGreeting').textContent = 'Bonjour ' + (p.nom || '');
 document.getElementById('dashAvatar').textContent = initials(p.business || p.nom);
+const preview = document.getElementById('avatarPreview');
+if (preview) {
+  if (p.avatar_url) {
+    preview.innerHTML = \;
+  } else {
+    preview.textContent = initials(p.business || p.nom);
+  }
+}
+
 document.getElementById('dashBusiness').textContent = p.business || p.nom || '—';
 document.getElementById('stripEmail').textContent = (CURRENT_USER && CURRENT_USER.email) || p.email || '—';
 if(p.created_at){
@@ -522,6 +538,40 @@ return;
 document.getElementById('dashContent').style.display = '';
 fillDashboard(profile);
 })();
+
+// --- Upload avatar ---
+document.getElementById('avatarInput')?.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  
+  if (file.size > 5 * 1024 * 1024) { showToast('Image trop lourde (max 5 Mo).'); return; }
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    document.getElementById('avatarPreview').innerHTML = \;
+  };
+  reader.readAsDataURL(file);
+
+  const base64 = await new Promise((resolve) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.readAsDataURL(file);
+  });
+
+  try {
+    const res = await fetch('/api/profiles/upload-avatar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ base64Image: base64, mimeType: file.type })
+    });
+    const data = await res.json();
+    if (CURRENT_PROFILE) CURRENT_PROFILE.avatar_url = data.avatar_url;
+    showToast('Photo mise à jour ✓');
+  } catch (err) {
+    showToast('Erreur : ' + err.message);
+  }
+});
+
 </script>
 </body>
 </html>
