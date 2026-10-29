@@ -38,10 +38,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // TRACKING : Enregistrer la vue (sans bloquer la réponse)
-    supabaseAdmin.from('profile_stats').insert({
-      profile_user_id: profile.user_id,
-      event_type: 'view'
-    }).then(() => {}).catch(() => {});
+    Promise.resolve(
+      supabaseAdmin.from('profile_stats').insert({
+        profile_user_id: profile.user_id,
+        event_type: 'view'
+      })
+    ).then(() => {}, () => {});
 
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
     return res.status(200).json({ profile });
