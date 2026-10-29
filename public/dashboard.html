@@ -226,6 +226,16 @@ body{padding-bottom:74px;}
 </div>
 </aside>
 <main class="dash-main">
+<div id="statsCard" style="padding:20px 28px 0;">
+  <div class="panel" style="background:var(--bg-soft); border:1px solid var(--line);">
+    <h3 style="margin-bottom:8px;">📊 Vos statistiques (7 derniers jours)</h3>
+    <div id="statsContent" style="display:flex; gap:24px; flex-wrap:wrap;">
+      <div><div style="font-size:24px; font-weight:700; color:var(--green-dark);" id="statViews">—</div><div style="font-size:12px; color:var(--muted);">Vues de la fiche</div></div>
+      <div><div style="font-size:24px; font-weight:700; color:var(--green-dark);" id="statClicks">—</div><div style="font-size:12px; color:var(--muted);">Clics WhatsApp</div></div>
+      <div><div style="font-size:24px; font-weight:700; color:var(--muted);" id="statTotalViews">—</div><div style="font-size:12px; color:var(--muted);">Vues totales</div></div>
+    </div>
+  </div>
+</div>
 <div id="gateMsg" class="gate" style="display:none;">
 <h2>Connexion requise</h2>
 <p>Tu dois être connecté pour accéder à ton tableau de bord.</p>
@@ -666,6 +676,16 @@ return;
 document.getElementById('dashContent').style.display = '';
 fillDashboard(profile);
 })();
+async function loadStats() {
+  try {
+    const res = await fetch('/api/profiles?action=stats', { credentials: 'include' });
+    const data = await res.json();
+    document.getElementById('statViews').textContent = data.weekly_views ?? 0;
+    document.getElementById('statClicks').textContent = data.weekly_clicks ?? 0;
+    document.getElementById('statTotalViews').textContent = data.total_views ?? 0;
+  } catch(e) { console.error(e); }
+}
+loadStats();
 </script>
 </body>
 </html>

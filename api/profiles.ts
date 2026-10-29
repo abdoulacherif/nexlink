@@ -20,7 +20,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (action === 'public') {
     if (req.method !== 'GET') return res.status(405).json({ error: 'Méthode non autorisée' });
     const { slug, id } = req.query;
-    if (!slug && !id) return res.status(400).json({ error: 'Paramètre slug ou id requis.' });
+    if (!slug && !id) return res.status(400).json({ error: 'Paramètre requis.' });
 
     const publicFields = 'nom, business, ville, pays, secteur, whatsapp, description, avatar_url, slug, created_at, user_id, is_boosted';
     let query = supabaseAdmin.from('profiles').select(publicFields);
@@ -33,11 +33,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!profile.slug && profile.business) {
       const newSlug = makeSlug(profile.business, profile.user_id);
-      const { error: updateError } = await supabaseAdmin.from('profiles').update({ slug: newSlug }).eq('user_id', profile.user_id);
-      if (!updateError) profile.slug = newSlug;
+      await supabaseAdmin.from('profiles').update({ slug: newSlug }).eq('user_id', profile.user_id);
+      profile.slug = newSlug;
     }
+
+    // TRACKING : Enregistrer la vue (sans bloquer la réponse)
+    supabaseAdmin.from('profile_stats').insert({
+      profile_user_id: profile.user_id,
+      event_type: 'view'
+    }).then(() => {}).catch(() => {});
+
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
     return res.status(200).json({ profile });
+  }
+
+  // ============================================================
+  // TRACK CLICK (WhatsApp)
+  // ============================================================
+  if (action === 'track-click') {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
+    const { userId } = req.body || {};
+    if (!userId) return res.status(400).json({ error: 'userId requis' });
+
+    await supabaseAdmin.from('profile_stats').insert({
+      profile_user_id: userId,
+      event_type: 'whatsapp_click'
+    });
+    return res.status(200).json({ ok: true });
   }
 
   // ============================================================
@@ -81,6 +103,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!result.ok) return res.status(400).json({ error: result.error });
 
       return res.status(200).json({ ok: true, credits: result.credits, boosted_until: result.boosted_until });
+    })(req, res);
+  }
+
+  // ============================================================
+  // GET STATS
+  // ============================================================
+  if (action === 'stats') {
+    return requireAuth(async (req, res, session) => {
+      if (req.method !== 'GET') return res.status(405).json({ error: 'Méthode non autorisée' });
+
+      const { data, error } = await supabaseAdmin.rpc('get_profile_stats', { p_user_id: session.userId });
+      if (error) return res.status(400).json({ error: error.message });
+
+      return res.status(200).json(data);
     })(req, res);
   }
 

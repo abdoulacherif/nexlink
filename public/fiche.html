@@ -103,16 +103,20 @@ function escapeHtml(s) {
 async function loadProfile() {
   const params = new URLSearchParams(window.location.search);
   const slug = params.get('slug');
+  const id = params.get('id');
 
-  if (!slug) {
+  if (!slug && !id) {
     document.getElementById('loader').style.display = 'none';
     document.getElementById('notFound').style.display = 'block';
     return;
   }
 
+  let apiUrl = '/api/profiles?action=public';
+  if (slug) apiUrl += '&slug=' + encodeURIComponent(slug);
+  else if (id) apiUrl += '&id=' + encodeURIComponent(id);
+
   try {
-    // On utilise l'URL correcte de l'API fusionnée
-    const res = await fetch('/api/profiles?action=public&slug=' + encodeURIComponent(slug));
+    const res = await fetch(apiUrl);
     const data = await res.json();
 
     if (!res.ok || !data.profile) {
@@ -139,12 +143,17 @@ async function loadProfile() {
     }
 
     const waBtn = document.getElementById('waBtn');
-    // On nettoie le numéro pour ne garder que les chiffres
     const cleanPhone = (p.whatsapp || '').replace(/\D/g, '');
     const message = encodeURIComponent(`Bonjour, je vous ai trouvé sur Kontak — je voudrais discuter de ${p.business || 'votre activité'}.`);
     
     waBtn.addEventListener('click', () => {
-      // Format universel qui fonctionne partout (mobile et desktop)
+      // ENREGISTREMENT DU CLIC (Analytics)
+      fetch('/api/profiles?action=track-click', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: p.user_id })
+      }).catch(() => {});
+      
       window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
     });
 
