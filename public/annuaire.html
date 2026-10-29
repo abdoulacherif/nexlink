@@ -264,7 +264,7 @@ const SECTORS = ['Commerce','Mode & beauté','Restauration','Services','Tech & d
 function initials(name){
 return (name||'').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
 }
-function waLink(phone){
+function waLink(phone, business){
 const clean = (phone||'').replace(/[^\d+]/g,'').replace('+','');
 return `https://wa.me/${clean}`;
 }
@@ -465,7 +465,7 @@ ${c.avatar_url ? `<img src="${escapeHtml(c.avatar_url)}" style="width:100%;heigh
 </div>
 <div class="card-owner">Par ${escapeHtml(c.nom)}</div>
 <div class="card-actions">
-<button class="wa-btn" data-wa="${escapeHtml(waLink(c.whatsapp))}" onclick="contactViaWhatsapp(this.dataset.wa)">Discuter sur WhatsApp</button>
+<button class="wa-btn" data-wa="${escapeHtml(waLink(c.whatsapp, c.business || c.nom))}" onclick="contactViaWhatsapp(this.dataset.wa)">Discuter sur WhatsApp</button>
 </div>
 <div class="card-actions-secondary">
 <button class="sec-btn" onclick='openDownloadMenu(${JSON.stringify(c).replace(/'/g,"&apos;")})'>${ICON_DOWNLOAD} Télécharger</button>
@@ -582,7 +582,7 @@ document.getElementById('detailLoc').textContent = [c.ville, c.pays].filter(Bool
 document.getElementById('detailSector').textContent = c.secteur || '—';
 document.getElementById('detailPhone').textContent = c.whatsapp || '—';
 const btn = document.getElementById('detailWaBtn');
-btn.onclick = ()=> { closeContactDetail(); contactViaWhatsapp(waLink(c.whatsapp)); };
+btn.onclick = ()=> { closeContactDetail(); contactViaWhatsapp(waLink(c.whatsapp, c.business || c.nom)); };
 document.getElementById('detailOverlay').classList.add('open');
 }
 function closeContactDetail(){ document.getElementById('detailOverlay').classList.remove('open'); }
