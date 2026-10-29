@@ -437,5 +437,27 @@ export default requireAdmin(async (req, res) => {
     return res.status(200).json({ ok: true, updated, remaining: remaining ?? 0 });
   }
 
+  // --- BOOSTS (fiches boostées) ---
+  if (resource === 'boosts') {
+    if (req.method !== 'GET') return res.status(405).json({ error: 'Méthode non autorisée' });
+
+    const { data: profiles, error } = await supabaseAdmin
+      .from('profiles')
+      .select('id, business, nom, ville, is_boosted, boosted_until, user_id')
+      .eq('is_boosted', true)
+      .order('boosted_until', { ascending: false });
+
+    if (error) return res.status(400).json({ error: error.message });
+
+    const now = new Date();
+    const activeCount = (profiles || []).filter(p => p.boosted_until && new Date(p.boosted_until) > now).length;
+
+    return res.status(200).json({
+      boosts: profiles || [],
+      total: (profiles || []).length,
+      active: activeCount,
+    });
+  }
+
   return res.status(400).json({ error: `Ressource inconnue : ${resource}` });
 });
