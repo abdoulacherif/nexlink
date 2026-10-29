@@ -8,7 +8,6 @@ function genReferralCode(): string {
 
 const SITE_URL = process.env.SITE_URL || 'https://kontaks.vercel.app';
 
-// Nettoie les entrées pour éviter le XSS stocké
 function sanitize(str: string): string {
   return str.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
 }
@@ -66,6 +65,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (insertError) {
     await supabaseAdmin.auth.admin.deleteUser(userId);
     return res.status(400).json({ error: insertError.message });
+  }
+
+  // Créditer le parrain (5 crédits) si un code de parrainage a été fourni
+  if (referredBy) {
+    Promise.resolve(
+      supabaseAdmin.rpc('reward_referrer', {
+        p_referral_code: sanitize(String(referredBy)),
+        p_new_user_email: cleanEmail,
+      })
+    ).then(() => {}, (err) => {
+      console.error('[signup] reward_referrer:', err);
+    });
   }
 
   if (actionLink) {
