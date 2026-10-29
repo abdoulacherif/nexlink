@@ -128,6 +128,12 @@ h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;} a{color:inherit
 <h3 style="margin-bottom:4px;">Informations du profil</h3>
 <div class="sub">Ces informations sont visibles dans l'annuaire public.</div>
 
+<div class="panel" style="margin-bottom:20px; background:var(--bg-soft); border: 2px solid var(--gold);">
+  <h3 style="margin-bottom:4px;">⭐ Booster ma fiche</h3>
+  <p class="sub" style="margin-bottom:12px;">Apparais en haut de l'annuaire pendant 7 jours avec un badge "En vedette".</p>
+  <button type="button" class="btn-primary" onclick="buyBoost()" style="width:100%; background: var(--gold); color: var(--ink);">Booster pour 500 crédits</button>
+</div>
+
 <div class="field" style="text-align:center; margin-bottom:24px;">
   <div class="avatar-ring" style="width:90px;height:90px;margin:0 auto 12px;">
     <div class="avatar" id="avatarPreview" style="font-size:28px;">--</div>
@@ -136,11 +142,6 @@ h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;} a{color:inherit
   <button type="button" class="btn-ghost" onclick="document.getElementById('avatarInput').click()">📷 Changer ma photo</button>
 </div>
 
-<div class="panel" style="margin-bottom:20px; background:var(--bg-soft);">
-  <h3 style="margin-bottom:4px;">⭐ Booster ma fiche</h3>
-  <p class="sub" style="margin-bottom:12px;">Apparais en haut de l'annuaire pendant 7 jours avec un badge "En vedette".</p>
-  <button type="button" class="btn-primary" onclick="buyBoost()" style="width:100%;">Booster pour 500 crédits</button>
-</div>
 <form id="dashForm">
 <div class="field"><label>Nom complet</label><input type="text" id="d-name" required></div>
 <div class="field"><label>Numéro WhatsApp</label><input type="tel" id="d-phone" required></div>
@@ -229,9 +230,7 @@ const ICONS = {
 };
 function icon(key, cls){ return `<span class="ic-svg ${cls||''}">${ICONS[key] || ICONS.grid}</span>`; }
 
-async function loadNavItems(){
-  try{ const res = await fetch('/api/nav-items'); if(!res.ok) throw new Error(); const data = await res.json(); return data.items || []; }catch(e){ return []; }
-}
+async function loadNavItems(){ try{ const res = await fetch('/api/nav-items'); if(!res.ok) throw new Error(); const data = await res.json(); return data.items || []; }catch(e){ return []; } }
 function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('open'); }
 function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); }
 document.getElementById('icOverview').innerHTML = ICONS.home;
@@ -257,7 +256,6 @@ async function renderFixedNavbar(){
   if(items.length===0){ bar.style.display='none'; return; }
   bar.innerHTML = items.map(it=>`<a class="fnav-btn" href="${escapeHtml(it.url)}">${icon(it.icon)}<span>${escapeHtml(it.label)}</span></a>`).join('');
 }
-
 renderFixedNavbar();
 document.getElementById('d-sector').innerHTML = SECTORS.map(s=>`<option>${s}</option>`).join('');
 document.getElementById('c-sector').innerHTML = SECTORS.map(s=>`<option>${s}</option>`).join('');
@@ -273,10 +271,7 @@ function fillDashboard(p){
     document.getElementById('dashAvatar').textContent = initials(p.business || p.nom);
     document.getElementById('dashBusiness').textContent = p.business || p.nom || '—';
     document.getElementById('stripEmail').textContent = (CURRENT_USER && CURRENT_USER.email) || p.email || '—';
-    if(p.created_at){
-      const d = new Date(p.created_at);
-      document.getElementById('acc-since').value = d.toLocaleDateString('fr-FR', {day:'numeric', month:'long', year:'numeric'});
-    }
+    if(p.created_at){ const d = new Date(p.created_at); document.getElementById('acc-since').value = d.toLocaleDateString('fr-FR', {day:'numeric', month:'long', year:'numeric'}); }
     document.getElementById('acc-email').value = (CURRENT_USER && CURRENT_USER.email) || p.email || '';
     document.getElementById('d-name').value = p.nom || '';
     document.getElementById('d-phone').value = p.whatsapp || '';
@@ -287,122 +282,81 @@ function fillDashboard(p){
 
     const preview = document.getElementById('avatarPreview');
     if (preview) {
-      if (p.avatar_url) {
-        preview.innerHTML = '<img src="' + p.avatar_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-      } else {
-        preview.textContent = initials(p.business || p.nom);
-      }
+      if (p.avatar_url) preview.innerHTML = '<img src="' + p.avatar_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+      else preview.textContent = initials(p.business || p.nom);
     }
-  } catch(e) {
-    console.error('Erreur fillDashboard:', e);
-  }
+  } catch(e) { console.error('Erreur fillDashboard:', e); }
 }
 
-// --- Upload avatar ---
 document.getElementById('avatarInput').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
   if (file.size > 5 * 1024 * 1024) { showToast('Image trop lourde (max 5 Mo).'); return; }
-  
   const reader = new FileReader();
   reader.onload = (ev) => { document.getElementById('avatarPreview').innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`; };
   reader.readAsDataURL(file);
-
   const base64 = await new Promise((resolve) => { const r = new FileReader(); r.onload = () => resolve(r.result); r.readAsDataURL(file); });
   try {
-    const res = await fetch('/api/profiles?action=upload-avatar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ base64Image: base64, mimeType: file.type })
-    });
+    const res = await fetch('/api/profiles?action=upload-avatar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ base64Image: base64, mimeType: file.type }) });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Erreur d'upload.");
     if (CURRENT_PROFILE) CURRENT_PROFILE.avatar_url = data.avatar_url;
     showToast('Photo mise à jour ✓');
-  } catch (err) {
-    showToast('Erreur : ' + err.message);
-  }
+  } catch (err) { showToast('Erreur : ' + err.message); }
 });
+
+async function buyBoost() {
+  if (!confirm("Dépenser 500 crédits pour booster ta fiche 7 jours ?")) return;
+  try {
+    const res = await fetch('/api/profiles?action=buy-boost', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ credits: 500, days: 7 }) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Erreur lors de l'achat.");
+    showToast('Fiche boostée pour 7 jours ! ⭐');
+    setTimeout(() => window.location.reload(), 1500);
+  } catch (err) { showToast('Erreur : ' + err.message); }
+}
 
 document.getElementById('pwForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
-  const pw = document.getElementById('pw-new').value;
-  const pw2 = document.getElementById('pw-confirm').value;
+  const pw = document.getElementById('pw-new').value; const pw2 = document.getElementById('pw-confirm').value;
   if(pw.length < 6){ showErr('errPw','Le mot de passe doit contenir au moins 6 caractères.'); return; }
   if(pw !== pw2){ showErr('errPw','Les mots de passe ne correspondent pas.'); return; }
-  hideErr('errPw');
-  const btn = document.getElementById('pwSaveBtn');
-  btn.disabled = true; btn.textContent = 'Mise à jour…';
+  hideErr('errPw'); const btn = document.getElementById('pwSaveBtn'); btn.disabled = true; btn.textContent = 'Mise à jour…';
   try{
     const res = await fetch('/api/profiles', {method: 'PUT', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ password: pw })});
-    const data = await res.json();
-    if(!res.ok) throw new Error(data.error || "Erreur lors de la mise à jour.");
-    document.getElementById('pwForm').reset();
-    showToast('Mot de passe mis à jour ✓');
-  }catch(err){ showErr('errPw', err.message || "Erreur lors de la mise à jour."); }
+    const data = await res.json(); if(!res.ok) throw new Error(data.error || "Erreur.");
+    document.getElementById('pwForm').reset(); showToast('Mot de passe mis à jour ✓');
+  }catch(err){ showErr('errPw', err.message); }
   finally{ btn.disabled = false; btn.textContent = 'Mettre à jour le mot de passe'; }
 });
 
 document.getElementById('dashForm').addEventListener('submit', async (e)=>{
-  e.preventDefault();
-  const btn = document.getElementById('dashSaveBtn');
-  btn.disabled = true; btn.textContent = 'Enregistrement…';
-  const updated = {
-    nom: document.getElementById('d-name').value.trim(),
-    whatsapp: document.getElementById('d-phone').value.trim(),
-    pays: document.getElementById('d-country').value.trim(),
-    ville: document.getElementById('d-city').value.trim(),
-    business: document.getElementById('d-business').value.trim(),
-    secteur: document.getElementById('d-sector').value
-  };
+  e.preventDefault(); const btn = document.getElementById('dashSaveBtn'); btn.disabled = true; btn.textContent = 'Enregistrement…';
+  const updated = { nom: document.getElementById('d-name').value.trim(), whatsapp: document.getElementById('d-phone').value.trim(), pays: document.getElementById('d-country').value.trim(), ville: document.getElementById('d-city').value.trim(), business: document.getElementById('d-business').value.trim(), secteur: document.getElementById('d-sector').value };
   try{
     const res = await fetch('/api/profiles', {method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(updated) });
-    const data = await res.json();
-    if(!res.ok) throw new Error(data.error || "Erreur lors de l'enregistrement.");
-    hideErr('errDash');
-    CURRENT_PROFILE = {...CURRENT_PROFILE, ...updated};
-    fillDashboard(CURRENT_PROFILE);
-    showToast('Profil mis à jour ✓');
-  }catch(err){ showErr('errDash', err.message || "Erreur lors de l'enregistrement."); }
+    const data = await res.json(); if(!res.ok) throw new Error(data.error || "Erreur.");
+    hideErr('errDash'); CURRENT_PROFILE = {...CURRENT_PROFILE, ...updated}; fillDashboard(CURRENT_PROFILE); showToast('Profil mis à jour ✓');
+  }catch(err){ showErr('errDash', err.message); }
   finally{ btn.disabled = false; btn.textContent = 'Enregistrer'; }
 });
 
 async function deleteMyProfile(){
   if(!confirm("Supprimer définitivement ta fiche de l'annuaire ?")) return;
   try{
-    const res = await fetch('/api/profiles', { method: 'DELETE', credentials: 'include' });
-    const data = await res.json();
-    if(!res.ok) throw new Error(data.error || "Erreur lors de la suppression.");
-    showToast('Fiche supprimée');
-    await fetch('/api/auth/session', { method: 'DELETE', credentials: 'include' });
-    window.location.href = 'index';
-  }catch(err){ showErr('errDash', err.message || "Erreur lors de la suppression."); }
+    const res = await fetch('/api/profiles', { method: 'DELETE', credentials: 'include' }); const data = await res.json(); if(!res.ok) throw new Error(data.error || "Erreur.");
+    showToast('Fiche supprimée'); await fetch('/api/auth/session', { method: 'DELETE', credentials: 'include' }); window.location.href = 'index';
+  }catch(err){ showErr('errDash', err.message); }
 }
 
 document.getElementById('completeForm').addEventListener('submit', async (e)=>{
-  e.preventDefault();
-  const btn = document.getElementById('completeSaveBtn');
-  btn.disabled = true; btn.textContent = 'Création…';
-  const payload = {
-    nom: document.getElementById('c-name').value.trim(),
-    whatsapp: document.getElementById('c-phone').value.trim(),
-    pays: document.getElementById('c-country').value.trim(),
-    ville: document.getElementById('c-city').value.trim(),
-    business: document.getElementById('c-business').value.trim(),
-    secteur: document.getElementById('c-sector').value
-  };
+  e.preventDefault(); const btn = document.getElementById('completeSaveBtn'); btn.disabled = true; btn.textContent = 'Création…';
+  const payload = { nom: document.getElementById('c-name').value.trim(), whatsapp: document.getElementById('c-phone').value.trim(), pays: document.getElementById('c-country').value.trim(), ville: document.getElementById('c-city').value.trim(), business: document.getElementById('c-business').value.trim(), secteur: document.getElementById('c-sector').value };
   try{
     const res = await fetch('/api/profiles', {method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) });
-    const data = await res.json();
-    if(!res.ok) throw new Error(data.error || "Erreur lors de la création.");
-    hideErr('errComplete');
-    CURRENT_PROFILE = data.profile;
-    document.getElementById('completeContent').style.display = 'none';
-    document.getElementById('dashContent').style.display = '';
-    fillDashboard(data.profile);
-    showToast('Fiche créée ✓');
-  }catch(err){ showErr('errComplete', err.message || "Erreur lors de la création."); }
+    const data = await res.json(); if(!res.ok) throw new Error(data.error || "Erreur.");
+    hideErr('errComplete'); CURRENT_PROFILE = data.profile; document.getElementById('completeContent').style.display = 'none'; document.getElementById('dashContent').style.display = ''; fillDashboard(data.profile); showToast('Fiche créée ✓');
+  }catch(err){ showErr('errComplete', err.message); }
   finally{ btn.disabled = false; btn.textContent = 'Créer ma fiche'; }
 });
 
@@ -410,8 +364,7 @@ document.getElementById('completeForm').addEventListener('submit', async (e)=>{
   const { user, profile } = await initNav();
   if(!user){ document.getElementById('gateMsg').style.display = ''; return; }
   if(!profile){ document.getElementById('completeContent').style.display = ''; return; }
-  document.getElementById('dashContent').style.display = '';
-  fillDashboard(profile);
+  document.getElementById('dashContent').style.display = ''; fillDashboard(profile);
 })();
 </script>
 </body>
