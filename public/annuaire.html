@@ -458,7 +458,7 @@ const cardsHtml = profiles.map(c=>`
 ${c.avatar_url ? `<img src="${escapeHtml(c.avatar_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : initials(c.business || c.nom)}
 </div></div>
 <div>
-<div class="card-name">${escapeHtml(c.business || c.nom)}</div>
+<div class="card-name">${escapeHtml(c.business || c.nom)} ${c.is_boosted ? "⭐" : ""}</div>
 <div class="card-city">${escapeHtml(c.ville)}${c.pays ? ', '+escapeHtml(c.pays) : ''}</div>
 <span class="card-cat">${escapeHtml(c.secteur)}</span>
 </div>
