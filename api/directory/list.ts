@@ -6,7 +6,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'GET') {
     const { type } = req.query;
 
-    // ---- Groupes WhatsApp (page business.html) ----
     if (type === 'groups') {
       const { theme, q, offset, limit } = req.query;
       const from = parseInt((offset as string) || '0', 10) || 0;
@@ -39,7 +38,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ themes });
     }
 
-    // ---- Cagnottes actives (page cagnotte.html) ----
     if (type === 'cagnottes') {
       const { data, error } = await supabaseAdmin
         .from('cagnotte_campaigns')
@@ -50,13 +48,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ campaigns: data });
     }
 
-
     const { city, sector, q, offset, limit } = req.query;
     const from = parseInt((offset as string) || '0', 10) || 0;
     const size = Math.min(parseInt((limit as string) || '30', 10) || 30, 60);
 
-    // Champs volontairement limités : jamais d'email, de credits, de solde ou
-    // d'user_id exposés côté public via cette route.
     let query = supabaseAdmin
       .from('profiles')
       .select('nom, ville, pays, business, secteur, whatsapp, created_at', { count: 'exact' });
@@ -77,34 +72,47 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method === 'POST') {
-    // Dépense de crédits (contact WhatsApp, téléchargement de fiche) — fait
-    // ici côté serveur pour ne jamais laisser le client décider seul de son solde.
     const session = getSession(req);
     if (!session) return res.status(401).json({ error: 'Non authentifié' });
 
     const cost = parseInt(req.body?.amount, 10);
+    const targetUserId = req.body?.targetUserId as string | undefined;
+    
     if (!cost || cost <= 0) return res.status(400).json({ error: 'Montant invalide.' });
 
-    const { data: profile, error: profErr } = await supabaseAdmin
-      .from('profiles')
-      .select('credits')
-      .eq('user_id', session.userId)
-      .maybeSingle();
-
-    if (profErr || !profile) return res.status(400).json({ error: 'Profil introuvable.' });
-
-    const credits = profile.credits || 0;
-    if (credits < cost) {
-      return res.status(402).json({ error: 'Crédits insuffisants.', credits, needed: cost });
+    if (targetUserId) {
+      const { data, error } = await supabaseAdmin.rpc('unlock_contact', {
+        p_user_id: session.userId,
+        p_target_user_id: targetUserId,
+        p_cost: cost,
+      });
+      
+      if (error) {
+        console.error('[directory/list] unlock_contact:', error.message);
+        return res.status(400).json({ error: error.message });
+      }
+      
+      const result = data as { ok: boolean; credits?: number; already_unlocked?: boolean; error?: string };
+      if (!result.ok) {
+        return res.status(402).json({ error: result.error || 'Crédits insuffisants', credits: result.credits });
+      }
+      return res.status(200).json({ ok: true, credits: result.credits, already_unlocked: result.already_unlocked });
     }
 
-    const { error: updErr } = await supabaseAdmin
-      .from('profiles')
-      .update({ credits: credits - cost })
-      .eq('user_id', session.userId);
-
-    if (updErr) return res.status(400).json({ error: updErr.message });
-    return res.status(200).json({ ok: true, credits: credits - cost });
+    const { data, error } = await supabaseAdmin.rpc('spend_credits', {
+      p_user_id: session.userId,
+      p_amount: cost,
+    });
+    
+    if (error) {
+      console.error('[directory/list] spend_credits:', error.message);
+      return res.status(400).json({ error: error.message });
+    }
+    
+    const result = data as { ok: boolean; credits?: number; error?: string };
+    if (!result.ok) return res.status(402).json({ error: result.error || 'Crédits insuffisants' });
+    
+    return res.status(200).json({ ok: true, credits: result.credits });
   }
 
   return res.status(405).json({ error: 'Méthode non autorisée' });

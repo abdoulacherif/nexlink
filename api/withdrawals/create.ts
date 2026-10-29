@@ -6,29 +6,33 @@ export default requireAuth(async (req, res, session) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
   const { amount, method, details } = req.body || {};
-  if (!amount || amount <= 0 || !method || !details) {
+  const amt = parseInt(amount, 10);
+
+  if (!amt || amt <= 0 || !method || !details) {
     return res.status(400).json({ error: 'Merci de remplir tous les champs.' });
   }
 
-  const { data: profile } = await supabaseAdmin
-    .from('profiles')
-    .select('solde')
-    .eq('user_id', session.userId)
-    .maybeSingle();
-
-  const solde = profile?.solde || 0;
-  if (amount > solde) {
-    return res.status(400).json({ error: 'Le montant dépasse ton solde disponible.' });
-  }
-
-  const { error } = await supabaseAdmin.from('withdrawal_requests').insert({
-    user_id: session.userId,
-    amount,
-    method,
-    details,
-    status: 'en attente',
+  const { data, error } = await supabaseAdmin.rpc('request_withdrawal', {
+    p_user_id: session.userId,
+    p_amount: amt,
+    p_method: method,
+    p_details: details,
   });
 
-  if (error) return res.status(400).json({ error: error.message });
-  return res.status(200).json({ ok: true });
+  if (error) {
+    console.error('[withdrawals/create]', error.message);
+    return res.status(400).json({ error: 'Erreur lors de la demande de retrait.' });
+  }
+
+  const result = data as { ok: boolean; solde?: number; error?: string; request_id?: string };
+
+  if (!result.ok) {
+    return res.status(400).json({ error: result.error || 'Solde insuffisant.' });
+  }
+
+  return res.status(200).json({
+    ok: true,
+    solde: result.solde,
+    requestId: result.request_id
+  });
 });

@@ -8,42 +8,34 @@ export default requireAuth(async (req, res, session) => {
   const { planId } = req.body || {};
   if (!planId) return res.status(400).json({ error: 'planId requis' });
 
-  const { data: plan, error: planErr } = await supabaseAdmin
-    .from('subscription_plans')
-    .select('*')
-    .eq('id', planId)
-    .eq('active', true)
-    .maybeSingle();
+  const { data, error } = await supabaseAdmin.rpc('pay_plan_with_solde', {
+    p_user_id: session.userId,
+    p_plan_id: planId,
+  });
 
-  if (planErr || !plan) return res.status(404).json({ error: 'Forfait introuvable' });
-
-  const { data: profile } = await supabaseAdmin
-    .from('profiles')
-    .select('solde')
-    .eq('user_id', session.userId)
-    .maybeSingle();
-
-  const solde = profile?.solde || 0;
-
-  if (solde >= plan.price) {
-    const { error: updErr } = await supabaseAdmin
-      .from('profiles')
-      .update({ solde: solde - plan.price })
-      .eq('user_id', session.userId);
-    if (updErr) return res.status(400).json({ error: updErr.message });
-
-    const { error: insErr } = await supabaseAdmin.from('subscription_requests').insert({
-      user_id: session.userId,
-      plan_id: plan.id,
-      plan_name: plan.name,
-      price: plan.price,
-      status: 'payé',
-    });
-    if (insErr) return res.status(400).json({ error: insErr.message });
-
-    return res.status(200).json({ paid: true, method: 'solde' });
+  if (error) {
+    console.error('[subscriptions/create]', error.message);
+    return res.status(400).json({ error: 'Erreur lors du paiement.' });
   }
 
-  // Solde insuffisant : le client doit lancer le paiement LeekPay avec ce forfait
-  return res.status(200).json({ paid: false, plan });
+  const result = data as { ok: boolean; paid?: boolean; solde?: number; error?: string };
+
+  if (!result.ok) {
+    if (result.paid === false) {
+      const { data: plan } = await supabaseAdmin
+        .from('subscription_plans')
+        .select('*')
+        .eq('id', planId)
+        .eq('active', true)
+        .maybeSingle();
+      return res.status(200).json({ paid: false, plan });
+    }
+    return res.status(400).json({ error: result.error });
+  }
+
+  return res.status(200).json({ 
+    paid: true, 
+    method: 'solde', 
+    solde: result.solde 
+  });
 });

@@ -2,20 +2,12 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireAdmin } from '../../lib/auth';
 import { supabaseAdmin } from '../../lib/supabaseAdmin';
 
-// Route admin unique, multi-ressources via ?resource=
-// Ressources prévues : profiles, nav-items, withdrawals, subscriptions,
-// plans, server-offers, server-orders, biz-services, biz-orders
-// (ajoutées au fur et à mesure des 6 pages admin, pour ne pas dépasser
-// la limite de 12 fonctions serverless du plan Vercel Hobby).
-
-const COMMISSION_CAP_PER_FILLEUL = 5000; // FCFA à vie, par filleul
+const COMMISSION_CAP_PER_FILLEUL = 5000;
 
 export default requireAdmin(async (req, res) => {
   const resource = (req.query.resource as string) || 'profiles';
 
-  // ---------------------------------------------------------------
-  // FICHES (profiles)
-  // ---------------------------------------------------------------
+  // --- FICHES (profiles) ---
   if (resource === 'profiles') {
     if (req.method === 'GET') {
       const q = (req.query.q as string) || '';
@@ -25,9 +17,7 @@ export default requireAdmin(async (req, res) => {
       let query = supabaseAdmin.from('profiles').select('*', { count: 'exact' });
       if (q) {
         const safe = q.replace(/[%,]/g, '');
-        query = query.or(
-          `nom.ilike.%${safe}%,business.ilike.%${safe}%,whatsapp.ilike.%${safe}%,email.ilike.%${safe}%,ville.ilike.%${safe}%`
-        );
+        query = query.or(`nom.ilike.%${safe}%,business.ilike.%${safe}%,whatsapp.ilike.%${safe}%,email.ilike.%${safe}%,ville.ilike.%${safe}%`);
       }
       query = query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
 
@@ -39,61 +29,46 @@ export default requireAdmin(async (req, res) => {
     if (req.method === 'POST') {
       const { action } = req.body || {};
 
-      // Attribution de commission de parrainage
       if (action === 'grant-commission') {
         const { referredBy, sourceName, sourceUserId, sourceEmail, sourceWhatsapp, amount } = req.body || {};
         const purchase = parseFloat(amount);
         if (!purchase || purchase <= 0) return res.status(400).json({ error: 'Montant invalide.' });
 
-        const { data: referrer, error: findErr } = await supabaseAdmin
-          .from('profiles')
-          .select('user_id, solde, email, whatsapp')
-          .eq('referral_code', referredBy)
-          .maybeSingle();
-        if (findErr) return res.status(400).json({ error: findErr.message });
+        const { data: referrer } = await supabaseAdmin
+          .from('profiles').select('user_id, solde, email, whatsapp').eq('referral_code', referredBy).maybeSingle();
         if (!referrer) return res.status(404).json({ error: 'Parrain introuvable pour ce code.' });
 
         const referrerEmail = (referrer.email || '').toLowerCase();
         const srcEmail = (sourceEmail || '').toLowerCase();
         if ((srcEmail && srcEmail === referrerEmail) || (sourceWhatsapp && sourceWhatsapp === referrer.whatsapp)) {
-          return res.status(400).json({ error: 'Auto-parrainage détecté — commission refusée.' });
+          return res.status(400).json({ error: 'Auto-parrainage détecté.' });
         }
 
         const commission = Math.round(purchase * 0.1);
 
         if (sourceUserId) {
-          const { data: earnings, error: earnErr } = await supabaseAdmin
-            .from('referral_earnings')
-            .select('amount')
-            .eq('referrer_id', referrer.user_id)
-            .eq('source_user_id', sourceUserId);
-          if (earnErr) return res.status(400).json({ error: earnErr.message });
-          const already = (earnings || []).reduce((sum: number, e: any) => sum + (e.amount || 0), 0);
+          const { data: earnings } = await supabaseAdmin
+            .from('referral_earnings').select('amount').eq('referrer_id', referrer.user_id).eq('source_user_id', sourceUserId);
+          const already = (earnings || []).reduce((s: number, e: any) => s + (e.amount || 0), 0);
           if (already + commission > COMMISSION_CAP_PER_FILLEUL) {
             const remaining = Math.max(0, COMMISSION_CAP_PER_FILLEUL - already);
-            return res.status(400).json({
-              error: `Plafond atteint pour ce filleul (${already}/${COMMISSION_CAP_PER_FILLEUL} FCFA). Marge restante : ${remaining} FCFA.`,
-            });
+            return res.status(400).json({ error: `Plafond atteint. Reste : ${remaining} FCFA.` });
           }
         }
 
-        const { error: updErr } = await supabaseAdmin
-          .from('profiles')
-          .update({ solde: (referrer.solde || 0) + commission })
-          .eq('user_id', referrer.user_id);
-        if (updErr) return res.status(400).json({ error: updErr.message });
-
-        await supabaseAdmin.from('referral_earnings').insert({
-          referrer_id: referrer.user_id,
-          source_name: sourceName,
-          source_user_id: sourceUserId || null,
-          amount: commission,
+        const { data, error } = await supabaseAdmin.rpc('grant_commission', {
+          p_referrer_user_id: referrer.user_id,
+          p_source_name: sourceName || null,
+          p_source_user_id: sourceUserId || null,
+          p_amount: commission,
         });
+        if (error) return res.status(400).json({ error: error.message });
+        const result = data as { ok: boolean; solde?: number; error?: string };
+        if (!result.ok) return res.status(400).json({ error: result.error });
 
-        return res.status(200).json({ ok: true, commission });
+        return res.status(200).json({ ok: true, commission, solde: result.solde });
       }
 
-      // Création d'une fiche
       const payload = req.body || {};
       delete payload.action;
       const { error } = await supabaseAdmin.from('profiles').insert(payload);
@@ -116,29 +91,21 @@ export default requireAdmin(async (req, res) => {
       if (error) return res.status(400).json({ error: error.message });
       return res.status(200).json({ ok: true });
     }
-
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
 
-  // ---------------------------------------------------------------
-  // BARRE DE NAVIGATION (nav_items)
-  // ---------------------------------------------------------------
+  // --- BARRE DE NAVIGATION ---
   if (resource === 'nav-items') {
     if (req.method === 'GET') {
-      const { data, error } = await supabaseAdmin
-        .from('nav_items')
-        .select('*')
-        .order('position', { ascending: true });
+      const { data, error } = await supabaseAdmin.from('nav_items').select('*').order('position', { ascending: true });
       if (error) return res.status(400).json({ error: error.message });
       return res.status(200).json({ items: data });
     }
-
     if (req.method === 'POST') {
       const { error } = await supabaseAdmin.from('nav_items').insert(req.body || {});
       if (error) return res.status(400).json({ error: error.message });
       return res.status(200).json({ ok: true });
     }
-
     if (req.method === 'PATCH') {
       const id = req.query.id as string;
       if (!id) return res.status(400).json({ error: 'id requis' });
@@ -146,7 +113,6 @@ export default requireAdmin(async (req, res) => {
       if (error) return res.status(400).json({ error: error.message });
       return res.status(200).json({ ok: true });
     }
-
     if (req.method === 'DELETE') {
       const id = req.query.id as string;
       if (!id) return res.status(400).json({ error: 'id requis' });
@@ -154,19 +120,13 @@ export default requireAdmin(async (req, res) => {
       if (error) return res.status(400).json({ error: error.message });
       return res.status(200).json({ ok: true });
     }
-
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
 
-  // ---------------------------------------------------------------
-  // DEMANDES DE RETRAIT (withdrawal_requests)
-  // ---------------------------------------------------------------
+  // --- RETRAITS ---
   if (resource === 'withdrawals') {
     if (req.method === 'GET') {
-      const { data, error } = await supabaseAdmin
-        .from('withdrawal_requests')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabaseAdmin.from('withdrawal_requests').select('*').order('created_at', { ascending: false });
       if (error) return res.status(400).json({ error: error.message });
       return res.status(200).json({ items: data });
     }
@@ -187,15 +147,10 @@ export default requireAdmin(async (req, res) => {
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
 
-  // ---------------------------------------------------------------
-  // DEMANDES D'ABONNEMENT (subscription_requests)
-  // ---------------------------------------------------------------
+  // --- ABONNEMENTS ---
   if (resource === 'subscriptions') {
     if (req.method === 'GET') {
-      const { data, error } = await supabaseAdmin
-        .from('subscription_requests')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabaseAdmin.from('subscription_requests').select('*').order('created_at', { ascending: false });
       if (error) return res.status(400).json({ error: error.message });
       return res.status(200).json({ items: data });
     }
@@ -216,15 +171,10 @@ export default requireAdmin(async (req, res) => {
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
 
-  // ---------------------------------------------------------------
-  // FORFAITS D'ABONNEMENT (subscription_plans)
-  // ---------------------------------------------------------------
+  // --- FORFAITS ---
   if (resource === 'plans') {
     if (req.method === 'GET') {
-      const { data, error } = await supabaseAdmin
-        .from('subscription_plans')
-        .select('*')
-        .order('position', { ascending: true });
+      const { data, error } = await supabaseAdmin.from('subscription_plans').select('*').order('position', { ascending: true });
       if (error) return res.status(400).json({ error: error.message });
       return res.status(200).json({ items: data });
     }
@@ -250,15 +200,10 @@ export default requireAdmin(async (req, res) => {
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
 
-  // ---------------------------------------------------------------
-  // OFFRES SERVEUR (server_offers)
-  // ---------------------------------------------------------------
+  // --- OFFRES SERVEUR ---
   if (resource === 'server-offers') {
     if (req.method === 'GET') {
-      const { data, error } = await supabaseAdmin
-        .from('server_offers')
-        .select('*')
-        .order('position', { ascending: true });
+      const { data, error } = await supabaseAdmin.from('server_offers').select('*').order('position', { ascending: true });
       if (error) return res.status(400).json({ error: error.message });
       return res.status(200).json({ items: data });
     }
@@ -284,15 +229,10 @@ export default requireAdmin(async (req, res) => {
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
 
-  // ---------------------------------------------------------------
-  // DEMANDES SERVEUR (server_orders)
-  // ---------------------------------------------------------------
+  // --- COMMANDES SERVEUR ---
   if (resource === 'server-orders') {
     if (req.method === 'GET') {
-      const { data, error } = await supabaseAdmin
-        .from('server_orders')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabaseAdmin.from('server_orders').select('*').order('created_at', { ascending: false });
       if (error) return res.status(400).json({ error: error.message });
       return res.status(200).json({ items: data });
     }
@@ -313,15 +253,10 @@ export default requireAdmin(async (req, res) => {
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
 
-  // ---------------------------------------------------------------
-  // SERVICES BUSINESS (business_services)
-  // ---------------------------------------------------------------
+  // --- SERVICES BUSINESS ---
   if (resource === 'biz-services') {
     if (req.method === 'GET') {
-      const { data, error } = await supabaseAdmin
-        .from('business_services')
-        .select('*')
-        .order('position', { ascending: true });
+      const { data, error } = await supabaseAdmin.from('business_services').select('*').order('position', { ascending: true });
       if (error) return res.status(400).json({ error: error.message });
       return res.status(200).json({ items: data });
     }
@@ -347,15 +282,10 @@ export default requireAdmin(async (req, res) => {
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
 
-  // ---------------------------------------------------------------
-  // DEMANDES BUSINESS (business_orders)
-  // ---------------------------------------------------------------
+  // --- COMMANDES BUSINESS ---
   if (resource === 'biz-orders') {
     if (req.method === 'GET') {
-      const { data, error } = await supabaseAdmin
-        .from('business_orders')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabaseAdmin.from('business_orders').select('*').order('created_at', { ascending: false });
       if (error) return res.status(400).json({ error: error.message });
       return res.status(200).json({ items: data });
     }
@@ -376,145 +306,74 @@ export default requireAdmin(async (req, res) => {
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
 
-  // ---------------------------------------------------------------
-  // CAGNOTTES (cagnotte_campaigns + cagnotte_entries)
-  // ---------------------------------------------------------------
+  // --- CAGNOTTES ---
   if (resource === 'cagnottes') {
     if (req.method === 'GET') {
       const campaignId = req.query.campaignId as string | undefined;
-
-      // Liste des participants d'une campagne, pour vérification par l'admin
       if (campaignId) {
-        const { data: entries, error } = await supabaseAdmin
-          .from('cagnotte_entries')
-          .select('*')
-          .eq('campaign_id', campaignId)
-          .order('created_at', { ascending: false });
+        const { data: entries, error } = await supabaseAdmin.from('cagnotte_entries').select('*').eq('campaign_id', campaignId).order('created_at', { ascending: false });
         if (error) return res.status(400).json({ error: error.message });
-
         const userIds = [...new Set((entries || []).map((e: any) => e.user_id))];
-        const { data: profiles } = await supabaseAdmin
-          .from('profiles')
-          .select('user_id, nom, business, whatsapp')
-          .in('user_id', userIds.length ? userIds : ['00000000-0000-0000-0000-000000000000']);
+        const { data: profiles } = await supabaseAdmin.from('profiles').select('user_id, nom, business, whatsapp').in('user_id', userIds.length ? userIds : ['00000000-0000-0000-0000-000000000000']);
         const profileMap = Object.fromEntries((profiles || []).map((p: any) => [p.user_id, p]));
-
         const merged = (entries || []).map((e: any) => ({ ...e, profile: profileMap[e.user_id] || null }));
         return res.status(200).json({ entries: merged });
       }
 
-      const { data: campaigns, error } = await supabaseAdmin
-        .from('cagnotte_campaigns')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data: campaigns, error } = await supabaseAdmin.from('cagnotte_campaigns').select('*').order('created_at', { ascending: false });
       if (error) return res.status(400).json({ error: error.message });
-
       const withCounts = await Promise.all(
         (campaigns || []).map(async (c: any) => {
-          const { count: total } = await supabaseAdmin
-            .from('cagnotte_entries')
-            .select('*', { count: 'exact', head: true })
-            .eq('campaign_id', c.id);
-          const { count: verified } = await supabaseAdmin
-            .from('cagnotte_entries')
-            .select('*', { count: 'exact', head: true })
-            .eq('campaign_id', c.id)
-            .eq('verified', true);
+          const { count: total } = await supabaseAdmin.from('cagnotte_entries').select('*', { count: 'exact', head: true }).eq('campaign_id', c.id);
+          const { count: verified } = await supabaseAdmin.from('cagnotte_entries').select('*', { count: 'exact', head: true }).eq('campaign_id', c.id).eq('verified', true);
           return { ...c, entries_count: total ?? 0, verified_count: verified ?? 0 };
         })
       );
-
       return res.status(200).json({ items: withCounts });
     }
 
     if (req.method === 'POST') {
       const { action } = req.body || {};
 
-      // Valide ou rejette la preuve de publication d'un participant
       if (action === 'verify-entry') {
         const { entryId, verified } = req.body || {};
         if (!entryId) return res.status(400).json({ error: 'entryId requis' });
-        const { error } = await supabaseAdmin
-          .from('cagnotte_entries')
-          .update({ verified: !!verified })
-          .eq('id', entryId);
+        const { error } = await supabaseAdmin.from('cagnotte_entries').update({ verified: !!verified }).eq('id', entryId);
         if (error) return res.status(400).json({ error: error.message });
         return res.status(200).json({ ok: true });
       }
 
-      // Déclenche le tirage — uniquement parmi les participants vérifiés
       if (action === 'draw') {
         const { campaignId } = req.body || {};
         if (!campaignId) return res.status(400).json({ error: 'campaignId requis' });
-
-        const { data: campaign, error: campErr } = await supabaseAdmin
-          .from('cagnotte_campaigns')
-          .select('*')
-          .eq('id', campaignId)
-          .maybeSingle();
-        if (campErr || !campaign) return res.status(404).json({ error: 'Campagne introuvable.' });
+        const { data: campaign } = await supabaseAdmin.from('cagnotte_campaigns').select('*').eq('id', campaignId).maybeSingle();
+        if (!campaign) return res.status(404).json({ error: 'Campagne introuvable.' });
         if (campaign.status === 'drawn') return res.status(400).json({ error: 'Le tirage a déjà eu lieu.' });
 
         const prizeTiers: number[] = Array.isArray(campaign.prize_tiers) ? campaign.prize_tiers : [];
-        if (prizeTiers.length === 0) {
-          return res.status(400).json({ error: "Cette campagne n'a pas de paliers de gains définis." });
-        }
+        if (prizeTiers.length === 0) return res.status(400).json({ error: "Pas de paliers de gains définis." });
 
-        const { data: entries, error: entErr } = await supabaseAdmin
-          .from('cagnotte_entries')
-          .select('*')
-          .eq('campaign_id', campaignId)
-          .eq('verified', true);
+        const { data: entries, error: entErr } = await supabaseAdmin.from('cagnotte_entries').select('*').eq('campaign_id', campaignId).eq('verified', true);
         if (entErr) return res.status(400).json({ error: entErr.message });
-        if (!entries || entries.length === 0) {
-          return res.status(400).json({ error: 'Aucun participant vérifié (preuve de publication validée) pour cette campagne.' });
-        }
+        if (!entries || entries.length === 0) return res.status(400).json({ error: 'Aucun participant vérifié.' });
 
         const shuffled = [...entries].sort(() => Math.random() - 0.5);
         const winners = shuffled.slice(0, prizeTiers.length);
-
         for (let i = 0; i < winners.length; i++) {
           const w = winners[i];
           const prize = prizeTiers[i];
-          const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('solde')
-            .eq('user_id', w.user_id)
-            .maybeSingle();
+          const { data: profile } = await supabaseAdmin.from('profiles').select('solde').eq('user_id', w.user_id).maybeSingle();
           const solde = profile?.solde || 0;
           await supabaseAdmin.from('profiles').update({ solde: solde + prize }).eq('user_id', w.user_id);
-          await supabaseAdmin
-            .from('cagnotte_entries')
-            .update({ is_winner: true, amount_won: prize, rank: i + 1 })
-            .eq('id', w.id);
+          await supabaseAdmin.from('cagnotte_entries').update({ is_winner: true, amount_won: prize, rank: i + 1 }).eq('id', w.id);
         }
-
-        await supabaseAdmin
-          .from('cagnotte_campaigns')
-          .update({ status: 'drawn', drawn_at: new Date().toISOString() })
-          .eq('id', campaignId);
-
-        return res.status(200).json({
-          ok: true,
-          winnersCount: winners.length,
-          eligibleCount: entries.length,
-          winners: winners.map((w: any) => w.user_id),
-        });
+        await supabaseAdmin.from('cagnotte_campaigns').update({ status: 'drawn', drawn_at: new Date().toISOString() }).eq('id', campaignId);
+        return res.status(200).json({ ok: true, winnersCount: winners.length, eligibleCount: entries.length, winners: winners.map((w: any) => w.user_id) });
       }
 
-      // Création d'une nouvelle campagne
       const { name, entry_price, credits_reward, prize_tiers, promo_instructions } = req.body || {};
-      if (!name || !entry_price || !Array.isArray(prize_tiers) || prize_tiers.length === 0) {
-        return res.status(400).json({ error: 'Champs manquants.' });
-      }
-      const { error } = await supabaseAdmin.from('cagnotte_campaigns').insert({
-        name,
-        entry_price,
-        credits_reward: credits_reward || 0,
-        prize_tiers,
-        promo_instructions: promo_instructions || null,
-        status: 'open',
-      });
+      if (!name || !entry_price || !Array.isArray(prize_tiers) || prize_tiers.length === 0) return res.status(400).json({ error: 'Champs manquants.' });
+      const { error } = await supabaseAdmin.from('cagnotte_campaigns').insert({ name, entry_price, credits_reward: credits_reward || 0, prize_tiers, promo_instructions: promo_instructions || null, status: 'open' });
       if (error) return res.status(400).json({ error: error.message });
       return res.status(200).json({ ok: true });
     }
@@ -534,7 +393,6 @@ export default requireAdmin(async (req, res) => {
       if (error) return res.status(400).json({ error: error.message });
       return res.status(200).json({ ok: true });
     }
-
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
 
