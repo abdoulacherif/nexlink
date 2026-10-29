@@ -12,6 +12,12 @@ function genReferralCode(): string {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
 
+function makeSlug(text: string, userId: string): string {
+  let base = (text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  if (!base) base = 'membre';
+  return `${base}-${userId.slice(0, 4)}`;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const action = req.query.action as string;
 
@@ -133,16 +139,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: 'Merci de remplir tous les champs.' });
       }
 
-      // Générer un slug unique pour la fiche publique
-      let baseSlug = business.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      if (!baseSlug) baseSlug = 'membre';
-      let slug = baseSlug;
+      let slug = makeSlug(business, session.userId);
       let counter = 0;
       while (true) {
-        const { data: existing } = await supabaseAdmin.from('profiles').select('id').eq('slug', slug).maybeSingle();
-        if (!existing) break;
+        const { data: existing } = await supabaseAdmin.from('profiles').select('user_id').eq('slug', slug).maybeSingle();
+        if (!existing || existing.user_id === session.userId) break;
         counter++;
-        slug = `${baseSlug}-${counter}`;
+        slug = `${makeSlug(business, session.userId)}-${counter}`;
       }
 
       const { data, error } = await supabaseAdmin
@@ -175,9 +178,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       const { nom, whatsapp, ville, pays, business, secteur, description } = req.body || {};
+      
+      const { data: currentProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('slug')
+        .eq('user_id', session.userId)
+        .maybeSingle();
+
+      let updates: any = { nom, whatsapp, ville, pays, business, secteur };
+      if (description !== undefined) updates.description = description;
+
+      if (!currentProfile?.slug && business) {
+        updates.slug = makeSlug(business, session.userId);
+      }
+
       const { error } = await supabaseAdmin
         .from('profiles')
-        .update({ nom, whatsapp, ville, pays, business, secteur, ...(description !== undefined && { description }) })
+        .update(updates)
         .eq('user_id', session.userId);
       if (error) return res.status(400).json({ error: error.message });
       return res.status(200).json({ ok: true });
