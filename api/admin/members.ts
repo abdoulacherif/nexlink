@@ -396,5 +396,46 @@ export default requireAdmin(async (req, res) => {
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
 
+  // ---------------------------------------------------------------
+  // GÉNÉRATION DE SLUGS (par paquets, pour ne pas bloquer la base)
+  // ---------------------------------------------------------------
+  if (resource === 'generate-slugs') {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
+
+    const count = Math.min(parseInt(req.body?.count, 10) || 100, 5000);
+
+    // Récupérer les profils sans slug
+    const { data: profiles, error: fetchError } = await supabaseAdmin
+      .from('profiles')
+      .select('id, business, user_id')
+      .or('slug.is.null,slug.eq.')
+      .limit(count);
+
+    if (fetchError) return res.status(400).json({ error: fetchError.message });
+      return res.status(200).json({ ok: true, updated: 0, remaining: 0 });
+    }
+
+    // Générer et mettre à jour chaque slug
+    let updated = 0;
+    for (const p of profiles) {
+      let base = (p.business || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const slug = `${base}-${p.user_id.slice(0, 4)}`;
+
+      const { error: updateError } = await supabaseAdmin
+        .from('profiles')
+        .update({ slug })
+        .eq('id', p.id);
+
+    }
+
+    // Compter combien il reste
+    const { count: remaining } = await supabaseAdmin
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .or('slug.is.null,slug.eq.');
+
+    return res.status(200).json({ ok: true, updated, remaining: remaining ?? 0 });
+  }
+
   return res.status(400).json({ error: `Ressource inconnue : ${resource}` });
 });

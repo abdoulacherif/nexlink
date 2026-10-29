@@ -13,7 +13,7 @@
 }
 *{box-sizing:border-box;}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:'Sora',sans-serif;-webkit-font-smoothing:antialiased;}
-h1,h2{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
 a{color:inherit;}
 .logo{font-family:'Fraunces',serif;font-style:italic;font-size:22px;letter-spacing:0.3px;text-decoration:none;color:var(--ink);}
 .logo span{color:var(--green-dark);}
@@ -26,10 +26,26 @@ a{color:inherit;}
 .menu-grid{display:grid;grid-template-columns:1fr;gap:14px;padding:0 20px 60px;max-width:720px;}
 @media(min-width:600px){.menu-grid{grid-template-columns:1fr 1fr;}}
 @media(min-width:900px){.menu-grid{grid-template-columns:1fr 1fr 1fr;}}
-.menu-card{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:22px;text-decoration:none;color:var(--ink);display:block;}
+.menu-card{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:22px;text-decoration:none;color:var(--ink);display:block;transition:border-color .15s;}
 .menu-card:hover{border-color:var(--green);}
 .menu-card h3{font-size:17px;margin-bottom:6px;}
 .menu-card p{font-size:13px;color:var(--muted);margin:0;line-height:1.5;}
+.menu-card.highlight{background:linear-gradient(135deg, var(--bg-soft) 0%, #fff 100%);border-color:var(--gold);}
+.menu-card.highlight h3{color:var(--gold);}
+
+/* --- Panneau outils --- */
+.tools-panel{background:#fff;border:1.5px solid var(--gold);border-radius:16px;padding:22px;margin:0 20px 40px;max-width:720px;}
+.tools-panel h3{font-size:17px;margin-bottom:6px;color:var(--gold);}
+.tools-panel .sub{font-size:13px;color:var(--muted);margin-bottom:16px;}
+.tools-panel .field{margin-bottom:14px;}
+.tools-panel label{display:block;font-size:12px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px;}
+.tools-panel input,.tools-panel select{width:100%;padding:11px 13px;border-radius:10px;border:1.5px solid var(--line);font-family:'Sora',sans-serif;font-size:14.5px;}
+.tools-panel .row{display:flex;gap:10px;align-items:end;flex-wrap:wrap;}
+.tools-panel .row .field{flex:1;min-width:160px;margin-bottom:0;}
+.status-msg{margin-top:14px;padding:10px 14px;border-radius:10px;font-size:13px;display:none;}
+.status-msg.show{display:block;}
+.status-msg.success{background:#E8F8EE;color:var(--green-dark);}
+.status-msg.error{background:#FBE9EA;color:#B33A3E;}
 </style>
 </head>
 <body>
@@ -37,17 +53,20 @@ a{color:inherit;}
 <a class="logo" href="index" style="font-size:19px;">Kon<span>tak</span></a>
 <a class="btn-ghost" href="dashboard">Quitter l'admin</a>
 </header>
+
 <div id="gateMsg" class="gate" style="display:none;">
 <h2>Accès refusé</h2>
 <p>Cette page est réservée à l'administrateur.</p>
 <br>
 <a class="btn-fill" href="index">Retour à l'accueil</a>
 </div>
+
 <div id="adminContent" style="display:none;">
 <div class="hero">
 <div class="eyebrow">Panneau d'administration</div>
 <h1 style="font-size:28px;">Que veux-tu gérer ?</h1>
 </div>
+
 <div class="menu-grid">
 <a class="menu-card" href="admin-fiches">
 <h3>Fiches</h3>
@@ -77,8 +96,29 @@ a{color:inherit;}
 <h3>Cagnottes</h3>
 <p>Créer des campagnes, suivre les participants, lancer les tirages.</p>
 </a>
+<a class="menu-card" href="admin-boosts">
+<h3>⭐ Boosts</h3>
+<p>Suivi des fiches boostées et des revenus générés.</p>
+</a>
+</div>
+
+<div class="tools-panel">
+<h3>🔧 Outils de maintenance</h3>
+<div class="sub">Opérations lourdes à lancer manuellement.</div>
+
+<div class="row">
+<div class="field">
+<label>Nombre de slugs à générer</label>
+<input type="number" id="slugCount" min="1" max="5000" value="100" placeholder="Ex: 100">
+<div class="hint" style="font-size:11.5px;color:var(--muted);margin-top:4px;">Maximum 5000 par batch pour éviter de surcharger la base.</div>
+</div>
+<button class="btn-fill" onclick="generateSlugs()" id="slugBtn" style="padding:11px 22px;">Générer les slugs</button>
+</div>
+
+<div id="slugStatus" class="status-msg"></div>
 </div>
 </div>
+
 <script>
 (async ()=>{
 try{
@@ -94,6 +134,49 @@ document.getElementById('adminContent').style.display = '';
 document.getElementById('gateMsg').style.display = '';
 }
 })();
+
+async function generateSlugs() {
+  const countInput = document.getElementById('slugCount');
+  const btn = document.getElementById('slugBtn');
+  const status = document.getElementById('slugStatus');
+  
+  const count = parseInt(countInput.value, 10);
+  if (!count || count < 1 || count > 5000) {
+    status.className = 'status-msg error show';
+    status.textContent = 'Entre un nombre entre 1 et 5000.';
+    return;
+  }
+  
+  if (!confirm(`Générer les slugs pour ${count} profils sans slug ?`)) return;
+  
+  btn.disabled = true;
+  btn.textContent = 'Génération…';
+  status.className = 'status-msg show';
+  status.style.background = 'var(--bg-soft)';
+  status.style.color = 'var(--ink)';
+  status.textContent = 'Traitement en cours…';
+  
+  try {
+    const res = await fetch('/api/admin?resource=generate-slugs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ count })
+    });
+    const data = await res.json();
+    
+    if (!res.ok) throw new Error(data.error || 'Erreur lors de la génération.');
+    
+    status.className = 'status-msg success show';
+    status.textContent = `✅ ${data.updated} slugs générés. Il reste ${data.remaining} profils sans slug.`;
+  } catch (err) {
+    status.className = 'status-msg error show';
+    status.textContent = '❌ ' + err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Générer les slugs';
+  }
+}
 </script>
 </body>
 </html>
