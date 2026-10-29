@@ -157,7 +157,7 @@ async function generateSlugs() {
   status.textContent = 'Traitement en cours…';
   
   try {
-    const res = await fetch('/api/admin?resource=generate-slugs', {
+    const res = await fetch('/api/admin/members?resource=generate-slugs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

@@ -100,7 +100,7 @@ document.getElementById('gateMsg').style.display = '';
 
 async function loadBoosts(){
   try{
-    const res = await fetch('/api/admin?resource=boosts', { credentials: 'include' });
+    const res = await fetch('/api/admin/members?resource=boosts', { credentials: 'include' });
     const data = await res.json();
     if(!res.ok) throw new Error(data.error || 'Erreur');
 
