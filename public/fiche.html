@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiche — Kontak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Sora:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF; --bg-soft:#F3FBF5; --ink:#0E2A1B;
+  --green:#25D366; --green-dark:#128C4A; --line:rgba(14,42,27,0.10);
+  --muted:rgba(14,42,27,0.55);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Sora',sans-serif;-webkit-font-smoothing:antialiased;}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+a{color:inherit;text-decoration:none;}
+.logo{font-family:'Fraunces',serif;font-style:italic;font-size:22px;letter-spacing:0.3px;text-decoration:none;color:var(--ink);}
+.logo span{color:var(--green-dark);}
+header{padding:18px 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:12px;}
+.btn-line{background:transparent;color:var(--ink);border:1.5px solid var(--line);padding:9px 16px;border-radius:100px;font-weight:600;font-size:14px;display:inline-block;}
+.btn-fill{background:var(--green);color:#fff;border:none;padding:10px 18px;border-radius:100px;font-weight:700;font-size:14px;text-decoration:none;display:inline-block;}
+
+.hero{padding:40px 24px;background:linear-gradient(180deg,var(--bg-soft) 0%, #fff 100%);}
+.hero-inner{max-width:720px;margin:0 auto;display:flex;gap:24px;align-items:center;flex-wrap:wrap;}
+.avatar{width:110px;height:110px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:38px;flex-shrink:0;overflow:hidden;border:4px solid #fff;box-shadow:0 8px 24px -8px rgba(14,42,27,0.25);}
+.avatar img{width:100%;height:100%;object-fit:cover;}
+.hero-info h1{font-size:clamp(24px,5vw,34px);line-height:1.15;}
+.hero-loc{margin-top:6px;color:var(--muted);font-family:'Space Mono',monospace;font-size:12.5px;text-transform:uppercase;letter-spacing:0.6px;}
+.hero-tags{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;}
+.tag{background:var(--bg-soft);color:var(--green-dark);padding:4px 11px;border-radius:100px;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;text-transform:uppercase;}
+
+.content{max-width:720px;margin:0 auto;padding:28px 24px 64px;}
+.block{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:16px;}
+.block h2{font-size:17px;margin-bottom:12px;}
+.block p{font-size:14.5px;line-height:1.6;color:var(--ink);margin:0;}
+
+.wa-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--green);color:#fff;padding:16px 24px;border-radius:100px;font-weight:700;font-size:15.5px;margin-top:8px;width:100%;border:none;cursor:pointer;transition:transform .1s;}
+.wa-btn:active{transform:scale(0.98);}
+.wa-btn svg{width:20px;height:20px;}
+
+.loading{text-align:center;padding:60px 24px;color:var(--muted);}
+.not-found{text-align:center;padding:60px 24px;}
+.not-found h1{font-size:22px;margin-bottom:10px;}
+.not-found p{color:var(--muted);font-size:14.5px;}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="index">Kon<span>tak</span></a>
+  <a class="btn-line" href="annuaire">← Retour à l'annuaire</a>
+</header>
+
+<div id="loader" class="loading">Chargement de la fiche…</div>
+
+<div id="content" style="display:none;">
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="avatar" id="avatar">?</div>
+      <div class="hero-info">
+        <h1 id="businessName">—</h1>
+        <div class="hero-loc" id="location">—</div>
+        <div class="hero-tags" id="tags"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="content">
+    <div class="block">
+      <h2>À propos</h2>
+      <p id="aboutText">—</p>
+    </div>
+
+    <div class="block">
+      <h2>Contacter sur WhatsApp</h2>
+      <p style="margin-bottom:14px;color:var(--muted);font-size:13.5px;">Le message s'ouvre pré-rempli, il ne reste qu'à envoyer.</p>
+      <button class="wa-btn" id="waBtn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.297-.497.1-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.553 4.12 1.52 5.855L.012 24l6.317-1.652A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.826 0-3.542-.5-5.02-1.372l-.36-.212-3.75.98.999-3.65-.234-.375A9.94 9.94 0 012 12c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10z"/></svg>
+        Ouvrir WhatsApp
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="notFound" class="not-found" style="display:none;">
+  <h1>Fiche introuvable</h1>
+  <p>Ce profil n'existe pas ou a été retiré de l'annuaire.</p>
+  <div style="margin-top:20px;"><a class="btn-fill" href="annuaire">Retour à l'annuaire</a></div>
+</div>
+
+<script>
+function initials(name) {
+  return (name || '').trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+}
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+async function loadProfile() {
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get('slug');
+
+  if (!slug) {
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('notFound').style.display = 'block';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/profiles/public?slug=' + encodeURIComponent(slug));
+    const data = await res.json();
+
+    if (!res.ok || !data.profile) {
+      document.getElementById('loader').style.display = 'none';
+      document.getElementById('notFound').style.display = 'block';
+      return;
+    }
+
+    const p = data.profile;
+
+    document.getElementById('businessName').textContent = p.business || p.nom || 'Sans nom';
+    document.getElementById('location').textContent = [p.ville, p.pays].filter(Boolean).join(', ') || 'Localisation non précisée';
+    document.getElementById('aboutText').textContent = p.description || "Ce business n'a pas encore ajouté de description. Contactez-le sur WhatsApp pour en savoir plus.";
+    document.title = (p.business || p.nom || 'Fiche') + ' — Kontak';
+
+    const tags = document.getElementById('tags');
+    if (p.secteur) tags.innerHTML = `<span class="tag">${escapeHtml(p.secteur)}</span>`;
+
+    const avatar = document.getElementById('avatar');
+    if (p.avatar_url) {
+      avatar.innerHTML = `<img src="${escapeHtml(p.avatar_url)}" alt="${escapeHtml(p.business || p.nom)}">`;
+    } else {
+      avatar.textContent = initials(p.business || p.nom);
+    }
+
+    const waBtn = document.getElementById('waBtn');
+    const cleanPhone = (p.whatsapp || '').replace(/\D/g, '');
+    const message = encodeURIComponent(`Bonjour, je vous ai trouvé sur Kontak — je voudrais discuter de ${p.business || 'votre activité'}.`);
+    waBtn.addEventListener('click', () => {
+      window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
+    });
+
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+  } catch (e) {
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('notFound').style.display = 'block';
+  }
+}
+
+loadProfile();
+</script>
+</body>
+</html>
