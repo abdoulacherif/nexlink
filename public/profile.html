@@ -401,6 +401,7 @@ document.getElementById('d-country').value = p.pays || '';
 document.getElementById('d-city').value = p.ville || '';
 document.getElementById('d-business').value = p.business || '';
 document.getElementById('d-sector').value = p.secteur || '';
+} catch(e) { console.error('fillDashboard error:', e); }
 }
 
 document.getElementById('pwForm').addEventListener('submit', async (e)=>{
