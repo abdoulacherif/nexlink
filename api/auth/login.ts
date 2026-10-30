@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabaseAdmin } from '../../lib/supabaseAdmin';
 import { signSession, setSessionCookie } from '../../lib/auth';
+import { applyCors } from '../../lib/cors';
 
 // Rate limiter en mémoire (par instance Vercel)
 const attempts = new Map<string, { count: number; resetAt: number }>();
@@ -25,6 +26,7 @@ function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (applyCors(req, res)) return;
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
   const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';

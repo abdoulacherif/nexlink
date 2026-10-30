@@ -2,8 +2,10 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSession, signSession, setSessionCookie, clearSessionCookie } from '../../lib/auth';
 import { supabaseAdmin } from '../../lib/supabaseAdmin';
 import { sendWelcomeEmail, sendAdminNotifEmail } from '../../lib/mailer';
+import { applyCors } from '../../lib/cors';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (applyCors(req, res)) return;
   if (req.method === 'DELETE') {
     clearSessionCookie(res);
     return res.status(200).json({ ok: true });

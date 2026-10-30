@@ -1,8 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabaseAdmin } from '../../lib/supabaseAdmin';
 import { getSession } from '../../lib/auth';
+import { applyCors } from '../../lib/cors';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (applyCors(req, res)) return;
   if (req.method === 'GET') {
     const { type } = req.query;
 

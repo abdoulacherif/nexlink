@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabaseAdmin } from '../lib/supabaseAdmin';
 import { requireAuth } from '../lib/auth';
+import { applyCors } from '../lib/cors';
 
 export const config = { api: { bodyParser: { sizeLimit: '5mb' } } };
 
@@ -12,6 +13,7 @@ function makeSlug(text: string, userId: string): string {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (applyCors(req, res)) return;
   const action = req.query.action as string;
 
   // ============================================================

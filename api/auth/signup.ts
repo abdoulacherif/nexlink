@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabaseAdmin } from '../../lib/supabaseAdmin';
 import { sendConfirmationEmail } from '../../lib/mailer';
+import { applyCors } from '../../lib/cors';
 
 function genReferralCode(): string {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -13,6 +14,7 @@ function sanitize(str: string): string {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (applyCors(req, res)) return;
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
   const { name, phone, email, password, country, city, business, sector, referredBy } = req.body || {};
