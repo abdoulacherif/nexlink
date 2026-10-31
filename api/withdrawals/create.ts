@@ -1,38 +1,43 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireAuth } from '../../lib/auth';
 import { supabaseAdmin } from '../../lib/supabaseAdmin';
+import { applyCors } from '../../lib/cors';
 
-export default requireAuth(async (req, res, session) => {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (applyCors(req, res)) return;
 
-  const { amount, method, details } = req.body || {};
-  const amt = parseInt(amount, 10);
+  return requireAuth(async (req, res, session) => {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
-  if (!amt || amt <= 0 || !method || !details) {
-    return res.status(400).json({ error: 'Merci de remplir tous les champs.' });
-  }
+    const { amount, method, details } = req.body || {};
+    const amt = parseInt(amount, 10);
 
-  const { data, error } = await supabaseAdmin.rpc('request_withdrawal', {
-    p_user_id: session.userId,
-    p_amount: amt,
-    p_method: method,
-    p_details: details,
-  });
+    if (!amt || amt <= 0 || !method || !details) {
+      return res.status(400).json({ error: 'Merci de remplir tous les champs.' });
+    }
 
-  if (error) {
-    console.error('[withdrawals/create]', error.message);
-    return res.status(400).json({ error: 'Erreur lors de la demande de retrait.' });
-  }
+    const { data, error } = await supabaseAdmin.rpc('request_withdrawal', {
+      p_user_id: session.userId,
+      p_amount: amt,
+      p_method: method,
+      p_details: details,
+    });
 
-  const result = data as { ok: boolean; solde?: number; error?: string; request_id?: string };
+    if (error) {
+      console.error('[withdrawals/create]', error.message);
+      return res.status(400).json({ error: 'Erreur lors de la demande de retrait.' });
+    }
 
-  if (!result.ok) {
-    return res.status(400).json({ error: result.error || 'Solde insuffisant.' });
-  }
+    const result = data as { ok: boolean; solde?: number; error?: string; request_id?: string };
 
-  return res.status(200).json({
-    ok: true,
-    solde: result.solde,
-    requestId: result.request_id
-  });
-});
+    if (!result.ok) {
+      return res.status(400).json({ error: result.error || 'Solde insuffisant.' });
+    }
+
+    return res.status(200).json({ 
+      ok: true, 
+      solde: result.solde, 
+      requestId: result.request_id 
+    });
+  })(req, res);
+}
